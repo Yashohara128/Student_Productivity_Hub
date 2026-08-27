@@ -1,5 +1,5 @@
 // ==========================================
-// STUDENT PRODUCTIVITY HUB - APP.JS (COMPLETE & INTEGRATED)
+// STUDENT PRODUCTIVITY HUB - APP.JS (COMPLETE & FINAL)
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -87,6 +87,32 @@ function updateDynamicGreeting(userName) {
     const formattedDate = now.toLocaleDateString('en-US', options);
 
     greetingEl.innerHTML = `${emoji} ${timeGreeting}, <span style="color: var(--text-color); font-weight: 600;">${userName}</span>! <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 2px;">📅 ${formattedDate}</span>`;
+}
+
+// --- Browser Push Notification Checker ---
+function checkDeadlineNotifications() {
+    if (!("Notification" in window)) return;
+
+    if (Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
+
+    setInterval(() => {
+        const now = new Date();
+        tasks.forEach(task => {
+            if (!task.date || !task.time) return;
+            const dueDateTime = new Date(`${task.date}T${task.time}:00`);
+            const diffMinutes = Math.floor((dueDateTime - now) / (1000 * 60));
+
+            // Notify if due in exactly 1 hour
+            if (diffMinutes === 60) {
+                new Notification("⏰ Deadline Reminder!", {
+                    body: `Your ${task.type} "${task.name}" is due in 1 hour (${task.time})!`,
+                    icon: "https://cdn-icons-png.flaticon.com/512/2921/2921222.png"
+                });
+            }
+        });
+    }, 60000); // Check every minute
 }
 
 // --- View Switcher Logic ---
@@ -533,6 +559,100 @@ async function loadGlobalReviews() {
     }
 }
 
+// --- TASK & DEADLINE MANAGER WITH TIME ---
+const addTaskBtn = document.getElementById('add-task-btn');
+if (addTaskBtn) {
+    addTaskBtn.addEventListener('click', async () => {
+        if (!currentUser) return;
+        const taskNameInput = document.getElementById('task-name');
+        const taskDateInput = document.getElementById('task-date');
+        const taskTimeInput = document.getElementById('task-time');
+        const taskTypeSelect = document.getElementById('task-type');
+
+        const name = taskNameInput.value.trim();
+        const date = taskDateInput.value;
+        const time = taskTimeInput.value || "23:59";
+        const type = taskTypeSelect.value;
+
+        if (!name || !date || !type) {
+            alert("⚠️ Please fill Task Name, Date, and Type!");
+            return;
+        }
+
+        const taskData = { name, date, time, type };
+        try {
+            const docRef = await addDoc(collection(db, "users", currentUser.uid, "tasks"), taskData);
+            taskData.dbId = docRef.id;
+            tasks.push(taskData);
+            
+            taskNameInput.value = '';
+            taskDateInput.value = '';
+            taskTimeInput.value = '';
+            taskTypeSelect.selectedIndex = 0;
+            renderTasksUI();
+            alert("✅ Deadline & Time added successfully!");
+        } catch (e) {
+            alert("Error adding task: " + e.message);
+        }
+    });
+}
+
+window.removeTask = async function(dbId) {
+    if (!currentUser) return;
+    tasks = tasks.filter(t => t.dbId !== dbId);
+    renderTasksUI();
+    try {
+        await deleteDoc(doc(db, "users", currentUser.uid, "tasks", dbId));
+    } catch (e) {
+        console.error("Error deleting task:", e);
+    }
+};
+
+function renderTasksUI() {
+    const tasksContainer = document.getElementById('tasks-container');
+    if (!tasksContainer) return;
+
+    if (tasks.length === 0) {
+        tasksContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 1rem;">No deadlines added yet. Add assignments or exams above!</div>`;
+        return;
+    }
+
+    let tasksHTML = '';
+    tasks.sort((a, b) => new Date(`${a.date}T${a.time || '23:59'}`) - new Date(`${b.date}T${b.time || '23:59'}`));
+
+    tasks.forEach(task => {
+        const today = new Date();
+        const dueDateTime = new Date(`${task.date}T${task.time || '23:59'}:00`);
+        const diffTime = dueDateTime - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        let badgeColor = task.type === 'Exam' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(56, 189, 248, 0.15)';
+        let badgeTextColor = task.type === 'Exam' ? '#ef4444' : '#38bdf8';
+        let timeText = '';
+
+        if (diffTime < 0) {
+            timeText = `<span style="color: #ef4444; font-weight: 500;">Overdue!</span>`;
+        } else {
+            timeText = `<span style="color: var(--text-muted);">Due: ${task.date} at ${task.time || '23:59'}</span>`;
+        }
+
+        tasksHTML += `
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); border: 1px solid var(--input-border); padding: 10px 14px; border-radius: 0.5rem; gap: 10px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="background: ${badgeColor}; color: ${badgeTextColor}; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase;">${task.type}</span>
+                    <b style="font-size: 0.9rem; color: var(--text-color);">${task.name}</b>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px; font-size: 0.8rem;">
+                    ${timeText}
+                    <button onclick="removeTask('${task.dbId}')" class="btn-remove" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Done</button>
+                </div>
+            </div>
+        `;
+    });
+
+    tasksContainer.innerHTML = tasksHTML;
+}
+
 // --- PRICING & PAYHERE PAYMENT LOGIC ---
 window.openPricingModal = function() {
     const modal = document.getElementById('pricing-modal');
@@ -694,8 +814,9 @@ onAuthStateChanged(auth, async (user) => {
         currentUser = user;
         const displayName = user.displayName ? user.displayName.split(" ")[0] : "Student";
         
-        // Trigger Dynamic Greeting
+        // Trigger Dynamic Greeting & Push Notifications
         updateDynamicGreeting(displayName);
+        checkDeadlineNotifications();
 
         if (loginSection) loginSection.style.display = "none";
         if (appSection) appSection.style.display = "block";
@@ -748,102 +869,6 @@ async function loadTasksFromDB() {
     } catch (error) {
         console.error("Error loading tasks:", error);
     }
-}
-
-const addTaskBtn = document.getElementById('add-task-btn');
-if (addTaskBtn) {
-    addTaskBtn.addEventListener('click', async () => {
-        if (!currentUser) return;
-        const taskNameInput = document.getElementById('task-name');
-        const taskDateInput = document.getElementById('task-date');
-        const taskTypeSelect = document.getElementById('task-type');
-
-        const name = taskNameInput.value.trim();
-        const date = taskDateInput.value;
-        const type = taskTypeSelect.value;
-
-        if (!name || !date || !type) {
-            alert("⚠️ Please fill all task fields (Name, Date, Type)!");
-            return;
-        }
-
-        const taskData = { name, date, type };
-        try {
-            const docRef = await addDoc(collection(db, "users", currentUser.uid, "tasks"), taskData);
-            taskData.dbId = docRef.id;
-            tasks.push(taskData);
-            
-            taskNameInput.value = '';
-            taskDateInput.value = '';
-            taskTypeSelect.selectedIndex = 0;
-            renderTasksUI();
-        } catch (e) {
-            alert("Error adding task: " + e.message);
-        }
-    });
-}
-
-window.removeTask = async function(dbId) {
-    if (!currentUser) return;
-    tasks = tasks.filter(t => t.dbId !== dbId);
-    renderTasksUI();
-    try {
-        await deleteDoc(doc(db, "users", currentUser.uid, "tasks", dbId));
-    } catch (e) {
-        console.error("Error deleting task:", e);
-    }
-};
-
-function renderTasksUI() {
-    const tasksContainer = document.getElementById('tasks-container');
-    if (!tasksContainer) return;
-
-    if (tasks.length === 0) {
-        tasksContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 1rem;">No deadlines added yet. Add assignments or exams above!</div>`;
-        return;
-    }
-
-    let tasksHTML = '';
-    tasks.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    tasks.forEach(task => {
-        const today = new Date();
-        const dueDate = new Date(task.date);
-        const diffTime = dueDate - today;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        let badgeColor = task.type === 'Exam' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(56, 189, 248, 0.15)';
-        let badgeTextColor = task.type === 'Exam' ? '#ef4444' : '#38bdf8';
-        let timeText = '';
-
-        if (diffDays < 0) {
-            timeText = `<span style="color: #ef4444; font-weight: 500;">Overdue by ${Math.abs(diffDays)} days</span>`;
-        } else if (diffDays === 0) {
-            timeText = `<span style="color: #f59e0b; font-weight: 500;">Due Today!</span>`;
-        } else {
-            timeText = `<span style="color: var(--text-muted);">Due in ${diffDays} days (${task.date})</span>`;
-        }
-
-        tasksHTML += `
-            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); border: 1px solid var(--input-border); padding: 10px 14px; border-radius: 0.5rem; gap: 10px; flex-wrap: wrap;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="background: ${badgeColor}; color: ${badgeTextColor}; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase;">${task.type}</span>
-                    <b style="font-size: 0.9rem; color: var(--text-color);">${task.name}</b>
-                </div>
-                <div style="display: flex; align-items: center; gap: 15px; font-size: 0.8rem;">
-                    ${timeText}
-                    <button onclick="removeTask('${task.dbId}')" class="btn-remove" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Done</button>
-                </div>
-            </div>
-        `;
-    });
-
-    tasksContainer.innerHTML = tasksHTML;
-}
-
-function getActiveSubjects() {
-    const activeMode = getActiveMode();
-    return allSubjects.filter(sub => (sub.mode || 'horizon') === activeMode);
 }
 
 window.editSubject = function(dbId) {
