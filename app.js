@@ -830,6 +830,8 @@ function determineDegreeClass(cgpa) {
 function getStatusAdvice(gradeText) {
     if (gradeText.includes("Repeat")) return '<br><small style="color: #f87171;">Repeat Subject</small>';
     if (gradeText === "NC-C" || gradeText === "F") return '<br><small style="color: #f87171;">Retake Exam & C/A</small>';
+    if (gradeText === "NC-E" || gradeText === "NE") return '<br><small style="color: #f87171;">Retake Exam</small>';
+    if (gradeText === "Absent" || gradeText === "Medical") return '<br><small style="color: #f87171;">Retake Exam</small>';
     return "";
 }
 
