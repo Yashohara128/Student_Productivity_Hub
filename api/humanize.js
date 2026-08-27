@@ -26,7 +26,6 @@ module.exports = async function handler(req, res) {
             return res.status(500).json({ error: 'GROQ_API_KEY is not set in environment variables' });
         }
 
-        // Groq API Endpoint (Using Llama 3.3 - Blazing fast & High Quality)
         const url = 'https://api.groq.com/openai/v1/chat/completions';
 
         const prompt = `Act as an expert human academic researcher, author, and senior editor. Completely rewrite the following text to make it 100% human-authored, highly engaging, and completely undetectable by AI detectors like Turnitin, GPTZero, and Copyleaks.
@@ -47,7 +46,7 @@ ${text}`;
                 "Authorization": `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: "llama-3.3-70b-versatile",
+                model: "llama-3.1-70b-versatile", // නිවැරදි මෝඩල් නම මෙන්න මෙහෙමයි
                 messages: [
                     { role: "user", content: prompt }
                 ],
