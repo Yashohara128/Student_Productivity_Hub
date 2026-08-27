@@ -1,5 +1,5 @@
 // ==========================================
-// STUDENT PRODUCTIVITY HUB - APP.JS (FINAL & BROWSER NOTIFICATIONS READY)
+// STUDENT PRODUCTIVITY HUB - APP.JS (WHATSAPP NOTIFICATIONS READY)
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -114,29 +114,47 @@ function updateDynamicGreeting(userName) {
     greetingEl.innerHTML = `${emoji} ${timeGreeting}, <span style="color: var(--text-color); font-weight: 600;">${userName}</span>! <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 2px;">📅 ${formattedDate}</span>`;
 }
 
-// --- Browser Push Notification System (Stable & Fixed) ---
+// --- WhatsApp Alert Function ---
+async function sendWhatsAppAlert(phoneNo, taskName, taskType, dueDate) {
+    const apiKey = "YOUR_CALLMEBOT_API_KEY"; // CallMeBot API කී එක මෙහි දාන්න
+    const message = encodeURIComponent(`⏰ Deadline Reminder!\n\nYour ${taskType} "${taskName}" is due on ${dueDate}. Please complete it on time!`);
+
+    try {
+        const res = await fetch(`https://api.callmebot.com/whatsapp.php?phone=${phoneNo}&text=${message}&apikey=${apiKey}`);
+        if (res.ok) {
+            console.log("WhatsApp alert sent successfully!");
+        }
+    } catch (err) {
+        console.error("WhatsApp error:", err);
+    }
+}
+
+// --- Browser Push & WhatsApp Notification System ---
 let notifiedTasks = new Set(); 
 
 function checkDeadlineNotifications() {
-    if (!("Notification" in window)) {
-        console.log("This browser does not support desktop notification");
-        return;
-    }
+    if (!("Notification" in window)) return;
 
     if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-        Notification.requestPermission().then(permission => {
-            if (permission === "granted") {
-                new Notification("🎉 Notifications Enabled!", {
-                    body: "You will now receive deadline alerts for your tasks.",
-                    icon: "https://cdn-icons-png.flaticon.com/512/2921/2921222.png"
-                });
-            }
-        });
+        Notification.requestPermission();
     }
 
-    setInterval(() => {
+    setInterval(async () => {
         const now = new Date();
         if (!tasks || tasks.length === 0) return;
+
+        // යූසර්ගේ ඩේටාබේස් එකෙන් WhatsApp නම්බර් එක ලබාගැනීම
+        let userWhatsapp = null;
+        if (currentUser) {
+            try {
+                const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+                if (userDoc.exists()) {
+                    userWhatsapp = userDoc.data().whatsapp;
+                }
+            } catch (e) {
+                console.error("Error fetching whatsapp number:", e);
+            }
+        }
 
         tasks.forEach(task => {
             if (!task.date || !task.time) return;
@@ -146,6 +164,7 @@ function checkDeadlineNotifications() {
 
             // හරියටම පැයකට කලින් (විනාඩි 60 තිබියදී) සහ මීට පෙර නොටිෆයි කර නැත්නම්
             if (diffMinutes === 60 && !notifiedTasks.has(task.dbId)) {
+                // 1. Browser Notification
                 if (Notification.permission === "granted") {
                     new Notification("⏰ Deadline Reminder!", {
                         body: `Your ${task.type} "${task.name}" is due in 1 hour (${task.time})!`,
@@ -153,6 +172,12 @@ function checkDeadlineNotifications() {
                         requireInteraction: true
                     });
                 }
+
+                // 2. WhatsApp Notification
+                if (userWhatsapp) {
+                    sendWhatsAppAlert(userWhatsapp, task.name, task.type, `${task.date} at ${task.time}`);
+                }
+
                 notifiedTasks.add(task.dbId);
             }
         });
@@ -601,6 +626,31 @@ async function loadGlobalReviews() {
         console.error("Error loading reviews:", error);
         modalReviewsContainer.innerHTML = `<div style="text-align: center; color: #ef4444; font-size: 0.8rem;">Failed to load reviews.</div>`;
     }
+}
+
+// --- WHATSAPP NUMBER SAVING LOGIC ---
+const saveWhatsappBtn = document.getElementById('save-whatsapp-btn');
+const whatsappInput = document.getElementById('whatsapp-input');
+
+if (saveWhatsappBtn) {
+    saveWhatsappBtn.addEventListener('click', async () => {
+        if (!currentUser) return;
+        const phoneNo = whatsappInput.value.trim();
+        if (!phoneNo) {
+            alert("⚠️ Please enter a valid WhatsApp number!");
+            return;
+        }
+
+        try {
+            const userRef = doc(db, "users", currentUser.uid);
+            await updateDoc(userRef, { whatsapp: phoneNo });
+            alert("✅ WhatsApp number saved successfully!");
+        } catch (e) {
+            const userRef = doc(db, "users", currentUser.uid);
+            await setDoc(userRef, { whatsapp: phoneNo }, { merge: true });
+            alert("✅ WhatsApp number saved successfully!");
+        }
+    });
 }
 
 // --- TASK & DEADLINE MANAGER ---
@@ -1225,285 +1275,5 @@ if (downloadPdfBtn) {
         doc.text(`Predicted Class: ${prediction}`, 25, yPos + 16);
 
         doc.save(`Transcript_${name.replace(/\s+/g, '_')}.pdf`);
-    });
-}
-
-function calculateSemesterGPA(year, semester) {
-    const activeSubjects = getActiveSubjects();
-    let totalCredits = 0;
-    let totalPoints = 0;
-    activeSubjects.filter(s => s.year == year && s.semester == semester).forEach(sub => {
-        if (sub.gradePoint !== -1) {
-            totalCredits += sub.credit;
-            totalPoints += (sub.credit * sub.gradePoint);
-        }
-    });
-    if (totalCredits === 0) return "0.00";
-    return (totalPoints / totalCredits).toFixed(2);
-}
-
-function calculateYearGPA(year) {
-    const activeSubjects = getActiveSubjects();
-    let totalCredits = 0;
-    let totalPoints = 0;
-    activeSubjects.filter(s => s.year == year).forEach(sub => {
-        if (sub.gradePoint !== -1) {
-            totalCredits += sub.credit;
-            totalPoints += (sub.credit * sub.gradePoint);
-        }
-    });
-    if (totalCredits === 0) return "0.00";
-    return (totalPoints / totalCredits).toFixed(2);
-}
-
-function calculateOverallCGPA() {
-    const activeSubjects = getActiveSubjects();
-    let totalCredits = 0;
-    let totalPoints = 0;
-    activeSubjects.forEach(sub => {
-        if (sub.gradePoint !== -1) {
-            totalCredits += sub.credit;
-            totalPoints += (sub.credit * sub.gradePoint);
-        }
-    });
-    if (totalCredits === 0) return 0.00;
-    return (totalPoints / totalCredits).toFixed(2);
-}
-
-function determineDegreeClass(cgpa) {
-    if (cgpa >= CLASS_THRESHOLDS.FIRST_CLASS) return "First Class";
-    if (cgpa >= CLASS_THRESHOLDS.SECOND_UPPER) return "Second Class (Upper)";
-    if (cgpa >= CLASS_THRESHOLDS.SECOND_LOWER) return "Second Class (Lower)";
-    if (cgpa >= CLASS_THRESHOLDS.PASS) return "Pass";
-    return "Below Pass mark (< 2.00)";
-}
-
-function getStatusAdvice(gradeText) {
-    if (gradeText.includes("Repeat")) return '<br><small style="color: #f87171;">Repeat Subject - Not included in GPA calculation</small>';
-    if (gradeText === "NC-C") return '<br><small style="color: #f87171;">Please Complete Your Exam & C/A Next Attempt</small>';
-    if (gradeText === "NC-E") return '<br><small style="color: #fbbf24;">Please Complete Your Exam Next Attempt</small>';
-    if (gradeText === "NE") return '<br><small style="color: #60a5fa;">Please Complete Your Exam & CA Next Attempt. Keep Your Attendance Upto 80%</small>';
-    if (gradeText === "F") return '<br><small style="color: #f87171;">Please Complete Your Exam & C/A Next Attempt</small>';
-    return "";
-}
-
-function renderGPAChart() {
-    const activeSubjects = getActiveSubjects();
-    const ctx = document.getElementById('gpaChart');
-    if (!ctx) return;
-
-    let labels = [];
-    let semGPAs = [];
-    let cumulativeGPAs = [];
-
-    const years = [1, 2, 3, 4];
-    years.forEach(year => {
-        [1, 2].forEach(sem => {
-            const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
-            if (semSubs.length > 0) {
-                labels.push(`Y${year} S${sem}`);
-                
-                let creds = 0, pts = 0;
-                semSubs.forEach(sub => {
-                    if (sub.gradePoint !== -1) {
-                        creds += sub.credit;
-                        pts += (sub.credit * sub.gradePoint);
-                    }
-                });
-                let sGPA = creds > 0 ? (pts / creds) : 0;
-                semGPAs.push(sGPA.toFixed(2));
-            }
-        });
-    });
-
-    let totalC = 0, totalP = 0;
-    years.forEach(year => {
-        [1, 2].forEach(sem => {
-            const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
-            if (semSubs.length > 0) {
-                semSubs.forEach(sub => {
-                    if (sub.gradePoint !== -1) {
-                        totalC += sub.credit;
-                        totalP += (sub.credit * sub.gradePoint);
-                    }
-                });
-                let cGPA = totalC > 0 ? (totalP / totalC) : 0;
-                cumulativeGPAs.push(cGPA.toFixed(2));
-            }
-        });
-    });
-
-    const isLight = document.body.classList.contains('light-mode');
-    const textColor = isLight ? '#0f172a' : '#e2e8f0';
-    const gridColor = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.05)';
-
-    if (myChart) {
-        myChart.destroy();
-    }
-
-    myChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Semester GPA',
-                    data: semGPAs,
-                    borderColor: '#a855f7',
-                    backgroundColor: 'rgba(168, 85, 247, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.3,
-                    fill: true
-                },
-                {
-                    label: 'Cumulative CGPA',
-                    data: cumulativeGPAs,
-                    borderColor: '#38bdf8',
-                    backgroundColor: 'rgba(56, 189, 248, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.3,
-                    fill: true
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    labels: { color: textColor, font: { family: 'Poppins' } }
-                }
-            },
-            scales: {
-                y: {
-                    min: 0,
-                    max: 4.3,
-                    grid: { color: gridColor },
-                    ticks: { color: textColor, font: { family: 'Poppins' } }
-                },
-                x: {
-                    grid: { color: gridColor },
-                    ticks: { color: textColor, font: { family: 'Poppins' } }
-                }
-            }
-        }
-    });
-}
-
-function updateUI() {
-    const activeSubjects = getActiveSubjects();
-    const overallCGPA = calculateOverallCGPA();
-    const currentGPA = parseFloat(overallCGPA);
-    const cgpaDisplay = document.getElementById('cgpa-display');
-    const classDisplay = document.getElementById('class-display');
-
-    if (cgpaDisplay) cgpaDisplay.innerText = overallCGPA;
-    
-    if (activeSubjects.length > 0) {
-        if (classDisplay) classDisplay.innerText = determineDegreeClass(currentGPA);
-    } else {
-        if (classDisplay) classDisplay.innerText = "Pending...";
-    }
-
-    const goalContent = document.getElementById('goal-content');
-    if (goalContent) {
-        const thresholds = [
-            { name: "Pass", min: CLASS_THRESHOLDS.PASS },
-            { name: "Second Class (Lower)", min: CLASS_THRESHOLDS.SECOND_LOWER },
-            { name: "Second Class (Upper)", min: CLASS_THRESHOLDS.SECOND_UPPER },
-            { name: "First Class", min: CLASS_THRESHOLDS.FIRST_CLASS }
-        ];
-
-        let goalsHTML = '';
-        thresholds.forEach(t => {
-            const isActive = currentGPA >= t.min;
-            const diff = (t.min - currentGPA).toFixed(2);
-            goalsHTML += `
-                <div class="goal-item ${isActive ? 'goal-active' : ''}">
-                    <div>${isActive ? '✅' : '🎯'} <b>${t.name} (>= ${t.min.toFixed(2)})</b></div>
-                    ${!isActive ? `<small style="color:#38bdf8; margin-top: 2px;">Need <b>${diff}</b> more GPA points to reach this target</small>` : `<small style="color:#22c55e; margin-top: 2px;">Target Achieved!</small>`}
-                </div>
-            `;
-        });
-        goalContent.innerHTML = goalsHTML;
-    }
-
-    renderGPAChart();
-
-    const container = document.getElementById('academic-container');
-    if (!container) return;
-    container.innerHTML = '';
-
-    if (activeSubjects.length === 0) {
-        container.innerHTML = `<div class="glass-card empty-state" style="text-align: center; color: var(--text-muted); padding: 2rem;">No subjects added in this profile yet. Select Year & Semester to start tracking!</div>`;
-        return;
-    }
-
-    const years = [1, 2, 3, 4];
-
-    years.forEach(year => {
-        const yearSubjects = activeSubjects.filter(s => s.year == year);
-        if (yearSubjects.length === 0) return;
-
-        const yearGPA = calculateYearGPA(year);
-
-        let yearHTML = `
-            <div class="glass-card year-card">
-                <div class="year-header">
-                    <div class="year-title">Year ${year}</div>
-                    <div style="font-size: 1rem; font-weight: 500;">Year GPA: <span style="color: #38bdf8; font-weight: 600;">${yearGPA}</span></div>
-                </div>`;
-
-        const semesters = [1, 2];
-        semesters.forEach(sem => {
-            const semSubjects = activeSubjects.filter(s => s.year == year && s.semester == sem);
-            if (semSubjects.length === 0) return;
-
-            const semGPA = calculateSemesterGPA(year, sem);
-
-            yearHTML += `
-                <div class="semester-box">
-                    <div class="semester-header">
-                        <div class="semester-title">Semester ${sem}</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted);">Semester GPA: <span style="color: #a855f7; font-weight: 600;">${semGPA}</span></div>
-                    </div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Subject Name</th>
-                                    <th>Credits</th>
-                                    <th>Grade Point / Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>`;
-
-            semSubjects.forEach(sub => {
-                let displayGrade = sub.gradePoint === -1 
-                    ? sub.gradeText + getStatusAdvice(sub.gradeText) 
-                    : sub.gradePoint.toFixed(2);
-
-                yearHTML += `
-                    <tr>
-                        <td>${sub.name}</td>
-                        <td>${sub.credit}</td>
-                        <td style="line-height: 1.3; padding: 8px 0;">${displayGrade}</td>
-                        <td>
-                            <button onclick="editSubject('${sub.dbId}')" class="btn-edit">Edit</button>
-                            <button onclick="removeSubject('${sub.dbId}')" class="btn-remove">Remove</button>
-                        </td>
-                    </tr>`;
-            });
-
-            yearHTML += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>`;
-        });
-
-        yearHTML += `</div>`;
-        container.innerHTML += yearHTML;
     });
 }
