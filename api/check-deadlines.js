@@ -11,7 +11,6 @@ if (!admin.apps.length) {
             credential: admin.credential.cert({
                 projectId: process.env.FIREBASE_PROJECT_ID,
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                // Private key එකේ නව රේඛා (\n) නිවැරදිව හැසිරවීම සඳහා
                 privateKey: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined
             })
         });
@@ -27,35 +26,43 @@ export default async function handler(req, res) {
         const now = new Date();
         console.log("Background deadline check running at:", now.toISOString());
 
-        // සියලුම යූසර්වරුන්ගේ tasks එකතු කිරීම සඳහා Collection Group Query එක භාවිත කරයි
         const tasksSnapshot = await db.collectionGroup('tasks').get();
         let notificationsSentCount = 0;
 
         for (const docSnap of tasksSnapshot.docs) {
             const task = docSnap.data();
             
-            // ඩේට්, ටයිම් නැත්නම් හෝ කලින් නොටිෆිකේෂන් යවා ඇත්නම් ස්කිප් කරයි
-            if (!task.date || !task.time || task.cronNotificationSent) continue;
+            if (!task.date || !task.time) continue;
 
             const dueDateTime = new Date(`${task.date}T${task.time}:00`);
             const diffMinutes = Math.floor((dueDateTime - now) / (1000 * 60));
 
-            // හරියටම පැයට කලින් (විනාඩි 58ත් 62ත් අතර කාලය තුළ)
-            if (diffMinutes >= 58 && diffMinutes <= 62) {
-                const userId = task.userId; // Task එක දාපු යුසර්ගේ ID එක (သို့ත් parent document path එකෙන් ගන්න පුළුවන්)
+            let notificationType = null; // 'dayBefore' හෝ 'fiveHours'
+            let messageContent = "";
+
+            // 1. 📅 දවසකට කලින් (පැය 24කට ආසන්න වෙලාවකදී - විනාඩි 1420ත් 1460ත් අතර)
+            if (!task.dayBeforeSent && diffMinutes >= 1420 && diffMinutes <= 1460) {
+                notificationType = 'dayBefore';
+                messageContent = `📅 *1-Day Deadline Reminder*\n\nHi!\nYour task *"${task.name}"* (${task.type}) is due tomorrow (${task.date} at ${task.time}).\n\nMake sure to complete it on time! ⏳`;
+            }
+            // 2. 🚨 පැය 5කට කලින් (විනාඩි 280ත් 320ත් අතර)
+            else if (!task.fiveHoursBeforeSent && diffMinutes >= 280 && diffMinutes <= 320) {
+                notificationType = 'fiveHours';
+                messageContent = `🚨 *Urgent! 5-Hour Deadline Alert*\n\nHi!\nYour task *"${task.name}"* (${task.type}) is due in *5 hours* today (${task.date} at ${task.time}).\n\nHurry up and finish it! 🚀`;
+            }
+
+            // යවන්න මැසේජ් එකක් තියෙනවා නම් පමණක් ඉදිරියට යයි
+            if (notificationType && messageContent) {
                 let userEmail = task.userEmail;
                 let userWhatsapp = null;
 
-                // යුසර්ගේ ප්‍රොෆයිල් එකෙන් WhatsApp නම්බර් එක ලබා ගැනීම (Firestore users/{userId} එකෙන්)
-                // සමහරවිට task එක ඇතුළෙම whatsapp number එක සේව් කරලා තියෙනවා නම් task.whatsapp ගන්නත් පුළුවන්.
                 try {
-                    // Task එකේ parent path එකෙන් හෝ user collection එකෙන් user data ගන්නවා
                     const pathSegments = docSnap.ref.path.split('/'); // users/{userId}/tasks/{taskId}
                     if (pathSegments.length >= 2) {
                         const actualUserId = pathSegments[1];
                         const userDoc = await db.collection('users').doc(actualUserId).get();
                         if (userDoc.exists) {
-                            userWhatsapp = userDoc.data().whatsappNumber; // අපි ෆ්‍රන්ට්එන්ඩ් එකෙන් save කරන field name එක මෙතනට දෙන්න
+                            userWhatsapp = userDoc.data().whatsappNumber;
                         }
                     }
                 } catch (err) {
@@ -74,9 +81,9 @@ export default async function handler(req, res) {
                         },
                         body: JSON.stringify({
                             access_key: process.env.WEB3FORMS_ACCESS_KEY || "bb33cf20-7257-424a-933e-384723d7e936",
-                            subject: `⏰ Deadline Reminder: ${task.type} - ${task.name}`,
+                            subject: `⏰ [${notificationType === 'dayBefore' ? '1-Day Notice' : '5-Hour Urgent'}] ${task.type} - ${task.name}`,
                             email: userEmail,
-                            message: `Hello!\n\nThis is an automated background reminder for your upcoming academic task:\n\n• Task Name: ${task.name}\n• Type: ${task.type}\n• Due Date: ${task.date} at ${task.time}\n\nPlease complete it on time.\n\nBest regards,\nStudent Productivity Hub`
+                            message: messageContent.replace(/\*/g, '') // Email එකට boldකුත් නැතිව plain text යැවීමට
                         })
                     });
                     const emailResult = await emailResponse.json();
@@ -90,12 +97,10 @@ export default async function handler(req, res) {
 
                     if (instanceId && token) {
                         const url = `https://api.ultramsg.com/${instanceId}/messages/chat`;
-                        const customMessage = `🔔 *Student Productivity Hub Alert*\n\nHi!\nThis is a friendly reminder for your upcoming task:\n\n• *Task:* ${task.name}\n• *Type:* ${task.type}\n• *Due:* ${task.date} at ${task.time}\n\nPlease complete it on time! 🚀`;
-
                         const bodyParams = new URLSearchParams({
                             token: token,
-                            to: userWhatsapp, // e.g. 94762068122
-                            body: customMessage
+                            to: userWhatsapp,
+                            body: messageContent
                         });
 
                         try {
@@ -107,7 +112,7 @@ export default async function handler(req, res) {
                             const waResult = await waResponse.json();
                             if (waResult.sent === "true" || waResult.message === "ok") {
                                 successFlag = true;
-                                console.log("WhatsApp alert sent successfully to:", userWhatsapp);
+                                console.log(`WhatsApp (${notificationType}) sent successfully to:`, userWhatsapp);
                             }
                         } catch (waErr) {
                             console.error("WhatsApp API Error:", waErr);
@@ -115,10 +120,14 @@ export default async function handler(req, res) {
                     }
                 }
 
-                // ඊමේල් හෝ වට්ස්ඇප් එකක් හරි සාර්ථක වුණා නම් නැවත නොයෑමට ටැග් කරයි
+                // යැවීම සාර්ථක නම් අදාළ ටයිප් එකට අදාළව ෆ්ලැග් එක සේව් කරයි (නැවත එම ಅಲර්ට් එකම නොයෑමට)
                 if (successFlag) {
                     notificationsSentCount++;
-                    await docSnap.ref.update({ cronNotificationSent: true });
+                    if (notificationType === 'dayBefore') {
+                        await docSnap.ref.update({ dayBeforeSent: true });
+                    } else if (notificationType === 'fiveHours') {
+                        await docSnap.ref.update({ fiveHoursBeforeSent: true });
+                    }
                 }
             }
         }
