@@ -26,7 +26,8 @@ module.exports = async function handler(req, res) {
             return res.status(500).json({ error: 'GEMINI_API_KEY is not set in environment variables' });
         }
 
-        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        // මෙතන v1 වෙනුවට v1beta දැම්මා
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
         const prompt = `Act as an expert human academic researcher, author, and senior editor. Completely rewrite the following text to make it 100% human-authored, highly engaging, and completely undetectable by AI detectors like Turnitin, GPTZero, and Copyleaks.
 
@@ -57,7 +58,6 @@ ${text}`;
         });
 
         const data = await response.json();
-        console.log("Gemini API Response:", JSON.stringify(data));
 
         if (data.error) {
             return res.status(500).json({ error: data.error.message || 'Gemini API returned an error' });
