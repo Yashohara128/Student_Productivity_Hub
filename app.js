@@ -1,5 +1,5 @@
 // ==========================================
-// STUDENT PRODUCTIVITY HUB - APP.JS (FINAL & CLEAN)
+// STUDENT PRODUCTIVITY HUB - APP.JS (COMPLETE & FINAL)
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -368,6 +368,121 @@ if (downloadHumanizedPdfBtn) {
         `);
         printWindow.document.close();
     });
+}
+
+// --- IN-APP REVIEW SYSTEM & MODAL LOGIC ---
+const reviewModal = document.getElementById('review-modal');
+const closeReviewModalBtn = document.getElementById('close-review-modal');
+const reviewNowButtons = document.querySelectorAll('.review-now-btn');
+
+reviewNowButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (reviewModal) {
+            reviewModal.style.display = 'flex';
+            loadGlobalReviews();
+        }
+    });
+});
+
+if (closeReviewModalBtn) {
+    closeReviewModalBtn.addEventListener('click', () => {
+        if (reviewModal) reviewModal.style.display = 'none';
+    });
+}
+
+window.addEventListener('click', (e) => {
+    if (e.target === reviewModal) {
+        reviewModal.style.display = 'none';
+    }
+});
+
+const modalSubmitReviewBtn = document.getElementById('modal-submit-review-btn');
+const modalReviewRating = document.getElementById('modal-review-rating');
+const modalReviewComment = document.getElementById('modal-review-comment');
+const modalReviewsContainer = document.getElementById('modal-reviews-container');
+
+if (modalSubmitReviewBtn) {
+    modalSubmitReviewBtn.addEventListener('click', async () => {
+        if (!currentUser) {
+            alert("⚠️ Please login with Google first to submit a review!");
+            return;
+        }
+
+        const comment = modalReviewComment.value.trim();
+        const rating = parseInt(modalReviewRating.value);
+
+        if (comment === "") {
+            alert("⚠️ Please write a short comment!");
+            modalReviewComment.focus();
+            return;
+        }
+
+        modalSubmitReviewBtn.innerText = "Submitting...";
+        modalSubmitReviewBtn.disabled = true;
+
+        try {
+            const reviewData = {
+                userName: currentUser.displayName || "Student",
+                userEmail: currentUser.email,
+                rating: rating,
+                comment: comment,
+                createdAt: new Date().toISOString()
+            };
+
+            await addDoc(collection(db, "global_reviews"), reviewData);
+
+            alert("✅ Thank you for your feedback!");
+            modalReviewComment.value = '';
+            modalReviewRating.selectedIndex = 0;
+            loadGlobalReviews();
+        } catch (error) {
+            console.error("Error submitting review:", error);
+            alert("❌ Failed to submit review. Please try again.");
+        } finally {
+            modalSubmitReviewBtn.innerText = "Submit Review";
+            modalSubmitReviewBtn.disabled = false;
+        }
+    });
+}
+
+async function loadGlobalReviews() {
+    if (!modalReviewsContainer) return;
+
+    try {
+        const querySnapshot = await getDocs(collection(db, "global_reviews"));
+        let reviewsList = [];
+
+        querySnapshot.forEach((doc) => {
+            reviewsList.push(doc.data());
+        });
+
+        reviewsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        if (reviewsList.length === 0) {
+            modalReviewsContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">No reviews yet. Be the first to review!</div>`;
+            return;
+        }
+
+        let html = '';
+        reviewsList.forEach(rev => {
+            let stars = '⭐'.repeat(rev.rating);
+            html += `
+                <div style="background: var(--input-bg); border: 1px solid var(--input-border); padding: 8px 10px; border-radius: 6px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
+                        <b style="color: var(--text-color);">${rev.userName}</b>
+                        <span>${stars}</span>
+                    </div>
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin: 3px 0 0 0;">${rev.comment}</p>
+                </div>
+            `;
+        });
+
+        modalReviewsContainer.innerHTML = html;
+    } catch (error) {
+        console.error("Error loading reviews:", error);
+        modalReviewsContainer.innerHTML = `<div style="text-align: center; color: #ef4444; font-size: 0.8rem;">Failed to load reviews.</div>`;
+    }
 }
 
 window.openPricingModal = function() {
