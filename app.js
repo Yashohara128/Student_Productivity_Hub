@@ -1,5 +1,5 @@
 // ==========================================
-// STUDENT PRODUCTIVITY HUB - APP.JS (COMPLETE & FINAL)
+// STUDENT PRODUCTIVITY HUB - APP.JS (FINAL & FULLY WORKING)
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -124,7 +124,7 @@ if (pdfUpload) {
     });
 }
 
-// --- GROQ AI / VERCEL SERVERLESS HUMANIZER LOGIC ---
+// --- GROQ AI HUMANIZER & PLAGIARISM LOGIC ---
 const checkPlagiarismBtn = document.getElementById('check-plagiarism-btn');
 const plagiarismText = document.getElementById('plagiarism-text');
 const plagiarismResult = document.getElementById('plagiarism-result');
@@ -297,7 +297,7 @@ if (copyHumanizedBtn) {
     });
 }
 
-// --- CLEAN ACADEMIC PDF DOWNLOAD (No Markdown tags, Times New Roman Font) ---
+// --- CLEAN ACADEMIC PDF DOWNLOAD (Times New Roman, No Markdown) ---
 if (downloadHumanizedPdfBtn) {
     downloadHumanizedPdfBtn.addEventListener('click', () => {
         const text = humanizedOutputText.value;
@@ -370,7 +370,7 @@ if (downloadHumanizedPdfBtn) {
     });
 }
 
-// --- IN-APP REVIEW SYSTEM & MODAL LOGIC ---
+// --- IN-APP REVIEW SYSTEM LOGIC ---
 const reviewModal = document.getElementById('review-modal');
 const closeReviewModalBtn = document.getElementById('close-review-modal');
 const reviewNowButtons = document.querySelectorAll('.review-now-btn');
@@ -485,6 +485,7 @@ async function loadGlobalReviews() {
     }
 }
 
+// --- PRICING & PAYHERE PAYMENT LOGIC ---
 window.openPricingModal = function() {
     const modal = document.getElementById('pricing-modal');
     if (modal) modal.style.display = 'flex';
@@ -543,6 +544,7 @@ window.startPayHerePayment = function(planName, amount, wordLimit) {
     payhere.startPayment(payment);
 };
 
+// --- GPA TRACKER & UNIVERSITY MODES ---
 const universitySelector = document.getElementById('university-selector');
 const profileOkBtn = document.getElementById('profile-ok-btn');
 const gradeSelect = document.getElementById('grade');
