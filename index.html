@@ -4,380 +4,276 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Productivity Hub & GPA Tracker</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=48">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Google Fonts & Chart.js -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PDF.js & jsPDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script type="text/javascript" src="https://www.payhere.lk/lib/payhere.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #e2e8f0;
+            --text-muted: #94a3b8;
+            --input-bg: #334155;
+            --input-border: #475569;
+            --primary: #38bdf8;
+            --primary-hover: #0ea5e9;
+        }
+
+        body.light-mode {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #0f172a;
+            --text-muted: #64748b;
+            --input-bg: #f1f5f9;
+            --input-border: #cbd5e1;
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--input-border);
+            border-radius: 0.5rem;
+            margin-bottom: 10px;
+        }
+
+        /* Login Section */
+        #login-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 80vh;
+            text-align: center;
+        }
+
+        /* Review Modal Styles */
+        #review-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+    </style>
 </head>
 <body>
-    
-    <div class="bg-glow circle-1"></div>
-    <div class="bg-glow circle-2"></div>
-
-    <div style="position: fixed; top: 15px; right: 20px; z-index: 9999;">
-        <select id="theme-selector" style="padding: 0.4rem 0.6rem; border-radius: 0.4rem; font-size: 0.75rem; cursor: pointer;">
-            <option value="system">🖥️ System</option>
-            <option value="dark">🌙 Dark</option>
-            <option value="light">☀️ Light</option>
-        </select>
-    </div>
-
-    <div id="pricing-modal" class="modal-overlay" style="display: none;">
-        <div class="glass-card modal-box" style="max-width: 600px;">
-            <h3 style="color: var(--heading-gradient-1); margin-bottom: 0.5rem;">⭐ Upgrade to Pro Plan</h3>
-            <p class="modal-desc" style="margin-bottom: 1.5rem;">Choose a package that fits your academic needs and unlock high-speed AI & Plagiarism scanning.</p>
-
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; text-align: left;">
-                <div style="background: var(--input-bg); border: 1px solid var(--input-border); padding: 1rem; border-radius: 0.5rem; display: flex; flex-direction: column; justify-content: space-between;">
-                    <div>
-                        <h4 style="color: #38bdf8; font-size: 1rem;">Basic Plan</h4>
-                        <p style="font-size: 1.25rem; font-weight: 600; margin: 5px 0;">Rs. 500 <span style="font-size: 0.7rem; color: var(--text-muted);">/mo</span></p>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.3;">• 20,000 Words / mo<br>• Plagiarism & AI Scan<br>• AI Humanizer</p>
-                    </div>
-                    <button onclick="startPayHerePayment('basic', 500, 20000)" class="btn-download" style="width: 100%; margin-top: 1rem; font-size: 0.75rem !important; justify-content: center;">Choose Basic</button>
-                </div>
-
-                <div style="background: var(--input-bg); border: 1px solid rgba(168, 85, 247, 0.4); padding: 1rem; border-radius: 0.5rem; display: flex; flex-direction: column; justify-content: space-between; position: relative;">
-                    <div style="position: absolute; top: -10px; right: 10px; background: #a855f7; color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: 600;">POPULAR</div>
-                    <div>
-                        <h4 style="color: #a855f7; font-size: 1rem;">Standard</h4>
-                        <p style="font-size: 1.25rem; font-weight: 600; margin: 5px 0;">Rs. 1,000 <span style="font-size: 0.7rem; color: var(--text-muted);">/mo</span></p>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.3;">• 30,000 Words / mo<br>• Priority Scanning<br>• Full AI Humanizer</p>
-                    </div>
-                    <button onclick="startPayHerePayment('standard', 1000, 30000)" class="btn-download" style="width: 100%; margin-top: 1rem; font-size: 0.75rem !important; justify-content: center; background: linear-gradient(to right, #9333ea, #a855f7) !important;">Choose Standard</button>
-                </div>
-
-                <div style="background: var(--input-bg); border: 1px solid rgba(34, 197, 94, 0.4); padding: 1rem; border-radius: 0.5rem; display: flex; flex-direction: column; justify-content: space-between;">
-                    <div>
-                        <h4 style="color: #22c55e; font-size: 1rem;">Unlimited</h4>
-                        <p style="font-size: 1.25rem; font-weight: 600; margin: 5px 0;">Rs. 2,500 <span style="font-size: 0.7rem; color: var(--text-muted);">/mo</span></p>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.3;">• Unlimited Words<br>• VIP Support<br>• All Pro Features</p>
-                    </div>
-                    <button onclick="startPayHerePayment('unlimited', 2500, 999999)" class="btn-download" style="width: 100%; margin-top: 1rem; font-size: 0.75rem !important; justify-content: center; background: linear-gradient(to right, #16a34a, #22c55e) !important;">Choose Unlimited</button>
-                </div>
-            </div>
-
-            <button onclick="closePricingModal()" class="btn-back" style="width: 100%;">Close</button>
-        </div>
-    </div>
-
-    <div id="review-modal" class="modal-overlay">
-        <div class="glass-card modal-box">
-            <h4 class="modal-title" style="margin-top:0;">👋 Welcome to Student Hub!</h4>
-            <p class="modal-desc" style="margin-top:1rem;">
-                Please drop a review or feedback via Google Form to help us improve. Need any updates or help? Contact me directly below!
-            </p>
-
-            <div class="modal-btn-group">
-                <a href="https://forms.gle/your-google-form-link" target="_blank" class="btn-review">⭐ Review Now</a>
-                <a href="https://wa.me/94762068122" target="_blank" class="btn-wa">💬 WhatsApp</a>
-                <a href="mailto:maleeshaganewatta@gmail.com" target="_blank" class="btn-email">✉️ Email</a>
-            </div>
-
-            <button id="close-modal-btn" class="btn-gotit">Got it!</button>
-        </div>
-    </div>
 
     <div class="container">
-        
-        <div id="login-section" class="glass-card login-card">
-            <h1>Welcome to Student Productivity Hub</h1>
-            <p class="login-sub">Please login with Google to access your academic tools</p>
-            
-            <button id="login-btn" class="btn-google">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width: 22px;">
-                Login with Google
-            </button>
+
+        <!-- 1. LOGIN SECTION -->
+        <div id="login-section" class="glass-card">
+            <h1 style="margin-bottom: 1rem;">Student Productivity Hub</h1>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Manage your GPA, Deadlines, and Humanize your Assignments seamlessly.</p>
+            <button id="login-btn" class="btn-primary">Login with Google</button>
         </div>
 
+        <!-- 2. MAIN APP SECTION -->
         <div id="app-section" style="display: none;">
             
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding: 0.5rem 0; border-bottom: 1px solid var(--card-border);">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <h3 style="font-size: 1rem; color: var(--heading-gradient-1);">👋 Welcome, <span id="user-name">Student</span>!</h3>
-                    <button onclick="openPricingModal()" class="btn-review" style="font-size: 0.7rem; padding: 0.2rem 0.6rem; cursor: pointer;">⭐ Upgrade Plan</button>
-                </div>
-                <div>
-                    <button id="logout-btn" style="background: none; border: 1px solid rgba(239, 68, 68, 0.5); color: #ef4444; padding: 0.3rem 0.8rem; border-radius: 0.4rem; cursor: pointer; font-size: 0.75rem;">Logout</button>
-                </div>
-            </div>
-
-            <div id="dashboard-hub" style="display: block;">
-                <div style="text-align: center; margin-bottom: 2.5rem;">
-                    <h1 style="font-size: 2.2rem; font-weight: 600; background: linear-gradient(to right, var(--heading-gradient-1), var(--heading-gradient-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px;">Student Productivity Hub</h1>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Select a tool below to get started with your academic tracking</p>
-                </div>
-
-                <div class="feature-cards-grid">
-                    <div class="glass-card feature-card" id="card-gpa">
-                        <div style="font-size: 2.5rem; margin-bottom: 1rem;">🎓</div>
-                        <h2>GPA & Class Tracker</h2>
-                        <p>Calculate your semester GPAs, track cumulative CGPA, analyze progress with charts, and generate professional PDF transcripts.</p>
-                        <button class="btn-launch">Open Tracker ➔</button>
-                    </div>
-
-                    <div class="glass-card feature-card" id="card-deadline">
-                        <div style="font-size: 2.5rem; margin-bottom: 1rem;">⏰</div>
-                        <h2>Deadline & Exam Tracker</h2>
-                        <p>Keep track of your upcoming university assignments, project deadlines, and exam dates with real-time countdown alerts.</p>
-                        <button class="btn-launch">Open Tracker ➔</button>
-                    </div>
-
-                    <div class="glass-card feature-card" id="card-plagiarism">
-                        <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔍</div>
-                        <h2>Plagiarism & AI Humanizer</h2>
-                        <p>Scan your essay drafts for originality and instantly humanize robotic or flagged text to sound 100% natural and unique.</p>
-                        <button class="btn-launch">Open Checker ➔</button>
-                    </div>
+            <!-- Top Bar -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2>Welcome, <span id="user-name" style="color: var(--primary);">Student</span>!</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <select id="theme-selector" style="width: auto; margin: 0;">
+                        <option value="system">System Theme</option>
+                        <option value="light">Light Mode</option>
+                        <option value="dark">Dark Mode</option>
+                    </select>
+                    <button id="logout-btn" style="padding: 8px 15px; background: #ef4444; color: #fff; border: none; border-radius: 6px; cursor: pointer;">Logout</button>
                 </div>
             </div>
 
-            <div id="view-gpa" class="sub-interface" style="display: none;">
-                <div style="margin-bottom: 1.5rem;">
-                    <button class="btn-back" id="back-to-hub-gpa">⬅ Back to Dashboard</button>
-                </div>
-
-                <div class="header">
-                    <h1>🎓 GPA & Class Tracker</h1>
+            <!-- Dashboard Hub Views -->
+            <div id="dashboard-hub">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
                     
-                    <div style="margin: 10px auto; max-width: 380px;">
-                        <select id="university-selector" style="padding: 0.6rem; border-radius: 0.5rem; font-size: 0.85rem; width: 100%; cursor: pointer;">
-                            <option value="horizon" selected>Horizon Campus Student (Auto Grading)</option>
-                            <option value="other">Other University Student (Select Grade & Custom Point)</option>
-                        </select>
+                    <!-- Card 1: GPA Tracker -->
+                    <div id="card-gpa" class="glass-card" style="cursor: pointer; text-align: center;">
+                        <h3>📊 GPA & Class Tracker</h3>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px;">Track semesters, calculate CGPA & predict class.</p>
                     </div>
 
-                    <div style="margin: 10px auto; max-width: 380px; display: flex; gap: 8px;">
-                        <input type="text" id="degree-name" placeholder="Enter Degree Name" style="flex: 1;">
-                        <button id="profile-ok-btn" class="btn-download" style="margin-top: 0; padding: 0.5rem 1.2rem !important; cursor: pointer;">OK</button>
+                    <!-- Card 2: Deadlines -->
+                    <div id="card-deadline" class="glass-card" style="cursor: pointer; text-align: center;">
+                        <h3>⏰ Exam & Task Deadlines</h3>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px;">Manage assignments and track exam countdowns.</p>
                     </div>
 
-                    <div style="margin-top: 15px;">
-                        <button id="download-pdf" class="btn-download">🎓 Download Your GPA Certificate</button>
-                    </div>
-                </div>
-
-                <div class="dashboard">
-                    <div class="glass-card dash-box">
-                        <h2>Overall Cumulative CGPA</h2>
-                        <p id="cgpa-display" class="highlight-text">0.00</p>
-                    </div>
-                    <div class="glass-card dash-box">
-                        <h2>Overall Predicted Class</h2>
-                        <p id="class-display" class="class-text">Pending...</p>
+                    <!-- Card 3: Plagiarism & Humanizer -->
+                    <div id="card-plagiarism" class="glass-card" style="cursor: pointer; text-align: center;">
+                        <h3>🤖 AI Humanizer & Plagiarism</h3>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px;">Scan plagiarism and rewrite AI text via Groq AI.</p>
                     </div>
                 </div>
 
-                <div id="goal-section" class="glass-card form-section">
-                    <h3>Academic Goals & Next Class Tracker</h3>
-                    <div id="goal-content"></div>
-                </div>
-
-                <div class="glass-card form-section">
-                    <h3>📈 CGPA & Semester Progress Analytics</h3>
-                    <div style="position: relative; height: 260px; width: 100%;">
-                        <canvas id="gpaChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="glass-card form-section">
-                    <h3 id="form-title">Add New Subject</h3>
-                    <div class="form-grid">
-                        <input type="text" id="subject-name" placeholder="Subject Name (E.g. Data Structures)">
-                        
-                        <select id="subject-year">
-                            <option value="" disabled selected>Select Year</option>
-                            <option value="1">1st Year</option>
-                            <option value="2">2nd Year</option>
-                            <option value="3">3rd Year</option>
-                            <option value="4">4th Year</option>
-                        </select>
-
-                        <select id="subject-semester">
-                            <option value="" disabled selected>Select Semester</option>
-                            <option value="1">1st Semester</option>
-                            <option value="2">2nd Semester</option>
-                        </select>
-
-                        <select id="credit">
-                            <option value="" disabled selected>Credits</option>
-                            <option value="1">1 Credit</option>
-                            <option value="2">2 Credits</option>
-                            <option value="3">3 Credits</option>
-                            <option value="4">4 Credits</option>
-                            <option value="5">5 Credits</option>
-                            <option value="6">6 Credits</option>
-                        </select>
-
-                        <select id="grade">
-                            <option value="" disabled selected>Grade</option>
-                            <option value="4.00">A+ (4.00)</option>
-                            <option value="4.00">A (4.00)</option>
-                            <option value="3.70">A- (3.70)</option>
-                            <option value="3.30">B+ (3.30)</option>
-                            <option value="3.00">B (3.00)</option>
-                            <option value="2.70">B- (2.70)</option>
-                            <option value="2.30">C+ (2.30)</option>
-                            <option value="2.00">C (2.00)</option>
-                            <option value="1.70">C- (1.70)</option>
-                            <option value="1.30">D+ (1.30)</option>
-                            <option value="1.00">D (1.00)</option>
-                            <option value="0.00">E (0.00)</option>
-                            <option value="-1">NC-C</option>
-                            <option value="-1">NC-E</option>
-                            <option value="-1">NE</option>
-                            <option value="-1">F</option>
-                        </select>
-
-                        <div id="other-uni-box" style="display: none; grid-column: 1 / -1; gap: 10px;">
-                            <select id="other-grade-letter" style="flex: 1;">
-                                <option value="" disabled selected>Select Grade (A to F / Repeat)</option>
-                                <option value="A+">A+</option>
-                                <option value="A">A</option>
-                                <option value="A-">A-</option>
-                                <option value="B+">B+</option>
-                                <option value="B">B</option>
-                                <option value="B-">B-</option>
-                                <option value="C+">C+</option>
-                                <option value="C">C</option>
-                                <option value="C-">C-</option>
-                                <option value="D+">D+</option>
-                                <option value="D">D</option>
-                                <option value="E">E</option>
-                                <option value="F">F (Fail)</option>
-                                <option value="Repeat">Repeat (RA / Absent)</option>
-                            </select>
-                            <input type="number" step="0.01" id="custom-grade-point" placeholder="Enter Grade Point (e.g. 4.0, 3.7)" style="flex: 1;">
-                        </div>
-                    </div>
-                    <button id="add-btn" class="btn-add">Add to List</button>
-                </div>
-
-                <div id="academic-container"></div>
-
-                <div class="glass-card form-section reset-card">
-                    <h3>GPA Data Management & Reset Options</h3>
-                    <div class="reset-grid">
-                        <div>
-                            <h4>Erase Specific Semester</h4>
-                            <div class="erase-select-group">
-                                <select id="erase-year">
-                                    <option value="" disabled selected>Year</option>
-                                    <option value="1">Year 1</option>
-                                    <option value="2">Year 2</option>
-                                    <option value="3">Year 3</option>
-                                    <option value="4">Year 4</option>
-                                </select>
-                                <select id="erase-semester">
-                                    <option value="" disabled selected>Semester</option>
-                                    <option value="1">Sem 1</option>
-                                    <option value="2">Sem 2</option>
-                                </select>
-                            </div>
-                            <button id="erase-sem-btn" class="btn-erase-sem">Erase Semester Data</button>
-                        </div>
-                        <div class="full-reset-box">
-                            <h4>Full Data Reset</h4>
-                            <p>Permanently delete all stored subjects across all years.</p>
-                            <button id="reset-all-btn" class="btn-reset-all">Reset All Data</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-deadline" class="sub-interface" style="display: none;">
-                <div style="margin-bottom: 1.5rem;">
-                    <button class="btn-back" id="back-to-hub-deadline">⬅ Back to Dashboard</button>
-                </div>
-
-                <div class="header">
-                    <h1>⏰ Assignment & Exam Deadline Tracker</h1>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Never miss a submission or quiz again</p>
-                </div>
-
-                <div class="glass-card form-section">
-                    <h3>Add New Task / Deadline</h3>
-                    <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr 1fr; gap: 0.8rem; margin-bottom: 1rem;">
-                        <input type="text" id="task-name" placeholder="Task Name (e.g. DSA Assignment 1)">
-                        <input type="date" id="task-date">
-                        <select id="task-type">
-                            <option value="" disabled selected>Type</option>
-                            <option value="Assignment">Assignment</option>
-                            <option value="Exam">Exam</option>
-                        </select>
-                        <button id="add-task-btn" class="btn-add" style="margin-top:0;">Add Task</button>
-                    </div>
-                    <div id="tasks-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
-                </div>
-            </div>
-
-            <div id="view-plagiarism" class="sub-interface" style="display: none;">
-                <div style="margin-bottom: 1.5rem;">
-                    <button class="btn-back" id="back-to-hub-plagiarism">⬅ Back to Dashboard</button>
-                </div>
-
-                <div class="header">
-                    <h1>🔍 Plagiarism Checker & AI Humanizer</h1>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Scan text uniqueness and rewrite robotic content into natural human tone</p>
-                </div>
-
-                <div class="glass-card form-section">
-                    <h3>Paste Your Assignment Draft or Upload PDF</h3>
-                    <textarea id="plagiarism-text" rows="5" placeholder="Paste your essay, report or paragraph here..." style="width: 100%; padding: 1rem; border-radius: 0.5rem; resize: vertical; margin-bottom: 0.8rem;"></textarea>
-                    
-                    <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--input-bg); padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--input-border);">
-                        <label for="pdf-upload" style="font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">📄 Upload PDF Assignment:</label>
-                        <input type="file" id="pdf-upload" accept=".pdf" style="font-size: 0.8rem; cursor: pointer;">
-                        <span id="pdf-file-name" style="font-size: 0.75rem; color: #38bdf8; font-weight: 500;"></span>
-                    </div>
-
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button id="check-plagiarism-btn" class="btn-add" style="flex: 1; margin-top: 0;">Scan for Plagiarism & AI</button>
-                    </div>
-
-                    <div id="plagiarism-result" style="margin-top: 1.5rem; display: none; padding: 1.2rem; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 0.5rem;">
-                        <h4 style="color: var(--heading-gradient-1); margin-bottom: 0.5rem;">📊 Originality & AI Scan Report</h4>
-                        <p id="plagiarism-stats" style="font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem;"></p>
-                        
-                        <div id="humanize-box" style="display: none; border-top: 1px solid var(--card-border); padding-top: 1rem; margin-top: 1rem;">
-                            <h4 style="color: var(--heading-gradient-2); margin-bottom: 0.5rem;">✨ AI Humanized Version</h4>
-                            <p id="humanized-stats" style="font-size: 0.85rem; color: #22c55e; margin-bottom: 0.5rem; font-weight: 500;"></p>
-                            
-                            <textarea id="humanized-output-text" rows="6" readonly style="width: 100%; padding: 0.8rem; border-radius: 0.5rem; background: var(--input-bg); font-size: 0.85rem; margin-bottom: 0.8rem;"></textarea>
-                            
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <button id="copy-humanized-btn" class="btn-download" style="font-size: 0.75rem !important; padding: 0.4rem 1rem !important;">📋 Copy Text</button>
-                                <button id="download-humanized-pdf-btn" class="btn-download" style="font-size: 0.75rem !important; padding: 0.4rem 1rem !important; background: linear-gradient(to right, #16a34a, #22c55e) !important;">📥 Download as PDF</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="glass-card footer-card" style="margin-top: 2rem;">
-                <div class="footer-profile">
-                    <img src="developer.jpeg" alt="Developer" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=Yasho'">
-                    <h2>Developed by</h2>
+                <!-- Developer Footer & Review Button -->
+                <div class="glass-card" style="text-align: center; padding: 2rem;">
                     <h3>Mr.G.K.M.P.Y Ganewaththa</h3>
-                    <p>Bsc(Hons) in Networking & Mobile Computing</p>
-                    <p>Faculty Of IT - Intake 16</p>
-                </div>
-
-                <h4>💡 Help Us Improve & Share Your Feedback!</h4>
-                <p class="footer-desc">We'd love to hear your thoughts or feature suggestions to make this app even better.</p>
-                
-                <div class="footer-btn-group">
-                    <a href="https://forms.gle/your-google-form-link" target="_blank" class="btn-review">⭐ Review Now</a>
-                    <a href="https://wa.me/94762068122" target="_blank" class="btn-wa">💬 WhatsApp Contact</a>
-                    <a href="mailto:maleeshaganewatta@gmail.com" target="_blank" class="btn-email">✉️ Email Contact</a>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 5px 0 15px 0;">BSc(Hons) in Networking & Mobile Computing • Faculty Of IT</p>
+                    <button class="btn-primary review-now-btn">⭐ Review Now</button>
                 </div>
             </div>
+
+            <!-- VIEW: GPA TRACKER -->
+            <div id="view-gpa" style="display: none;">
+                <button id="back-to-hub-gpa" class="btn-primary" style="margin-bottom: 1rem; background: #64748b;">← Back to Hub</button>
+                <div class="glass-card">
+                    <h3>GPA Tracker & Predictor</h3>
+                    <input type="text" id="degree-name" placeholder="Enter Degree Program Name...">
+                    <select id="university-selector">
+                        <option value="horizon">Horizon Campus</option>
+                        <option value="other">Other University</option>
+                    </select>
+                    <button id="profile-ok-btn" class="btn-primary">Save Profile</button>
+                    
+                    <div style="margin-top: 1rem;">
+                        <p>Overall CGPA: <b id="cgpa-display" style="color: var(--primary);">0.00</b></p>
+                        <p>Predicted Class: <b id="class-display">Pending...</b></p>
+                    </div>
+                </div>
+                <div id="academic-container"></div>
+                <div class="glass-card">
+                    <canvas id="gpaChart" style="max-height: 250px;"></canvas>
+                </div>
+                <button id="download-pdf" class="btn-primary">Download Transcript PDF</button>
+            </div>
+
+            <!-- VIEW: DEADLINES -->
+            <div id="view-deadline" style="display: none;">
+                <button id="back-to-hub-deadline" class="btn-primary" style="margin-bottom: 1rem; background: #64748b;">← Back to Hub</button>
+                <div class="glass-card">
+                    <h3>Task & Deadline Manager</h3>
+                    <input type="text" id="task-name" placeholder="Task / Assignment / Exam Name">
+                    <input type="date" id="task-date">
+                    <select id="task-type">
+                        <option value="Assignment">Assignment</option>
+                        <option value="Exam">Exam</option>
+                    </select>
+                    <button id="add-task-btn" class="btn-primary">Add Deadline</button>
+                </div>
+                <div id="tasks-container" class="glass-card"></div>
+            </div>
+
+            <!-- VIEW: PLAGIARISM & HUMANIZER -->
+            <div id="view-plagiarism" style="display: none;">
+                <button id="back-to-hub-plagiarism" class="btn-primary" style="margin-bottom: 1rem; background: #64748b;">← Back to Hub</button>
+                <div class="glass-card">
+                    <h3>AI Humanizer & Plagiarism Checker</h3>
+                    <input type="file" id="pdf-upload" accept=".pdf" style="display: none;">
+                    <label for="pdf-upload" class="btn-primary" style="display: inline-block; cursor: pointer; margin-bottom: 10px;">Upload PDF Assignment</label>
+                    <span id="pdf-file-name" style="margin-left: 10px; font-size: 0.85rem;">No file chosen</span>
+                    
+                    <textarea id="plagiarism-text" placeholder="Paste your assignment draft text here..." rows="6"></textarea>
+                    <button id="check-plagiarism-btn" class="btn-primary">Scan for Plagiarism & AI</button>
+                </div>
+
+                <div id="plagiarism-result" class="glass-card" style="display: none;">
+                    <div id="plagiarism-stats"></div>
+                </div>
+
+                <div id="humanize-box" class="glass-card" style="display: none;">
+                    <div id="humanized-stats" style="margin-bottom: 10px;"></div>
+                    <textarea id="humanized-output-text" rows="6" readonly></textarea>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button id="copy-humanized-btn" class="btn-primary">Copy Text</button>
+                        <button id="download-humanized-pdf-btn" class="btn-primary" style="background: #22c55e;">Download Clean PDF</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- IN-APP REVIEW & FEEDBACK MODAL -->
+    <div id="review-modal">
+        <div style="background: var(--card-bg); padding: 2rem; border-radius: 1rem; width: 90%; max-width: 480px; position: relative; color: var(--text-color); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
+            <button id="close-review-modal" style="position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-color); font-size: 1.2rem; cursor: pointer;">✕</button>
             
+            <h3 style="margin-bottom: 0.5rem; text-align: center; font-size: 1.3rem;">⭐ Rate & Review Student Hub</h3>
+            <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.2rem;">Share your feedback or check what others say!</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.2rem;">
+                <label style="font-size: 0.85rem; font-weight: 500;">Select Rating:</label>
+                <select id="modal-review-rating">
+                    <option value="5">⭐⭐⭐⭐⭐ (5/5 - Excellent)</option>
+                    <option value="4">⭐⭐⭐⭐ (4/5 - Very Good)</option>
+                    <option value="3">⭐⭐⭐ (3/5 - Good)</option>
+                    <option value="2">⭐⭐ (2/5 - Fair)</option>
+                    <option value="1">⭐ (1/5 - Poor)</option>
+                </select>
+                
+                <label style="font-size: 0.85rem; font-weight: 500;">Your Feedback / Suggestion:</label>
+                <textarea id="modal-review-comment" placeholder="Write your thoughts here..." rows="3"></textarea>
+                
+                <button id="modal-submit-review-btn" class="btn-primary">Submit Review</button>
+            </div>
+
+            <hr style="border-color: var(--input-border); margin-bottom: 1rem; opacity: 0.3;">
+
+            <h4 style="margin-bottom: 0.5rem; font-size: 0.95rem;">Recent User Feedback:</h4>
+            <div id="modal-reviews-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 150px; overflow-y: auto; padding-right: 4px;">
+                <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">Loading reviews...</div>
+            </div>
         </div>
     </div>
 
-    <script type="module" src="app.js?v=48"></script>
+    <!-- Link your modular app.js script here -->
+    <script type="module" src="app.js"></script>
 </body>
 </html>
