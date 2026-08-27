@@ -29,7 +29,7 @@ module.exports = async function handler(req, res) {
         const url = 'https://api.groq.com/openai/v1/chat/completions';
 
         // සේෆ්ටි ෆිල්ටර්ස් වලට නොසෑහෙන තරම් සරල සහ පැහැදිලි ඇකඩමික් ප්‍රොම්ට් එකක්
-        const prompt = `Rewrite the following academic text to make it exceptionally natural, highly engaging, and written in a refined human scholarly tone with varied sentence structures and rich vocabulary.
+        const prompt = `Rewrite the following academic text to make it exceptionally natural, highly engaging, and written in a refined human scholarly tone with varied sentence structures and rich vocabulary. Also, include 2 to 3 professionally formatted academic sources (in APA 7th edition style) related to the topic at the very end under a "References" section.
 
 Text to rewrite:
 ${text}`;
