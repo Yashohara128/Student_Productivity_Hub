@@ -1,3 +1,7 @@
+// ==========================================
+// STUDENT PRODUCTIVITY HUB - APP.JS (FINAL & CLEAN)
+// ==========================================
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
@@ -120,7 +124,7 @@ if (pdfUpload) {
     });
 }
 
-// --- SMODIN API & REAL GEMINI 1.5 FLASH HUMANIZER LOGIC ---
+// --- GROQ AI / VERCEL SERVERLESS HUMANIZER LOGIC ---
 const checkPlagiarismBtn = document.getElementById('check-plagiarism-btn');
 const plagiarismText = document.getElementById('plagiarism-text');
 const plagiarismResult = document.getElementById('plagiarism-result');
@@ -132,7 +136,6 @@ const downloadHumanizedPdfBtn = document.getElementById('download-humanized-pdf-
 
 async function trueAIHumanizer(inputText) {
     try {
-        // Vercel Serverless Function එකට රික්වෙස්ට් එක යවනවා
         const response = await fetch('/api/humanize', {
             method: "POST",
             headers: {
@@ -237,8 +240,6 @@ if (checkPlagiarismBtn) {
             const response = await fetch('https://plagiarism-checker-and-auto-citation-generator-multi-lingual.p.rapidapi.com/plagiarism', options);
             const result = await response.json();
             
-            console.log("Smodin API Full Response:", result);
-
             plagiarismResult.style.display = 'block';
             
             let percentPlagiarized = 0;
@@ -266,13 +267,12 @@ if (checkPlagiarismBtn) {
                 <small style="color: var(--text-muted); display: block; margin-top: 4px;">Status: ${percentPlagiarized > 10 ? '⚠️ Plagiarized matches found online. Humanizing text below.' : '✅ Content is clean.'}</small>
             `;
 
-            // Call Real Gemini 1.5 Flash AI Humanizer
-            checkPlagiarismBtn.innerText = "Humanizing via Real Gemini AI...";
+            checkPlagiarismBtn.innerText = "Humanizing via Groq AI...";
             const humanizedVersion = await trueAIHumanizer(text);
             humanizedOutputText.value = humanizedVersion;
 
             document.getElementById('humanized-stats').innerHTML = `
-                <b>✨ Post-Humanize Status (Real Gemini AI Humanizer):</b><br>
+                <b>✨ Post-Humanize Status (Groq AI Humanizer):</b><br>
                 • Plagiarism / AI Risk Level: <b style="color: #22c55e;">0.0% (Clean & Undetectable)</b><br>
                 • Tone Status: <b style="color: #38bdf8;">100% Natural Academic Human Tone</b>
             `;
@@ -297,6 +297,7 @@ if (copyHumanizedBtn) {
     });
 }
 
+// --- CLEAN ACADEMIC PDF DOWNLOAD (No Markdown tags, Times New Roman Font) ---
 if (downloadHumanizedPdfBtn) {
     downloadHumanizedPdfBtn.addEventListener('click', () => {
         const text = humanizedOutputText.value;
@@ -305,21 +306,67 @@ if (downloadHumanizedPdfBtn) {
             return;
         }
 
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(16);
-        doc.text("AI Humanized Assignment Report", 20, 20);
-        
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        
-        const splitText = doc.splitTextToSize(text, 170);
-        doc.text(splitText, 20, 30);
+        let cleanText = text
+            .replace(/\*\*(.*?)\*\*/g, '$1') 
+            .replace(/\*(.*?)\*/g, '$1')     
+            .replace(/^[*\-]\s+/gm, '• ');   
 
-        doc.save("Humanized_Assignment.pdf");
-        alert("📥 Humanized PDF downloaded successfully!");
+        let printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Humanized Assignment Report</title>
+                <style>
+                    body {
+                        font-family: 'Times New Roman', Times, serif;
+                        font-size: 12pt;
+                        line-height: 1.8;
+                        color: #111;
+                        margin: 25mm 20mm;
+                        text-align: justify;
+                    }
+                    h1 {
+                        font-size: 18pt;
+                        text-align: center;
+                        margin-bottom: 5px;
+                        color: #000;
+                        text-transform: uppercase;
+                        border-bottom: 2px solid #333;
+                        padding-bottom: 10px;
+                    }
+                    .subtitle {
+                        text-align: center;
+                        font-size: 11pt;
+                        color: #555;
+                        margin-bottom: 30px;
+                    }
+                    p {
+                        margin-bottom: 15px;
+                        text-indent: 30px;
+                    }
+                    @media print {
+                        body {
+                            margin: 20mm;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Humanized Assignment Report</h1>
+                <div class="subtitle">Generated via Student Productivity Hub • Academic Humanizer</div>
+                <div>
+                    ${cleanText.split('\n\n').map(para => `<p>${para.replace(/\n/g, '<br>')}</p>`).join('')}
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                    }
+                </script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
     });
 }
 
