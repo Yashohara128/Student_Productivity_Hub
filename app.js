@@ -32,21 +32,20 @@ const degreeInput = document.getElementById('degree-name');
 // Navigation Views
 const dashboardHub = document.getElementById('dashboard-hub');
 const viewGpa = document.getElementById('view-gpa');
-const viewDeadline = document.getElementById('view-deadline');
+const viewShortNotes = document.getElementById('view-shortnotes');
 const viewPlagiarism = document.getElementById('view-plagiarism');
 
 // Card Triggers
 const cardGpa = document.getElementById('card-gpa');
-const cardDeadline = document.getElementById('card-deadline');
+const cardShortNotes = document.getElementById('card-shortnotes');
 const cardPlagiarism = document.getElementById('card-plagiarism');
 
 // Back Buttons
 const backToHubGpa = document.getElementById('back-to-hub-gpa');
-const backToHubDeadline = document.getElementById('back-to-hub-deadline');
+const backToHubShortNotes = document.getElementById('back-to-hub-shortnotes');
 const backToHubPlagiarism = document.getElementById('back-to-hub-plagiarism');
 
 let allSubjects = []; 
-let tasks = [];
 let currentUser = null; 
 let editingSubjectId = null; 
 let myChart = null;
@@ -68,7 +67,7 @@ function getActiveSubjects() {
     return allSubjects.filter(sub => (sub.mode || 'horizon') === activeMode);
 }
 
-// --- Google Login via Popup (Standard & Stable) ---
+// --- Google Login via Popup ---
 if (loginBtn) {
     loginBtn.addEventListener('click', () => {
         signInWithPopup(auth, provider)
@@ -77,13 +76,12 @@ if (loginBtn) {
             })
             .catch((error) => {
                 console.error("Login Error Code:", error.code);
-                console.error("Login Error Message:", error.message);
                 alert("❌ Login Failed: " + error.message);
             });
     });
 }
 
-// --- Dynamic Greeting Function (Time & Date) ---
+// --- Dynamic Greeting Function ---
 function updateDynamicGreeting(userName) {
     const greetingEl = document.getElementById('welcome-greeting');
     if (!greetingEl) return;
@@ -94,13 +92,13 @@ function updateDynamicGreeting(userName) {
     let timeGreeting = "";
     let emoji = "";
 
-    if (hours >= 5 && hours < 12) {
+    if (hours >= 4 && hours < 12) {
         timeGreeting = "Good Morning";
         emoji = "☀️";
-    } else if (hours >= 12 && hours < 17) {
+    } else if (hours >= 12 && hours < 15) {
         timeGreeting = "Good Afternoon";
         emoji = "🌤️";
-    } else if (hours >= 17 && hours < 21) {
+    } else if (hours >= 16 && hours < 20) {
         timeGreeting = "Good Evening";
         emoji = "🌆";
     } else {
@@ -114,36 +112,11 @@ function updateDynamicGreeting(userName) {
     greetingEl.innerHTML = `${emoji} ${timeGreeting}, <span style="color: var(--text-color); font-weight: 600;">${userName}</span>! <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 2px;">📅 ${formattedDate}</span>`;
 }
 
-// --- Browser Push Notification Checker ---
-function checkDeadlineNotifications() {
-    if (!("Notification" in window)) return;
-
-    if (Notification.permission !== "granted") {
-        Notification.requestPermission();
-    }
-
-    setInterval(() => {
-        const now = new Date();
-        tasks.forEach(task => {
-            if (!task.date || !task.time) return;
-            const dueDateTime = new Date(`${task.date}T${task.time}:00`);
-            const diffMinutes = Math.floor((dueDateTime - now) / (1000 * 60));
-
-            if (diffMinutes === 60) {
-                new Notification("⏰ Deadline Reminder!", {
-                    body: `Your ${task.type} "${task.name}" is due in 1 hour (${task.time})!`,
-                    icon: "https://cdn-icons-png.flaticon.com/512/2921/2921222.png"
-                });
-            }
-        });
-    }, 60000);
-}
-
 // --- View Switcher Logic ---
 function showView(viewName) {
     if (dashboardHub) dashboardHub.style.display = 'none';
     if (viewGpa) viewGpa.style.display = 'none';
-    if (viewDeadline) viewDeadline.style.display = 'none';
+    if (viewShortNotes) viewShortNotes.style.display = 'none';
     if (viewPlagiarism) viewPlagiarism.style.display = 'none';
 
     if (viewName === 'hub') {
@@ -153,8 +126,8 @@ function showView(viewName) {
             viewGpa.style.display = 'block';
             renderGPAChart();
         }
-    } else if (viewName === 'deadline') {
-        if (viewDeadline) viewDeadline.style.display = 'block';
+    } else if (viewName === 'shortnotes') {
+        if (viewShortNotes) viewShortNotes.style.display = 'block';
     } else if (viewName === 'plagiarism') {
         if (viewPlagiarism) viewPlagiarism.style.display = 'block';
     }
@@ -162,14 +135,129 @@ function showView(viewName) {
 }
 
 if (cardGpa) cardGpa.addEventListener('click', () => showView('gpa'));
-if (cardDeadline) cardDeadline.addEventListener('click', () => showView('deadline'));
+if (cardShortNotes) cardShortNotes.addEventListener('click', () => showView('shortnotes'));
 if (cardPlagiarism) cardPlagiarism.addEventListener('click', () => showView('plagiarism'));
 
 if (backToHubGpa) backToHubGpa.addEventListener('click', () => showView('hub'));
-if (backToHubDeadline) backToHubDeadline.addEventListener('click', () => showView('hub'));
+if (backToHubShortNotes) backToHubShortNotes.addEventListener('click', () => showView('hub'));
 if (backToHubPlagiarism) backToHubPlagiarism.addEventListener('click', () => showView('hub'));
 
-// --- PDF UPLOAD & TEXT EXTRACTION LOGIC ---
+// --- AI PDF SHORT NOTE GENERATOR LOGIC ---
+const notePdfUpload = document.getElementById('note-pdf-upload');
+const notePdfFileName = document.getElementById('note-pdf-file-name');
+const generateNotesBtn = document.getElementById('generate-notes-btn');
+const noteLoading = document.getElementById('note-loading');
+const noteResultSection = document.getElementById('note-result-section');
+const generatedNotesOutput = document.getElementById('generated-notes-output');
+const copyNotesBtn = document.getElementById('copy-notes-btn');
+const downloadNotesTxtBtn = document.getElementById('download-notes-txt-btn');
+
+let extractedNoteText = "";
+
+if (notePdfUpload) {
+    notePdfUpload.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        notePdfFileName.innerText = "📁 " + file.name;
+
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(file);
+        reader.onload = async function() {
+            const typedarray = new Uint8Array(this.result);
+            try {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                let fullText = "";
+                
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + "\n";
+                }
+
+                extractedNoteText = fullText.trim();
+                alert("✅ Lecture PDF text extracted successfully! Ready to generate short notes.");
+            } catch (err) {
+                console.error("PDF Read Error:", err);
+                alert("❌ Failed to read PDF file.");
+            }
+        };
+    });
+}
+
+if (generateNotesBtn) {
+    generateNotesBtn.addEventListener('click', async () => {
+        if (!extractedNoteText) {
+            alert("⚠️ Please upload a lecture PDF first!");
+            return;
+        }
+
+        const customPromptInput = document.getElementById('note-custom-prompt');
+        const customPrompt = customPromptInput ? customPromptInput.value.trim() : "";
+
+        noteLoading.style.display = 'block';
+        noteResultSection.style.display = 'none';
+        generateNotesBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/shortnotes', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    text: extractedNoteText,
+                    prompt: customPrompt || "Generate well-structured, comprehensive academic short notes with key definitions, core concepts, bullet points, and important takeaways for a university student."
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.error) {
+                alert("❌ Error: " + data.error);
+                return;
+            }
+
+            if (data.result) {
+                generatedNotesOutput.value = data.result;
+                noteResultSection.style.display = 'block';
+            }
+        } catch (error) {
+            console.error("Short Notes API Error:", error);
+            alert("❌ Failed to connect to server for generating short notes.");
+        } finally {
+            noteLoading.style.display = 'none';
+            generateNotesBtn.disabled = false;
+        }
+    });
+}
+
+if (copyNotesBtn) {
+    copyNotesBtn.addEventListener('click', () => {
+        generatedNotesOutput.select();
+        navigator.clipboard.writeText(generatedNotesOutput.value);
+        alert("📋 Short notes copied to clipboard successfully!");
+    });
+}
+
+if (downloadNotesTxtBtn) {
+    downloadNotesTxtBtn.addEventListener('click', () => {
+        const text = generatedNotesOutput.value;
+        if (!text) {
+            alert("⚠️ No short notes available to download!");
+            return;
+        }
+
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Lecture_Short_Notes.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+}
+
+// --- PDF UPLOAD & TEXT EXTRACTION FOR PLAGIARISM ---
 const pdfUpload = document.getElementById('pdf-upload');
 const pdfFileName = document.getElementById('pdf-file-name');
 
@@ -196,10 +284,10 @@ if (pdfUpload) {
                 }
 
                 document.getElementById('plagiarism-text').value = fullText.trim();
-                alert("✅ PDF text extracted successfully! You can now scan for plagiarism or humanize.");
+                alert("✅ PDF text extracted successfully!");
             } catch (err) {
                 console.error("PDF Read Error:", err);
-                alert("❌ Failed to read PDF file. Please paste text manually.");
+                alert("❌ Failed to read PDF file.");
             }
         };
     });
@@ -219,28 +307,18 @@ async function trueAIHumanizer(inputText) {
     try {
         const response = await fetch('/api/humanize', {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text: inputText })
         });
 
         const data = await response.json();
-        
         if (data.error) {
-            console.error("Server Error Details:", data.error);
             alert("❌ Humanizer Error: " + data.error);
             return inputText;
         }
-
-        if (data.result) {
-            return data.result;
-        } else {
-            return inputText;
-        }
+        return data.result || inputText;
     } catch (error) {
         console.error("Network Fetch Error:", error);
-        alert("❌ Network error while connecting to Server.");
         return inputText;
     }
 }
@@ -256,26 +334,19 @@ if (checkPlagiarismBtn) {
 
         const inputWords = text.split(/\s+/).length;
         if (inputWords < 10) {
-            alert("⚠️ Please enter a longer text (at least 10 words) for accurate scanning.");
+            alert("⚠️ Please enter a longer text (at least 10 words).");
             return;
         }
 
         const currentMonth = new Date().toISOString().slice(0, 7);
-
-        checkPlagiarismBtn.innerText = "Checking Monthly Quota...";
+        checkPlagiarismBtn.innerText = "Checking Quota...";
         checkPlagiarismBtn.disabled = true;
 
         try {
             const userRef = doc(db, "users", currentUser.uid);
             const userSnap = await getDoc(userRef);
 
-            let userData = {
-                wordCountUsed: 0,
-                lastResetMonth: currentMonth,
-                plan: 'free',
-                wordLimit: 10000 
-            };
-
+            let userData = { wordCountUsed: 0, lastResetMonth: currentMonth, plan: 'free', wordLimit: 10000 };
             if (userSnap.exists()) {
                 userData = userSnap.data();
                 if (userData.lastResetMonth !== currentMonth) {
@@ -287,16 +358,15 @@ if (checkPlagiarismBtn) {
             }
 
             const activeWordLimit = userData.wordLimit || 10000;
-
             if (userData.wordCountUsed + inputWords > activeWordLimit) {
-                alert(`⭐ Monthly Quota Reached!\n\nYou have used ${userData.wordCountUsed} / ${activeWordLimit} words in your current plan (${userData.plan.toUpperCase()}). Please upgrade your package to continue.`);
+                alert(`⭐ Monthly Quota Reached!\n\nYou have used ${userData.wordCountUsed} / ${activeWordLimit} words.`);
                 openPricingModal();
                 checkPlagiarismBtn.innerText = "Scan for Plagiarism & AI";
                 checkPlagiarismBtn.disabled = false;
                 return;
             }
 
-            checkPlagiarismBtn.innerText = "Scanning Web via Smodin API...";
+            checkPlagiarismBtn.innerText = "Scanning Web...";
             plagiarismResult.style.display = 'none';
             humanizeBox.style.display = 'none';
 
@@ -310,29 +380,14 @@ if (checkPlagiarismBtn) {
                     'X-RapidAPI-Key': apiKey,
                     'X-RapidAPI-Host': apiHost
                 },
-                body: JSON.stringify({
-                    text: text,
-                    language: "en",
-                    includeCitations: true,
-                    scrapeSources: true
-                })
+                body: JSON.stringify({ text: text, language: "en", includeCitations: true, scrapeSources: true })
             };
 
             const response = await fetch('https://plagiarism-checker-and-auto-citation-generator-multi-lingual.p.rapidapi.com/plagiarism', options);
             const result = await response.json();
             
             plagiarismResult.style.display = 'block';
-            
-            let percentPlagiarized = 0;
-            if (result.percentPlagiarized !== undefined) {
-                percentPlagiarized = result.percentPlagiarized;
-            } else if (result.score !== undefined) {
-                percentPlagiarized = result.score;
-            } else if (result.plagiarismScore !== undefined) {
-                percentPlagiarized = result.plagiarismScore;
-            } else {
-                percentPlagiarized = 85.5; 
-            }
+            let percentPlagiarized = result.percentPlagiarized ?? result.score ?? result.plagiarismScore ?? 85.5;
 
             let sourcesHTML = "";
             if (result.sources && result.sources.length > 0) {
@@ -345,34 +400,30 @@ if (checkPlagiarismBtn) {
             }
 
             const newTotalUsed = userData.wordCountUsed + inputWords;
-            await updateDoc(userRef, {
-                wordCountUsed: newTotalUsed,
-                lastResetMonth: currentMonth
-            });
+            await updateDoc(userRef, { wordCountUsed: newTotalUsed, lastResetMonth: currentMonth });
 
             plagiarismStats.innerHTML = `
-                <b>📌 Original Scan Report (Before Humanizing):</b><br>
+                <b>📌 Original Scan Report:</b><br>
                 • Monthly Quota Used: <b>${newTotalUsed} / ${activeWordLimit} words</b><br>
                 • Plagiarism Detected: <b style="color: ${percentPlagiarized > 10 ? '#ef4444' : '#22c55e'};">${percentPlagiarized}%</b><br>
                 • Originality Score: <b style="color: #38bdf8;">${(100 - percentPlagiarized).toFixed(1)}% Unique</b><br>
                 ${sourcesHTML}
             `;
 
-            checkPlagiarismBtn.innerText = "Humanizing via Groq AI...";
+            checkPlagiarismBtn.innerText = "Humanizing via AI...";
             const humanizedVersion = await trueAIHumanizer(text);
             humanizedOutputText.value = humanizedVersion;
 
             document.getElementById('humanized-stats').innerHTML = `
-                <b>✨ Post-Humanize Status (Groq AI Humanizer):</b><br>
-                • Plagiarism / AI Risk Level: <b style="color: #22c55e;">0.0% (Clean & Undetectable)</b><br>
+                <b>✨ Post-Humanize Status:</b><br>
+                • Risk Level: <b style="color: #22c55e;">0.0% (Clean & Undetectable)</b><br>
                 • Tone Status: <b style="color: #38bdf8;">100% Natural Academic Human Tone</b>
             `;
 
             humanizeBox.style.display = 'block';
-
         } catch (error) {
             console.error("API Error:", error);
-            alert("❌ Plagiarism scan failed due to network or API limit. Please try again later.");
+            alert("❌ Plagiarism scan failed.");
         } finally {
             checkPlagiarismBtn.innerText = "Scan for Plagiarism & AI";
             checkPlagiarismBtn.disabled = false;
@@ -384,84 +435,22 @@ if (copyHumanizedBtn) {
     copyHumanizedBtn.addEventListener('click', () => {
         humanizedOutputText.select();
         navigator.clipboard.writeText(humanizedOutputText.value);
-        alert("📋 Humanized text copied to clipboard successfully!");
+        alert("📋 Humanized text copied to clipboard!");
     });
 }
 
-// --- CLEAN ACADEMIC PDF DOWNLOAD ---
 if (downloadHumanizedPdfBtn) {
     downloadHumanizedPdfBtn.addEventListener('click', () => {
         const text = humanizedOutputText.value;
-        if (!text) {
-            alert("⚠️ No humanized text available to download!");
-            return;
-        }
-
-        let cleanText = text
-            .replace(/\*\*(.*?)\*\*/g, '$1') 
-            .replace(/\*(.*?)\*/g, '$1')     
-            .replace(/^[*\-]\s+/gm, '• ');   
-
+        if (!text) return;
+        let cleanText = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/^[*\-]\s+/gm, '• ');
         let printWindow = window.open('', '_blank');
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Humanized Assignment Report</title>
-                <style>
-                    body {
-                        font-family: 'Times New Roman', Times, serif;
-                        font-size: 12pt;
-                        line-height: 1.8;
-                        color: #111;
-                        margin: 25mm 20mm;
-                        text-align: justify;
-                    }
-                    h1 {
-                        font-size: 18pt;
-                        text-align: center;
-                        margin-bottom: 5px;
-                        color: #000;
-                        text-transform: uppercase;
-                        border-bottom: 2px solid #333;
-                        padding-bottom: 10px;
-                    }
-                    .subtitle {
-                        text-align: center;
-                        font-size: 11pt;
-                        color: #555;
-                        margin-bottom: 30px;
-                    }
-                    p {
-                        margin-bottom: 15px;
-                        text-indent: 30px;
-                    }
-                    @media print {
-                        body {
-                            margin: 20mm;
-                        }
-                    }
-                </style>
-            </head>
-            <body>
-                <h1>Humanized Assignment Report</h1>
-                <div class="subtitle">Generated via Student Productivity Hub • Academic Humanizer</div>
-                <div>
-                    ${cleanText.split('\n\n').map(para => `<p>${para.replace(/\n/g, '<br>')}</p>`).join('')}
-                </div>
-                <script>
-                    window.onload = function() {
-                        window.print();
-                    }
-                </script>
-            </body>
-            </html>
-        `);
+        printWindow.document.write(`<html><head><title>Report</title><style>body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.8;margin:25mm 20mm;text-align:justify;}h1{font-size:18pt;text-align:center;border-bottom:2px solid #333;padding-bottom:10px;}</style></head><body><h1>Humanized Assignment Report</h1><div>${cleanText.split('\n\n').map(p=>`<p>${p}</p>`).join('')}</div><script>window.onload=()=>window.print();</script></body></html>`);
         printWindow.document.close();
     });
 }
 
-// --- IN-APP REVIEW SYSTEM LOGIC ---
+// --- REVIEW SYSTEM ---
 const reviewModal = document.getElementById('review-modal');
 const closeReviewModalBtn = document.getElementById('close-review-modal');
 const closeGotItBtn = document.getElementById('close-modal-btn');
@@ -470,30 +459,11 @@ const reviewNowButtons = document.querySelectorAll('.review-now-btn');
 reviewNowButtons.forEach(btn => {
     btn.addEventListener('click', (e) => {
         e.preventDefault();
-        if (reviewModal) {
-            reviewModal.style.display = 'flex';
-            loadGlobalReviews();
-        }
+        if (reviewModal) { reviewModal.style.display = 'flex'; loadGlobalReviews(); }
     });
 });
-
-if (closeReviewModalBtn) {
-    closeReviewModalBtn.addEventListener('click', () => {
-        if (reviewModal) reviewModal.style.display = 'none';
-    });
-}
-
-if (closeGotItBtn) {
-    closeGotItBtn.addEventListener('click', () => {
-        if (reviewModal) reviewModal.style.display = 'none';
-    });
-}
-
-window.addEventListener('click', (e) => {
-    if (e.target === reviewModal) {
-        reviewModal.style.display = 'none';
-    }
-});
+if (closeReviewModalBtn) closeReviewModalBtn.addEventListener('click', () => reviewModal.style.display = 'none');
+if (closeGotItBtn) closeGotItBtn.addEventListener('click', () => reviewModal.style.display = 'none');
 
 const modalSubmitReviewBtn = document.getElementById('modal-submit-review-btn');
 const modalReviewRating = document.getElementById('modal-review-rating');
@@ -502,221 +472,49 @@ const modalReviewsContainer = document.getElementById('modal-reviews-container')
 
 if (modalSubmitReviewBtn) {
     modalSubmitReviewBtn.addEventListener('click', async () => {
-        if (!currentUser) {
-            alert("⚠️ Please login with Google first to submit a review!");
-            return;
-        }
-
+        if (!currentUser) { alert("⚠️ Please login first!"); return; }
         const comment = modalReviewComment.value.trim();
         const rating = parseInt(modalReviewRating.value);
-
-        if (comment === "") {
-            alert("⚠️ Please write a short comment!");
-            modalReviewComment.focus();
-            return;
-        }
+        if (!comment) { alert("⚠️ Please write a comment!"); return; }
 
         modalSubmitReviewBtn.innerText = "Submitting...";
         modalSubmitReviewBtn.disabled = true;
-
         try {
-            const reviewData = {
+            await addDoc(collection(db, "global_reviews"), {
                 userName: currentUser.displayName || "Student",
                 userEmail: currentUser.email,
-                rating: rating,
-                comment: comment,
-                createdAt: new Date().toISOString()
-            };
-
-            await addDoc(collection(db, "global_reviews"), reviewData);
-
+                rating, comment, createdAt: new Date().toISOString()
+            });
             alert("✅ Thank you for your feedback!");
             modalReviewComment.value = '';
-            modalReviewRating.selectedIndex = 0;
             loadGlobalReviews();
-        } catch (error) {
-            console.error("Error submitting review:", error);
-            alert("❌ Failed to submit review. Please try again.");
-        } finally {
-            modalSubmitReviewBtn.innerText = "Submit Review";
-            modalSubmitReviewBtn.disabled = false;
-        }
+        } catch (e) { alert("❌ Failed to submit review."); }
+        finally { modalSubmitReviewBtn.innerText = "Submit Review"; modalSubmitReviewBtn.disabled = false; }
     });
 }
 
 async function loadGlobalReviews() {
     if (!modalReviewsContainer) return;
-
     try {
         const querySnapshot = await getDocs(collection(db, "global_reviews"));
-        let reviewsList = [];
-
-        querySnapshot.forEach((doc) => {
-            reviewsList.push(doc.data());
-        });
-
-        reviewsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-        if (reviewsList.length === 0) {
-            modalReviewsContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">No reviews yet. Be the first to review!</div>`;
-            return;
-        }
-
+        let list = [];
+        querySnapshot.forEach(doc => list.push(doc.data()));
+        list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        if (list.length === 0) { modalReviewsContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">No reviews yet.</div>`; return; }
         let html = '';
-        reviewsList.forEach(rev => {
-            let stars = '⭐'.repeat(rev.rating);
-            html += `
-                <div style="background: var(--input-bg); border: 1px solid var(--input-border); padding: 8px 10px; border-radius: 6px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
-                        <b style="color: var(--text-color);">${rev.userName}</b>
-                        <span>${stars}</span>
-                    </div>
-                    <p style="font-size: 0.78rem; color: var(--text-muted); margin: 3px 0 0 0;">${rev.comment}</p>
-                </div>
-            `;
+        list.forEach(rev => {
+            html += `<div style="background: var(--input-bg); border: 1px solid var(--input-border); padding: 8px 10px; border-radius: 6px;"><div style="display: flex; justify-content: space-between; font-size: 0.8rem;"><b>${rev.userName}</b><span>${'⭐'.repeat(rev.rating)}</span></div><p style="font-size: 0.78rem; color: var(--text-muted); margin: 3px 0 0 0;">${rev.comment}</p></div>`;
         });
-
         modalReviewsContainer.innerHTML = html;
-    } catch (error) {
-        console.error("Error loading reviews:", error);
-        modalReviewsContainer.innerHTML = `<div style="text-align: center; color: #ef4444; font-size: 0.8rem;">Failed to load reviews.</div>`;
-    }
-}
-
-// --- WHATSAPP NUMBER SAVING LOGIC ---
-const saveWhatsappBtn = document.getElementById('save-whatsapp-btn');
-const whatsappInput = document.getElementById('whatsapp-input');
-
-if (saveWhatsappBtn) {
-    saveWhatsappBtn.addEventListener('click', async () => {
-        if (!currentUser) {
-            alert("⚠️ Please login with Google first!");
-            return;
-        }
-        const phoneNo = whatsappInput.value.trim();
-        if (!phoneNo) {
-            alert("⚠️ Please enter a valid WhatsApp number!");
-            return;
-        }
-
-        try {
-            const userRef = doc(db, "users", currentUser.uid);
-            await setDoc(userRef, { whatsapp: phoneNo }, { merge: true });
-            alert("✅ WhatsApp number saved successfully!");
-        } catch (e) {
-            console.error("Error saving WhatsApp:", e);
-            alert("❌ Failed to save number: " + e.message);
-        }
-    });
-}
-
-// --- TASK & DEADLINE MANAGER ---
-const addTaskBtn = document.getElementById('add-task-btn');
-if (addTaskBtn) {
-    addTaskBtn.addEventListener('click', async () => {
-        if (!currentUser) return;
-        const taskNameInput = document.getElementById('task-name');
-        const taskDateInput = document.getElementById('task-date');
-        const taskTimeInput = document.getElementById('task-time');
-        const taskTypeSelect = document.getElementById('task-type');
-
-        const name = taskNameInput.value.trim();
-        const date = taskDateInput.value;
-        const time = taskTimeInput.value || "23:59";
-        const type = taskTypeSelect.value;
-
-        if (!name || !date || !type) {
-            alert("⚠️ Please fill Task Name, Date, and Type!");
-            return;
-        }
-
-        const taskData = { name, date, time, type };
-        try {
-            const docRef = await addDoc(collection(db, "users", currentUser.uid, "tasks"), taskData);
-            taskData.dbId = docRef.id;
-            tasks.push(taskData);
-            
-            taskNameInput.value = '';
-            taskDateInput.value = '';
-            taskTimeInput.value = '';
-            taskTypeSelect.selectedIndex = 0;
-            renderTasksUI();
-            alert("✅ Deadline added successfully!");
-        } catch (e) {
-            alert("Error adding task: " + e.message);
-        }
-    });
-}
-
-window.removeTask = async function(dbId) {
-    if (!currentUser) return;
-    tasks = tasks.filter(t => t.dbId !== dbId);
-    renderTasksUI();
-    try {
-        await deleteDoc(doc(db, "users", currentUser.uid, "tasks", dbId));
-    } catch (e) {
-        console.error("Error deleting task:", e);
-    }
-};
-
-function renderTasksUI() {
-    const tasksContainer = document.getElementById('tasks-container');
-    if (!tasksContainer) return;
-
-    if (tasks.length === 0) {
-        tasksContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 1rem;">No deadlines added yet. Add assignments or exams above!</div>`;
-        return;
-    }
-
-    let tasksHTML = '';
-    tasks.sort((a, b) => new Date(`${a.date}T${a.time || '23:59'}`) - new Date(`${b.date}T${b.time || '23:59'}`));
-
-    tasks.forEach(task => {
-        const today = new Date();
-        const dueDateTime = new Date(`${task.date}T${task.time || '23:59'}:00`);
-        const diffTime = dueDateTime - today;
-
-        let badgeColor = task.type === 'Exam' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(56, 189, 248, 0.15)';
-        let badgeTextColor = task.type === 'Exam' ? '#ef4444' : '#38bdf8';
-        let timeText = '';
-
-        if (diffTime < 0) {
-            timeText = `<span style="color: #ef4444; font-weight: 500;">Overdue!</span>`;
-        } else {
-            timeText = `<span style="color: var(--text-muted);">Due: ${task.date} at ${task.time || '23:59'}</span>`;
-        }
-
-        tasksHTML += `
-            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); border: 1px solid var(--input-border); padding: 10px 14px; border-radius: 0.5rem; gap: 10px; flex-wrap: wrap;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="background: ${badgeColor}; color: ${badgeTextColor}; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase;">${task.type}</span>
-                    <b style="font-size: 0.9rem; color: var(--text-color);">${task.name}</b>
-                </div>
-                <div style="display: flex; align-items: center; gap: 15px; font-size: 0.8rem;">
-                    ${timeText}
-                    <button onclick="removeTask('${task.dbId}')" class="btn-remove" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Done</button>
-                </div>
-            </div>
-        `;
-    });
-
-    tasksContainer.innerHTML = tasksHTML;
+    } catch (e) { modalReviewsContainer.innerHTML = `<div style="text-align: center; color: #ef4444; font-size: 0.8rem;">Failed to load reviews.</div>`; }
 }
 
 // --- PRICING & PAYHERE PAYMENT LOGIC ---
-window.openPricingModal = function() {
-    const modal = document.getElementById('pricing-modal');
-    if (modal) modal.style.display = 'flex';
-};
-
-window.closePricingModal = function() {
-    const modal = document.getElementById('pricing-modal');
-    if (modal) modal.style.display = 'none';
-};
+window.openPricingModal = function() { document.getElementById('pricing-modal').style.display = 'flex'; };
+window.closePricingModal = function() { document.getElementById('pricing-modal').style.display = 'none'; };
 
 window.startPayHerePayment = function(planName, amount, wordLimit) {
     if (!currentUser) return;
-
     var payment = {
         "sandbox": true,
         "merchant_id": "YOUR_MERCHANT_ID",
@@ -731,34 +529,17 @@ window.startPayHerePayment = function(planName, amount, wordLimit) {
         "last_name": currentUser.displayName.split(" ")[1] || "User",
         "email": currentUser.email,
         "phone": "0771234567",
-        "address": "Sri Lanka",
-        "city": "Colombo",
-        "country": "Sri Lanka"
+        "address": "Sri Lanka", "city": "Colombo", "country": "Sri Lanka"
     };
 
     payhere.onCompleted = async function orderId(orderId) {
         alert(`🎉 Payment Successful! Welcome to the ${planName.toUpperCase()} Plan.`);
-        
-        const userRef = doc(db, "users", currentUser.uid);
-        await updateDoc(userRef, {
-            plan: planName,
-            wordLimit: wordLimit,
-            isPaid: true,
-            upgradeDate: new Date().toISOString()
-        });
-
+        await updateDoc(doc(db, "users", currentUser.uid), { plan: planName, wordLimit, isPaid: true, upgradeDate: new Date().toISOString() });
         closePricingModal();
         location.reload();
     };
-
-    payhere.onDismissed = function () {
-        alert("⚠️ Payment was cancelled.");
-    };
-
-    payhere.onError = function (error) {
-        alert("❌ Payment Error: " + error);
-    };
-
+    payhere.onDismissed = () => alert("⚠️ Payment cancelled.");
+    payhere.onError = (err) => alert("❌ Payment Error: " + err);
     payhere.startPayment(payment);
 };
 
@@ -772,106 +553,61 @@ const customGradePointInput = document.getElementById('custom-grade-point');
 
 function toggleUniversityMode(mode) {
     if (!gradeSelect || !otherUniBox) return;
-    if (mode === 'other') {
-        gradeSelect.style.display = 'none';
-        otherUniBox.style.display = 'flex';
-    } else {
-        gradeSelect.style.display = 'block';
-        otherUniBox.style.display = 'none';
-    }
+    if (mode === 'other') { gradeSelect.style.display = 'none'; otherUniBox.style.display = 'flex'; }
+    else { gradeSelect.style.display = 'block'; otherUniBox.style.display = 'none'; }
 }
 
 if (profileOkBtn) {
     profileOkBtn.addEventListener('click', () => {
         if (!universitySelector || !degreeInput) return;
-        const selectedMode = universitySelector.value;
-        const degreeVal = degreeInput.value.trim();
-
-        if (degreeVal === "") {
-            alert("⚠️ Please enter your Degree Program name!");
-            degreeInput.focus();
-            return;
-        }
-
-        localStorage.setItem('active_uni_mode', selectedMode);
-        localStorage.setItem(selectedMode + '_degree', degreeVal);
-
-        toggleUniversityMode(selectedMode);
+        const mode = universitySelector.value;
+        const deg = degreeInput.value.trim();
+        if (!deg) { alert("⚠️ Please enter your Degree Program name!"); degreeInput.focus(); return; }
+        localStorage.setItem('active_uni_mode', mode);
+        localStorage.setItem(mode + '_degree', deg);
+        toggleUniversityMode(mode);
         updateUI();
-        alert("✅ Profile switched successfully to " + (selectedMode === 'horizon' ? "Horizon Campus" : "Other University") + "!");
+        alert("✅ Profile switched successfully!");
     });
 }
 
 const savedActiveMode = localStorage.getItem('active_uni_mode') || 'horizon';
-if (universitySelector) {
-    universitySelector.value = savedActiveMode;
-    toggleUniversityMode(savedActiveMode);
-}
-if (degreeInput) {
-    degreeInput.value = localStorage.getItem(savedActiveMode + '_degree') || '';
-}
+if (universitySelector) { universitySelector.value = savedActiveMode; toggleUniversityMode(savedActiveMode); }
+if (degreeInput) { degreeInput.value = localStorage.getItem(savedActiveMode + '_degree') || ''; }
 
 function applyTheme(theme) {
-    const body = document.body;
-    body.classList.remove('light-mode');
-
-    if (theme === 'light') {
-        body.classList.add('light-mode');
-    } else if (theme === 'system') {
-        if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-            body.classList.add('light-mode');
-        }
+    document.body.classList.remove('light-mode');
+    if (theme === 'light' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+        document.body.classList.add('light-mode');
     }
-    renderGPAChart(); 
+    renderGPAChart();
 }
 
 const themeSelector = document.getElementById('theme-selector');
 if (themeSelector) {
-    themeSelector.addEventListener('change', (e) => {
-        const selectedTheme = e.target.value;
-        localStorage.setItem('theme', selectedTheme);
-        applyTheme(selectedTheme);
-    });
-
-    const savedTheme = localStorage.getItem('theme') || 'system';
-    themeSelector.value = savedTheme;
-    applyTheme(savedTheme);
+    themeSelector.addEventListener('change', (e) => { localStorage.setItem('theme', e.target.value); applyTheme(e.target.value); });
+    themeSelector.value = localStorage.getItem('theme') || 'system';
+    applyTheme(themeSelector.value);
 }
 
 if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-        signOut(auth).then(() => {
-            allSubjects = []; 
-            tasks = [];
-            showView('hub');
-            updateUI();
-        });
-    });
+    logoutBtn.addEventListener('click', () => { signOut(auth).then(() => { allSubjects = []; showView('hub'); updateUI(); }); });
 }
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
-        const displayName = user.displayName ? user.displayName.split(" ")[0] : "Student";
-        
-        updateDynamicGreeting(displayName);
-        checkDeadlineNotifications();
-
+        updateDynamicGreeting(user.displayName ? user.displayName.split(" ")[0] : "Student");
         if (loginSection) loginSection.style.display = "none";
         if (appSection) appSection.style.display = "block";
-        
-        const modal = document.getElementById('review-modal');
-        if (modal) modal.style.display = 'flex';
-
+        if (document.getElementById('review-modal')) document.getElementById('review-modal').style.display = 'flex';
         showView('hub');
         await loadSubjectsFromDB();
-        await loadTasksFromDB();
     } else {
         currentUser = null;
         if (loginSection) loginSection.style.display = "block";
         if (appSection) appSection.style.display = "none";
-        const modal = document.getElementById('review-modal');
-        if (modal) modal.style.display = 'none';
+        if (document.getElementById('review-modal')) document.getElementById('review-modal').style.display = 'none';
     }
 });
 
@@ -880,52 +616,19 @@ async function loadSubjectsFromDB() {
         allSubjects = [];
         if (!currentUser) return;
         const querySnapshot = await getDocs(collection(db, "users", currentUser.uid, "subjects"));
-        
-        querySnapshot.forEach((doc) => {
-            let sub = doc.data();
-            sub.dbId = doc.id; 
-            if (!sub.mode) sub.mode = 'horizon'; 
-            allSubjects.push(sub);
-        });
-        
+        querySnapshot.forEach(doc => { let sub = doc.data(); sub.dbId = doc.id; if (!sub.mode) sub.mode = 'horizon'; allSubjects.push(sub); });
         updateUI();
-    } catch (error) {
-        console.error("Error fetching data:", error);
-    }
-}
-
-async function loadTasksFromDB() {
-    try {
-        tasks = [];
-        if (!currentUser) return;
-        const querySnapshot = await getDocs(collection(db, "users", currentUser.uid, "tasks"));
-        querySnapshot.forEach((doc) => {
-            let task = doc.data();
-            task.dbId = doc.id;
-            tasks.push(task);
-        });
-        renderTasksUI();
-    } catch (error) {
-        console.error("Error loading tasks:", error);
-    }
+    } catch (e) { console.error("Error loading subjects:", e); }
 }
 
 window.editSubject = function(dbId) {
-    if (!degreeInput || degreeInput.value.trim() === "") {
-        alert("⚠️ Please click 'OK' after entering your Degree Program name first!");
-        if (degreeInput) degreeInput.focus();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-    }
-
+    if (!degreeInput || degreeInput.value.trim() === "") { alert("⚠️ Please enter Degree Program name first!"); degreeInput.focus(); return; }
     const sub = allSubjects.find(s => s.dbId === dbId);
     if (!sub) return;
-
     document.getElementById('subject-name').value = sub.name;
     document.getElementById('subject-year').value = sub.year;
     document.getElementById('subject-semester').value = sub.semester;
     document.getElementById('credit').value = sub.credit;
-    
     const targetMode = sub.mode || 'horizon';
     if (universitySelector) universitySelector.value = targetMode;
     localStorage.setItem('active_uni_mode', targetMode);
@@ -935,89 +638,44 @@ window.editSubject = function(dbId) {
         if (otherGradeLetter) otherGradeLetter.value = sub.gradeLetter || "A";
         if (customGradePointInput) customGradePointInput.value = sub.gradePoint === -1 ? 0 : sub.gradePoint;
     } else {
-        let found = false;
         if (gradeSelect) {
             for (let i = 0; i < gradeSelect.options.length; i++) {
-                if (sub.gradeText && gradeSelect.options[i].text === sub.gradeText) {
-                    gradeSelect.selectedIndex = i;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                for (let i = 0; i < gradeSelect.options.length; i++) {
-                    if (gradeSelect.options[i].value == sub.gradePoint) {
-                        gradeSelect.selectedIndex = i;
-                        break;
-                    }
-                }
+                if (sub.gradeText && gradeSelect.options[i].text === sub.gradeText) { gradeSelect.selectedIndex = i; break; }
             }
         }
     }
-
     editingSubjectId = dbId;
     if (addBtn) addBtn.innerText = "Update Subject";
-    const formTitle = document.getElementById('form-title');
-    if (formTitle) formTitle.innerText = "Edit Subject";
+    document.getElementById('form-title').innerText = "Edit Subject";
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 if (addBtn) {
     addBtn.addEventListener('click', async () => {
-        if(!currentUser) return; 
+        if (!currentUser) return;
+        if (!degreeInput || degreeInput.value.trim() === "") { alert("⚠️ Please enter Degree name first!"); degreeInput.focus(); return; }
 
-        if (!degreeInput || degreeInput.value.trim() === "") {
-            alert("⚠️ Please select your campus, enter your Degree Program name, and click 'OK' first!");
-            if (degreeInput) degreeInput.focus();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-        }
-
-        const nameInput = document.getElementById('subject-name');
-        const yearInput = document.getElementById('subject-year');
-        const semesterInput = document.getElementById('subject-semester');
-        const creditInput = document.getElementById('credit');
-        
-        const name = nameInput ? nameInput.value.trim() : "";
-        const year = yearInput ? yearInput.value : "";
-        const semester = semesterInput ? semesterInput.value : "";
-        const credit = creditInput ? parseFloat(creditInput.value) : NaN;
+        const name = document.getElementById('subject-name').value.trim();
+        const year = document.getElementById('subject-year').value;
+        const semester = document.getElementById('subject-semester').value;
+        const credit = parseFloat(document.getElementById('credit').value);
         const activeMode = getActiveMode();
 
         let gradePoint, gradeText, gradeLetter = "", isCustom = false;
-
         if (activeMode === 'other') {
-            gradeLetter = otherGradeLetter ? otherGradeLetter.value : "";
-            const rawPoint = customGradePointInput ? customGradePointInput.value.trim() : "";
-            
-            if (name === "" || year === "" || semester === "" || isNaN(credit) || gradeLetter === "") {
-                alert("Please fill all fields correctly, including the grade letter!");
-                return;
-            }
-
-            if (gradeLetter === "Repeat") {
-                gradePoint = -1; 
-                gradeText = "Repeat (RA)";
-            } else {
-                if (rawPoint === "" || isNaN(parseFloat(rawPoint))) {
-                    alert("Please enter a valid numeric grade point for this grade!");
-                    return;
-                }
-                gradePoint = parseFloat(rawPoint);
-                gradeText = `${gradeLetter} (${gradePoint.toFixed(2)})`;
-            }
+            gradeLetter = otherGradeLetter.value;
+            const rawPoint = customGradePointInput.value.trim();
+            if (!name || !year || !semester || isNaN(credit) || !gradeLetter) { alert("Please fill all fields correctly!"); return; }
+            if (gradeLetter === "Repeat") { gradePoint = -1; gradeText = "Repeat (RA)"; }
+            else { gradePoint = parseFloat(rawPoint); gradeText = `${gradeLetter} (${gradePoint.toFixed(2)})`; }
             isCustom = true;
         } else {
-            gradePoint = gradeSelect ? parseFloat(gradeSelect.value) : NaN;
-            gradeText = gradeSelect ? gradeSelect.options[gradeSelect.selectedIndex].text : "";
-            if (name === "" || year === "" || semester === "" || isNaN(credit) || isNaN(gradePoint)) {
-                alert("Please fill all fields correctly!");
-                return;
-            }
+            gradePoint = parseFloat(gradeSelect.value);
+            gradeText = gradeSelect.options[gradeSelect.selectedIndex].text;
+            if (!name || !year || !semester || isNaN(credit) || isNaN(gradePoint)) { alert("Please fill all fields!"); return; }
         }
 
         const subjectData = { name, year, semester, credit, gradePoint, gradeText, gradeLetter, isCustom, mode: activeMode };
-
         addBtn.innerText = editingSubjectId ? "Updating..." : "Saving...";
         addBtn.disabled = true;
 
@@ -1028,40 +686,27 @@ if (addBtn) {
                 editingSubjectId = null;
             } else {
                 const docRef = await addDoc(collection(db, "users", currentUser.uid, "subjects"), subjectData);
-                subjectData.dbId = docRef.id; 
+                subjectData.dbId = docRef.id;
                 allSubjects.push(subjectData);
             }
-            
-            if (nameInput) nameInput.value = '';
-            if (yearInput) yearInput.selectedIndex = 0;
-            if (semesterInput) semesterInput.selectedIndex = 0;
-            if (creditInput) creditInput.selectedIndex = 0;
+            document.getElementById('subject-name').value = '';
+            document.getElementById('subject-year').selectedIndex = 0;
+            document.getElementById('subject-semester').selectedIndex = 0;
+            document.getElementById('credit').selectedIndex = 0;
             if (gradeSelect) gradeSelect.selectedIndex = 0;
-            if (otherGradeLetter) otherGradeLetter.selectedIndex = 0;
-            if (customGradePointInput) customGradePointInput.value = '';
             addBtn.innerText = "Add to List";
-            const formTitle = document.getElementById('form-title');
-            if (formTitle) formTitle.innerText = "Add New Subject";
+            document.getElementById('form-title').innerText = "Add New Subject";
             updateUI();
-        } catch (e) {
-            alert("Error saving subject: " + e.message);
-        }
-
+        } catch (e) { alert("Error saving subject: " + e.message); }
         addBtn.disabled = false;
     });
 }
 
 window.removeSubject = async function(dbId) {
-    if(!currentUser) return;
-
+    if (!currentUser) return;
     allSubjects = allSubjects.filter(sub => sub.dbId !== dbId);
     updateUI();
-
-    try {
-        await deleteDoc(doc(db, "users", currentUser.uid, "subjects", dbId));
-    } catch (e) {
-        console.error("Error deleting document: ", e);
-    }
+    try { await deleteDoc(doc(db, "users", currentUser.uid, "subjects", dbId)); } catch (e) { console.error(e); }
 };
 
 const eraseSemBtn = document.getElementById('erase-sem-btn');
@@ -1070,33 +715,16 @@ if (eraseSemBtn) {
         if (!currentUser) return;
         const year = document.getElementById('erase-year').value;
         const semester = document.getElementById('erase-semester').value;
+        if (!year || !semester) { alert("Please select Year and Semester!"); return; }
+        if (!confirm(`Delete subjects for Year ${year}, Semester ${semester}?`)) return;
 
-        if (!year || !semester) {
-            alert("Please select both Year and Semester to erase!");
-            return;
-        }
-
-        if (!confirm(`Are you sure you want to delete all subjects for Year ${year}, Semester ${semester}?`)) return;
-
-        const activeSubjects = getActiveSubjects();
-        const targets = activeSubjects.filter(s => s.year == year && s.semester == semester);
-        if (targets.length === 0) {
-            alert("No subjects found for the selected Year and Semester in this profile.");
-            return;
-        }
-
+        const targets = getActiveSubjects().filter(s => s.year == year && s.semester == semester);
         try {
-            for (let sub of targets) {
-                await deleteDoc(doc(db, "users", currentUser.uid, "subjects", sub.dbId));
-            }
+            for (let sub of targets) await deleteDoc(doc(db, "users", currentUser.uid, "subjects", sub.dbId));
             allSubjects = allSubjects.filter(s => !targets.some(t => t.dbId === s.dbId));
             updateUI();
-            alert(`Year ${year}, Semester ${semester} data erased successfully!`);
-            document.getElementById('erase-year').selectedIndex = 0;
-            document.getElementById('erase-semester').selectedIndex = 0;
-        } catch (e) {
-            alert("Error erasing data: " + e.message);
-        }
+            alert("Erasure successful!");
+        } catch (e) { alert("Error: " + e.message); }
     });
 }
 
@@ -1104,109 +732,53 @@ const resetAllBtn = document.getElementById('reset-all-btn');
 if (resetAllBtn) {
     resetAllBtn.addEventListener('click', async () => {
         if (!currentUser) return;
-        const activeSubjects = getActiveSubjects();
-        if (activeSubjects.length === 0) {
-            alert("No data to reset in this profile!");
-            return;
-        }
-
-        if (!confirm("WARNING: This will permanently delete ALL your subjects in the current profile. Are you sure?")) return;
-
+        const targets = getActiveSubjects();
+        if (targets.length === 0) { alert("No data to reset!"); return; }
+        if (!confirm("WARNING: Permanently delete all subjects in this profile?")) return;
         try {
-            for (let sub of activeSubjects) {
-                await deleteDoc(doc(db, "users", currentUser.uid, "subjects", sub.dbId));
-            }
+            for (let sub of targets) await deleteDoc(doc(db, "users", currentUser.uid, "subjects", sub.dbId));
             allSubjects = allSubjects.filter(s => (s.mode || 'horizon') !== getActiveMode());
             updateUI();
-            alert("Current profile data has been fully reset!");
-        } catch (e) {
-            alert("Error resetting data: " + e.message);
-        }
+            alert("Profile data reset successfully!");
+        } catch (e) { alert("Error: " + e.message); }
     });
 }
 
 const downloadPdfBtn = document.getElementById('download-pdf');
 if (downloadPdfBtn) {
     downloadPdfBtn.addEventListener('click', () => {
-        if (!degreeInput || degreeInput.value.trim() === "") {
-            alert("⚠️ Please enter your Degree Program name and click 'OK' before downloading the certificate!");
-            if (degreeInput) degreeInput.focus();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-        }
-
+        if (!degreeInput || degreeInput.value.trim() === "") { alert("⚠️ Enter degree name first!"); degreeInput.focus(); return; }
         const activeSubjects = getActiveSubjects();
-        if (activeSubjects.length === 0) {
-            alert("⚠️ You must add at least one subject in this profile to download your certificate!");
-            const subNameInput = document.getElementById('subject-name');
-            if (subNameInput) subNameInput.focus();
-            window.scrollTo({ top: 300, behavior: 'smooth' });
-            return;
-        }
+        if (activeSubjects.length === 0) { alert("⚠️ Add at least one subject!"); return; }
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        
         const degree = degreeInput.value;
         const name = userNameDisplay ? userNameDisplay.innerText : "Student";
-        const cgpaEl = document.getElementById('cgpa-display');
-        const classEl = document.getElementById('class-display');
-        const cgpa = cgpaEl ? cgpaEl.innerText : "0.00";
-        const prediction = classEl ? classEl.innerText : "Pending";
+        const cgpa = document.getElementById('cgpa-display').innerText;
+        const prediction = document.getElementById('class-display').innerText;
 
-        doc.setDrawColor(30, 41, 59);
-        doc.setLineWidth(1.5);
-        doc.rect(10, 10, 190, 277);
-
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(18);
-        doc.text("ACADEMIC PERFORMANCE REPORT", 105, 25, null, null, "center");
-        
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        doc.text(`Student: ${name}`, 20, 36);
-        doc.text(`Degree: ${degree}`, 20, 43);
-        
-        doc.setLineWidth(0.5);
+        doc.setDrawColor(30, 41, 59); doc.setLineWidth(1.5); doc.rect(10, 10, 190, 277);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.text("ACADEMIC PERFORMANCE REPORT", 105, 25, null, null, "center");
+        doc.setFontSize(10); doc.setFont("helvetica", "normal");
+        doc.text(`Student: ${name}`, 20, 36); doc.text(`Degree: ${degree}`, 20, 43);
         doc.line(20, 48, 190, 48);
 
         let yPos = 56;
-
-        const years = [1, 2, 3, 4];
-        years.forEach(year => {
-            const yearSubjects = activeSubjects.filter(s => s.year == year);
-            if (yearSubjects.length === 0) return;
-
+        [1, 2, 3, 4].forEach(year => {
             [1, 2].forEach(sem => {
-                const semSubjects = activeSubjects.filter(s => s.year == year && s.semester == sem);
-                if (semSubjects.length === 0) return;
-
-                if (yPos > 240) {
-                    doc.addPage();
-                    yPos = 25;
-                }
-
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(11);
-                doc.text(`Year ${year} - Semester ${sem}`, 20, yPos);
-                yPos += 6;
-
-                doc.setFillColor(240, 240, 240);
-                doc.rect(20, yPos, 170, 7, "F");
-
+                const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
+                if (semSubs.length === 0) return;
+                if (yPos > 240) { doc.addPage(); yPos = 25; }
+                doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+                doc.text(`Year ${year} - Semester ${sem}`, 20, yPos); yPos += 6;
+                doc.setFillColor(240, 240, 240); doc.rect(20, yPos, 170, 7, "F");
                 doc.setFontSize(9);
-                doc.text("Subject Name", 25, yPos + 5);
-                doc.text("Credits", 115, yPos + 5);
-                doc.text("Grade", 140, yPos + 5);
-                doc.text("Point", 165, yPos + 5);
+                doc.text("Subject Name", 25, yPos + 5); doc.text("Credits", 115, yPos + 5); doc.text("Grade", 140, yPos + 5); doc.text("Point", 165, yPos + 5);
                 yPos += 9;
-
                 doc.setFont("helvetica", "normal");
-                semSubjects.forEach(sub => {
-                    if (yPos > 265) {
-                        doc.addPage();
-                        yPos = 25;
-                    }
+                semSubs.forEach(sub => {
+                    if (yPos > 265) { doc.addPage(); yPos = 25; }
                     doc.text(sub.name, 25, yPos);
                     doc.text(String(sub.credit), 118, yPos);
                     doc.text(sub.gradeText, 140, yPos);
@@ -1217,64 +789,34 @@ if (downloadPdfBtn) {
             });
         });
 
-        if (yPos > 230) {
-            doc.addPage();
-            yPos = 25;
-        }
-
-        doc.setDrawColor(30, 41, 59);
-        doc.setFillColor(248, 250, 252);
-        doc.roundedRect(20, yPos, 170, 22, 2, 2, "FD");
-
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
+        if (yPos > 230) { doc.addPage(); yPos = 25; }
+        doc.setFillColor(248, 250, 252); doc.roundedRect(20, yPos, 170, 22, 2, 2, "FD");
+        doc.setFont("helvetica", "bold"); doc.setFontSize(11);
         doc.text(`Overall Cumulative CGPA: ${cgpa}`, 25, yPos + 8);
         doc.text(`Predicted Class: ${prediction}`, 25, yPos + 16);
-
         doc.save(`Transcript_${name.replace(/\s+/g, '_')}.pdf`);
     });
 }
 
 function calculateSemesterGPA(year, semester) {
-    const activeSubjects = getActiveSubjects();
-    let totalCredits = 0;
-    let totalPoints = 0;
-    activeSubjects.filter(s => s.year == year && s.semester == semester).forEach(sub => {
-        if (sub.gradePoint !== -1) {
-            totalCredits += sub.credit;
-            totalPoints += (sub.credit * sub.gradePoint);
-        }
-    });
-    if (totalCredits === 0) return "0.00";
-    return (totalPoints / totalCredits).toFixed(2);
+    const subs = getActiveSubjects().filter(s => s.year == year && s.semester == semester && s.gradePoint !== -1);
+    let creds = subs.reduce((acc, s) => acc + s.credit, 0);
+    let pts = subs.reduce((acc, s) => acc + (s.credit * s.gradePoint), 0);
+    return creds === 0 ? "0.00" : (pts / creds).toFixed(2);
 }
 
 function calculateYearGPA(year) {
-    const activeSubjects = getActiveSubjects();
-    let totalCredits = 0;
-    let totalPoints = 0;
-    activeSubjects.filter(s => s.year == year).forEach(sub => {
-        if (sub.gradePoint !== -1) {
-            totalCredits += sub.credit;
-            totalPoints += (sub.credit * sub.gradePoint);
-        }
-    });
-    if (totalCredits === 0) return "0.00";
-    return (totalPoints / totalCredits).toFixed(2);
+    const subs = getActiveSubjects().filter(s => s.year == year && s.gradePoint !== -1);
+    let creds = subs.reduce((acc, s) => acc + s.credit, 0);
+    let pts = subs.reduce((acc, s) => acc + (s.credit * s.gradePoint), 0);
+    return creds === 0 ? "0.00" : (pts / creds).toFixed(2);
 }
 
 function calculateOverallCGPA() {
-    const activeSubjects = getActiveSubjects();
-    let totalCredits = 0;
-    let totalPoints = 0;
-    activeSubjects.forEach(sub => {
-        if (sub.gradePoint !== -1) {
-            totalCredits += sub.credit;
-            totalPoints += (sub.credit * sub.gradePoint);
-        }
-    });
-    if (totalCredits === 0) return 0.00;
-    return (totalPoints / totalCredits).toFixed(2);
+    const subs = getActiveSubjects().filter(s => s.gradePoint !== -1);
+    let creds = subs.reduce((acc, s) => acc + s.credit, 0);
+    let pts = subs.reduce((acc, s) => acc + (s.credit * s.gradePoint), 0);
+    return creds === 0 ? "0.00" : (pts / creds).toFixed(2);
 }
 
 function determineDegreeClass(cgpa) {
@@ -1286,11 +828,8 @@ function determineDegreeClass(cgpa) {
 }
 
 function getStatusAdvice(gradeText) {
-    if (gradeText.includes("Repeat")) return '<br><small style="color: #f87171;">Repeat Subject - Not included in GPA calculation</small>';
-    if (gradeText === "NC-C") return '<br><small style="color: #f87171;">Please Complete Your Exam & C/A Next Attempt</small>';
-    if (gradeText === "NC-E") return '<br><small style="color: #fbbf24;">Please Complete Your Exam Next Attempt</small>';
-    if (gradeText === "NE") return '<br><small style="color: #60a5fa;">Please Complete Your Exam & CA Next Attempt. Keep Your Attendance Upto 80%</small>';
-    if (gradeText === "F") return '<br><small style="color: #f87171;">Please Complete Your Exam & C/A Next Attempt</small>';
+    if (gradeText.includes("Repeat")) return '<br><small style="color: #f87171;">Repeat Subject</small>';
+    if (gradeText === "NC-C" || gradeText === "F") return '<br><small style="color: #f87171;">Retake Exam & C/A</small>';
     return "";
 }
 
@@ -1299,43 +838,26 @@ function renderGPAChart() {
     const ctx = document.getElementById('gpaChart');
     if (!ctx) return;
 
-    let labels = [];
-    let semGPAs = [];
-    let cumulativeGPAs = [];
-
-    const years = [1, 2, 3, 4];
-    years.forEach(year => {
+    let labels = [], semGPAs = [], cumulativeGPAs = [];
+    [1, 2, 3, 4].forEach(year => {
         [1, 2].forEach(sem => {
             const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
             if (semSubs.length > 0) {
                 labels.push(`Y${year} S${sem}`);
-                
                 let creds = 0, pts = 0;
-                semSubs.forEach(sub => {
-                    if (sub.gradePoint !== -1) {
-                        creds += sub.credit;
-                        pts += (sub.credit * sub.gradePoint);
-                    }
-                });
-                let sGPA = creds > 0 ? (pts / creds) : 0;
-                semGPAs.push(sGPA.toFixed(2));
+                semSubs.forEach(sub => { if (sub.gradePoint !== -1) { creds += sub.credit; pts += (sub.credit * sub.gradePoint); } });
+                semGPAs.push(creds > 0 ? (pts / creds).toFixed(2) : 0);
             }
         });
     });
 
     let totalC = 0, totalP = 0;
-    years.forEach(year => {
+    [1, 2, 3, 4].forEach(year => {
         [1, 2].forEach(sem => {
             const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
             if (semSubs.length > 0) {
-                semSubs.forEach(sub => {
-                    if (sub.gradePoint !== -1) {
-                        totalC += sub.credit;
-                        totalP += (sub.credit * sub.gradePoint);
-                    }
-                });
-                let cGPA = totalC > 0 ? (totalP / totalC) : 0;
-                cumulativeGPAs.push(cGPA.toFixed(2));
+                semSubs.forEach(sub => { if (sub.gradePoint !== -1) { totalC += sub.credit; totalP += (sub.credit * sub.gradePoint); } });
+                cumulativeGPAs.push(totalC > 0 ? (totalP / totalC).toFixed(2) : 0);
             }
         });
     });
@@ -1344,54 +866,22 @@ function renderGPAChart() {
     const textColor = isLight ? '#0f172a' : '#e2e8f0';
     const gridColor = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.05)';
 
-    if (myChart) {
-        myChart.destroy();
-    }
-
+    if (myChart) myChart.destroy();
     myChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
             datasets: [
-                {
-                    label: 'Semester GPA',
-                    data: semGPAs,
-                    borderColor: '#a855f7',
-                    backgroundColor: 'rgba(168, 85, 247, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.3,
-                    fill: true
-                },
-                {
-                    label: 'Cumulative CGPA',
-                    data: cumulativeGPAs,
-                    borderColor: '#38bdf8',
-                    backgroundColor: 'rgba(56, 189, 248, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.3,
-                    fill: true
-                }
+                { label: 'Semester GPA', data: semGPAs, borderColor: '#a855f7', backgroundColor: 'rgba(168, 85, 247, 0.1)', borderWidth: 2, tension: 0.3, fill: true },
+                { label: 'Cumulative CGPA', data: cumulativeGPAs, borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', borderWidth: 3, tension: 0.3, fill: true }
             ]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    labels: { color: textColor, font: { family: 'Poppins' } }
-                }
-            },
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: textColor, font: { family: 'Poppins' } } } },
             scales: {
-                y: {
-                    min: 0,
-                    max: 4.3,
-                    grid: { color: gridColor },
-                    ticks: { color: textColor, font: { family: 'Poppins' } }
-                },
-                x: {
-                    grid: { color: gridColor },
-                    ticks: { color: textColor, font: { family: 'Poppins' } }
-                }
+                y: { min: 0, max: 4.3, grid: { color: gridColor }, ticks: { color: textColor } },
+                x: { grid: { color: gridColor }, ticks: { color: textColor } }
             }
         }
     });
@@ -1399,18 +889,12 @@ function renderGPAChart() {
 
 function updateUI() {
     const activeSubjects = getActiveSubjects();
-    const overallCGPA = calculateOverallCGPA();
-    const currentGPA = parseFloat(overallCGPA);
+    const currentGPA = parseFloat(calculateOverallCGPA());
     const cgpaDisplay = document.getElementById('cgpa-display');
     const classDisplay = document.getElementById('class-display');
 
-    if (cgpaDisplay) cgpaDisplay.innerText = overallCGPA;
-    
-    if (activeSubjects.length > 0) {
-        if (classDisplay) classDisplay.innerText = determineDegreeClass(currentGPA);
-    } else {
-        if (classDisplay) classDisplay.innerText = "Pending...";
-    }
+    if (cgpaDisplay) cgpaDisplay.innerText = currentGPA.toFixed(2);
+    if (classDisplay) classDisplay.innerText = activeSubjects.length > 0 ? determineDegreeClass(currentGPA) : "Pending...";
 
     const goalContent = document.getElementById('goal-content');
     if (goalContent) {
@@ -1420,19 +904,13 @@ function updateUI() {
             { name: "Second Class (Upper)", min: CLASS_THRESHOLDS.SECOND_UPPER },
             { name: "First Class", min: CLASS_THRESHOLDS.FIRST_CLASS }
         ];
-
-        let goalsHTML = '';
+        let html = '';
         thresholds.forEach(t => {
             const isActive = currentGPA >= t.min;
             const diff = (t.min - currentGPA).toFixed(2);
-            goalsHTML += `
-                <div class="goal-item ${isActive ? 'goal-active' : ''}">
-                    <div>${isActive ? '✅' : '🎯'} <b>${t.name} (>= ${t.min.toFixed(2)})</b></div>
-                    ${!isActive ? `<small style="color:#38bdf8; margin-top: 2px;">Need <b>${diff}</b> more GPA points to reach this target</small>` : `<small style="color:#22c55e; margin-top: 2px;">Target Achieved!</small>`}
-                </div>
-            `;
+            html += `<div class="goal-item ${isActive ? 'goal-active' : ''}"><div>${isActive ? '✅' : '🎯'} <b>${t.name} (>= ${t.min.toFixed(2)})</b></div>${!isActive ? `<small style="color:#38bdf8; margin-top:2px;">Need <b>${diff}</b> more points</small>` : `<small style="color:#22c55e; margin-top:2px;">Target Achieved!</small>`}</div>`;
         });
-        goalContent.innerHTML = goalsHTML;
+        goalContent.innerHTML = html;
     }
 
     renderGPAChart();
@@ -1442,74 +920,31 @@ function updateUI() {
     container.innerHTML = '';
 
     if (activeSubjects.length === 0) {
-        container.innerHTML = `<div class="glass-card empty-state" style="text-align: center; color: var(--text-muted); padding: 2rem;">No subjects added in this profile yet. Select Year & Semester to start tracking!</div>`;
+        container.innerHTML = `<div class="glass-card empty-state" style="text-align: center; color: var(--text-muted); padding: 2rem;">No subjects added in this profile yet.</div>`;
         return;
     }
 
-    const years = [1, 2, 3, 4];
-
-    years.forEach(year => {
-        const yearSubjects = activeSubjects.filter(s => s.year == year);
-        if (yearSubjects.length === 0) return;
-
+    [1, 2, 3, 4].forEach(year => {
+        const yearSubs = activeSubjects.filter(s => s.year == year);
+        if (yearSubs.length === 0) return;
         const yearGPA = calculateYearGPA(year);
 
-        let yearHTML = `
-            <div class="glass-card year-card">
-                <div class="year-header">
-                    <div class="year-title">Year ${year}</div>
-                    <div style="font-size: 1rem; font-weight: 500;">Year GPA: <span style="color: #38bdf8; font-weight: 600;">${yearGPA}</span></div>
-                </div>`;
+        let yearHTML = `<div class="glass-card year-card"><div class="year-header"><div class="year-title">Year ${year}</div><div style="font-size: 1rem; font-weight: 500;">Year GPA: <span style="color: #38bdf8; font-weight: 600;">${yearGPA}</span></div></div>`;
 
-        const semesters = [1, 2];
-        semesters.forEach(sem => {
-            const semSubjects = activeSubjects.filter(s => s.year == year && s.semester == sem);
-            if (semSubjects.length === 0) return;
-
+        [1, 2].forEach(sem => {
+            const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
+            if (semSubs.length === 0) return;
             const semGPA = calculateSemesterGPA(year, sem);
 
-            yearHTML += `
-                <div class="semester-box">
-                    <div class="semester-header">
-                        <div class="semester-title">Semester ${sem}</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted);">Semester GPA: <span style="color: #a855f7; font-weight: 600;">${semGPA}</span></div>
-                    </div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Subject Name</th>
-                                    <th>Credits</th>
-                                    <th>Grade Point / Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>`;
+            yearHTML += `<div class="semester-box"><div class="semester-header"><div class="semester-title">Semester ${sem}</div><div style="font-size: 0.85rem; color: var(--text-muted);">Semester GPA: <span style="color: #a855f7; font-weight: 600;">${semGPA}</span></div></div><div class="table-responsive"><table><thead><tr><th>Subject Name</th><th>Credits</th><th>Grade / Status</th><th>Action</th></tr></thead><tbody>`;
 
-            semSubjects.forEach(sub => {
-                let displayGrade = sub.gradePoint === -1 
-                    ? sub.gradeText + getStatusAdvice(sub.gradeText) 
-                    : sub.gradePoint.toFixed(2);
-
-                yearHTML += `
-                    <tr>
-                        <td>${sub.name}</td>
-                        <td>${sub.credit}</td>
-                        <td style="line-height: 1.3; padding: 8px 0;">${displayGrade}</td>
-                        <td>
-                            <button onclick="editSubject('${sub.dbId}')" class="btn-edit">Edit</button>
-                            <button onclick="removeSubject('${sub.dbId}')" class="btn-remove">Remove</button>
-                        </td>
-                    </tr>`;
+            semSubs.forEach(sub => {
+                let displayGrade = sub.gradePoint === -1 ? sub.gradeText + getStatusAdvice(sub.gradeText) : sub.gradePoint.toFixed(2);
+                yearHTML += `<tr><td>${sub.name}</td><td>${sub.credit}</td><td style="line-height: 1.3; padding: 8px 0;">${displayGrade}</td><td><button onclick="editSubject('${sub.dbId}')" class="btn-edit">Edit</button> <button onclick="removeSubject('${sub.dbId}')" class="btn-remove">Remove</button></td></tr>`;
             });
 
-            yearHTML += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>`;
+            yearHTML += `</tbody></table></div></div>`;
         });
-
         yearHTML += `</div>`;
         container.innerHTML += yearHTML;
     });
