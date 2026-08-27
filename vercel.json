@@ -1,5 +1,11 @@
 {
   "rewrites": [
     { "source": "/api/humanize", "destination": "/api/humanize.js" }
+  ],
+  "crons": [
+    {
+      "path": "/api/check-deadlines",
+      "schedule": "* * * * *"
+    }
   ]
 }
