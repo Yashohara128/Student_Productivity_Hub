@@ -17,12 +17,15 @@ module.exports = async function handler(req, res) {
 
     try {
         const { text } = req.body;
+        console.log("Received text for humanizing, length:", text ? text.length : 0);
+
         if (!text) {
             return res.status(400).json({ error: 'Text is required' });
         }
 
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
+            console.error("ERROR: GEMINI_API_KEY is missing in environment variables!");
             return res.status(500).json({ error: 'GEMINI_API_KEY is not set in Vercel environment variables' });
         }
 
@@ -57,14 +60,17 @@ ${text}`;
         });
 
         const data = await response.json();
+        console.log("Gemini API response status:", response.status);
         
         if (data.candidates && data.candidates[0].content.parts[0].text) {
             const humanizedResult = data.candidates[0].content.parts[0].text.trim();
             return res.status(200).json({ result: humanizedResult });
         } else {
+            console.error("Gemini API returned error structure:", JSON.stringify(data));
             return res.status(500).json({ error: 'Gemini API structure error', details: data });
         }
     } catch (error) {
+        console.error("Catch block error in serverless function:", error);
         return res.status(500).json({ error: error.message });
     }
 };
