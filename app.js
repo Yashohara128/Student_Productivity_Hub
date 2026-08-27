@@ -1,9 +1,9 @@
 // ==========================================
-// STUDENT PRODUCTIVITY HUB - APP.JS (REDIRECT LOGIN & COMPLETE)
+// STUDENT PRODUCTIVITY HUB - APP.JS (FINAL AUTH & APP CODE)
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -58,23 +58,30 @@ const CLASS_THRESHOLDS = {
     PASS: 2.00
 };
 
-// --- Google Login via Redirect (Brave & Popup Blocker Proof) ---
-if (loginBtn) {
-    loginBtn.addEventListener('click', () => {
-        signInWithRedirect(auth, provider);
-    });
+// --- HELPER FUNCTIONS ---
+function getActiveMode() {
+    return localStorage.getItem('active_uni_mode') || 'horizon';
 }
 
-// Handle Redirect Result
-getRedirectResult(auth)
-    .then((result) => {
-        if (result && result.user) {
-            console.log("Login Success:", result.user.displayName);
-        }
-    }).catch((error) => {
-        console.error("Login Error:", error);
-        alert("Login Failed: " + error.message);
+function getActiveSubjects() {
+    const activeMode = getActiveMode();
+    return allSubjects.filter(sub => (sub.mode || 'horizon') === activeMode);
+}
+
+// --- Google Login via Popup (Standard & Stable) ---
+if (loginBtn) {
+    loginBtn.addEventListener('click', () => {
+        signInWithPopup(auth, provider)
+            .then((result) => {
+                console.log("Login Success:", result.user.displayName);
+            })
+            .catch((error) => {
+                console.error("Login Error Code:", error.code);
+                console.error("Login Error Message:", error.message);
+                alert("❌ Login Failed: " + error.message);
+            });
     });
+}
 
 // --- Dynamic Greeting Function (Time & Date) ---
 function updateDynamicGreeting(userName) {
@@ -406,7 +413,7 @@ if (copyHumanizedBtn) {
     });
 }
 
-// --- CLEAN ACADEMIC PDF DOWNLOAD (Times New Roman, No Markdown Tags) ---
+// --- CLEAN ACADEMIC PDF DOWNLOAD ---
 if (downloadHumanizedPdfBtn) {
     downloadHumanizedPdfBtn.addEventListener('click', () => {
         const text = humanizedOutputText.value;
@@ -601,7 +608,7 @@ async function loadGlobalReviews() {
     }
 }
 
-// --- TASK & DEADLINE MANAGER WITH TIME & EMAIL REMINDER ---
+// --- TASK & DEADLINE MANAGER ---
 const addTaskBtn = document.getElementById('add-task-btn');
 if (addTaskBtn) {
     addTaskBtn.addEventListener('click', async () => {
@@ -627,7 +634,6 @@ if (addTaskBtn) {
             taskData.dbId = docRef.id;
             tasks.push(taskData);
             
-            // Send Email Notification via Web3Forms
             sendDeadlineEmail(name, date, time, type, currentUser.email);
 
             taskNameInput.value = '';
@@ -763,10 +769,6 @@ const gradeSelect = document.getElementById('grade');
 const otherUniBox = document.getElementById('other-uni-box');
 const otherGradeLetter = document.getElementById('other-grade-letter');
 const customGradePointInput = document.getElementById('custom-grade-point');
-
-function getActiveMode() {
-    return localStorage.getItem('active_uni_mode') || 'horizon';
-}
 
 function toggleUniversityMode(mode) {
     if (!gradeSelect || !otherUniBox) return;
