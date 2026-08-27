@@ -1,10 +1,5 @@
-// ==========================================
-// VERCEL CRON FUNCTION: api/check-deadlines.js
-// ==========================================
-
 const admin = require('firebase-admin');
 
-// Firebase Admin SDK ඉනිෂල් කරන්න
 if (!admin.apps.length) {
     try {
         admin.initializeApp({
@@ -31,7 +26,6 @@ module.exports = async (req, res) => {
 
         for (const docSnap of tasksSnapshot.docs) {
             const task = docSnap.data();
-            
             if (!task.date || !task.time) continue;
 
             const dueDateTime = new Date(`${task.date}T${task.time}:00`);
@@ -40,15 +34,12 @@ module.exports = async (req, res) => {
             let notificationType = null; 
             let messageContent = "";
 
-            // 1. 📅 දවසකට කලින් (විනාඩි 1420ත් 1460ත් අතර)
             if (!task.dayBeforeSent && diffMinutes >= 1420 && diffMinutes <= 1460) {
                 notificationType = 'dayBefore';
-                messageContent = `📅 *1-Day Deadline Reminder*\n\nHi!\nYour task *"${task.name}"* (${task.type}) is due tomorrow (${task.date} at ${task.time}).\n\nMake sure to complete it on time! ⏳`;
-            }
-            // 2. 🚨 පැය 5කට කලින් (විනාඩි 280ත් 320ත් අතර)
-            else if (!task.fiveHoursBeforeSent && diffMinutes >= 280 && diffMinutes <= 320) {
+                messageContent = `📅 1-Day Deadline Reminder\n\nHi!\nYour task "${task.name}" (${task.type}) is due tomorrow (${task.date} at ${task.time}).\n\nMake sure to complete it on time!`;
+            } else if (!task.fiveHoursBeforeSent && diffMinutes >= 280 && diffMinutes <= 320) {
                 notificationType = 'fiveHours';
-                messageContent = `🚨 *Urgent! 5-Hour Deadline Alert*\n\nHi!\nYour task *"${task.name}"* (${task.type}) is due in *5 hours* today (${task.date} at ${task.time}).\n\nHurry up and finish it! 🚀`;
+                messageContent = `🚨 Urgent! 5-Hour Deadline Alert\n\nHi!\nYour task "${task.name}" (${task.type}) is due in 5 hours today (${task.date} at ${task.time}).\n\nHurry up and finish it!`;
             }
 
             if (notificationType && messageContent) {
@@ -70,37 +61,28 @@ module.exports = async (req, res) => {
 
                 let successFlag = false;
 
-                // 1. Web3Forms හරහා ඊමේල් යැවීම
                 if (userEmail) {
                     const emailResponse = await fetch("https://api.web3forms.com/submit", {
                         method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Accept": "application/json"
-                        },
+                        headers: { "Content-Type": "application/json", "Accept": "application/json" },
                         body: JSON.stringify({
                             access_key: process.env.WEB3FORMS_ACCESS_KEY || "bb33cf20-7257-424a-933e-384723d7e936",
-                            subject: `⏰ [${notificationType === 'dayBefore' ? '1-Day Notice' : '5-Hour Urgent'}] ${task.type} - ${task.name}`,
+                            subject: `⏰ Deadline Reminder: ${task.type} - ${task.name}`,
                             email: userEmail,
-                            message: messageContent.replace(/\*/g, '')
+                            message: messageContent
                         })
                     });
                     const emailResult = await emailResponse.json();
                     if (emailResult.success) successFlag = true;
                 }
 
-                // 2. UltraMsg හරහා WhatsApp මැසේජ් යැවීම
                 if (userWhatsapp) {
                     const instanceId = process.env.WHATSAPP_INSTANCE_ID;
                     const token = process.env.WHATSAPP_TOKEN;
 
                     if (instanceId && token) {
                         const url = `https://api.ultramsg.com/${instanceId}/messages/chat`;
-                        const bodyParams = new URLSearchParams({
-                            token: token,
-                            to: userWhatsapp,
-                            body: messageContent
-                        });
+                        const bodyParams = new URLSearchParams({ token: token, to: userWhatsapp, body: messageContent });
 
                         try {
                             const waResponse = await fetch(url, {
@@ -111,7 +93,6 @@ module.exports = async (req, res) => {
                             const waResult = await waResponse.json();
                             if (waResult.sent === "true" || waResult.message === "ok") {
                                 successFlag = true;
-                                console.log(`WhatsApp (${notificationType}) sent successfully to:`, userWhatsapp);
                             }
                         } catch (waErr) {
                             console.error("WhatsApp API Error:", waErr);
