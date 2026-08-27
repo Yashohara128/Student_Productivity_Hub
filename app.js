@@ -1,5 +1,5 @@
 // ==========================================
-// STUDENT PRODUCTIVITY HUB - APP.JS (FINAL & READY)
+// STUDENT PRODUCTIVITY HUB - APP.JS (FINAL & BROWSER NOTIFICATIONS READY)
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -114,54 +114,49 @@ function updateDynamicGreeting(userName) {
     greetingEl.innerHTML = `${emoji} ${timeGreeting}, <span style="color: var(--text-color); font-weight: 600;">${userName}</span>! <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 2px;">📅 ${formattedDate}</span>`;
 }
 
-// --- Browser Push Notification Checker ---
-function checkDeadlineNotifications() {
-    if (!("Notification" in window)) return;
+// --- Browser Push Notification System (Stable & Fixed) ---
+let notifiedTasks = new Set(); 
 
-    if (Notification.permission !== "granted") {
-        Notification.requestPermission();
+function checkDeadlineNotifications() {
+    if (!("Notification" in window)) {
+        console.log("This browser does not support desktop notification");
+        return;
     }
 
-    setInterval(() => {
-        const now = new Date();
-        tasks.forEach(task => {
-            if (!task.date || !task.time) return;
-            const dueDateTime = new Date(`${task.date}T${task.time}:00`);
-            const diffMinutes = Math.floor((dueDateTime - now) / (1000 * 60));
-
-            if (diffMinutes === 60) {
-                new Notification("⏰ Deadline Reminder!", {
-                    body: `Your ${task.type} "${task.name}" is due in 1 hour (${task.time})!`,
+    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                new Notification("🎉 Notifications Enabled!", {
+                    body: "You will now receive deadline alerts for your tasks.",
                     icon: "https://cdn-icons-png.flaticon.com/512/2921/2921222.png"
                 });
             }
         });
-    }, 60000);
-}
-
-// --- Web3Forms Email Integration ---
-async function sendDeadlineEmail(taskName, taskDate, taskTime, taskType, userEmail) {
-    const accessKey = "bb33cf20-7257-424a-933e-384723d7e936";
-
-    const formData = {
-        access_key: accessKey,
-        subject: `⏰ Deadline Reminder: ${taskType} - ${taskName}`,
-        email: userEmail,
-        message: `Hello!\n\nThis is a reminder for your upcoming academic task:\n\n• Task Name: ${taskName}\n• Type: ${taskType}\n• Due Date: ${taskDate} at ${taskTime}\n\nPlease complete it on time.\n\nBest regards,\nStudent Productivity Hub`
-    };
-
-    try {
-        await fetch("https://api.web3forms.com/submit", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            },
-            body: JSON.stringify(formData)
-        });
-    } catch (error) {
-        console.error("Email fetch error:", error);
     }
+
+    setInterval(() => {
+        const now = new Date();
+        if (!tasks || tasks.length === 0) return;
+
+        tasks.forEach(task => {
+            if (!task.date || !task.time) return;
+
+            const dueDateTime = new Date(`${task.date}T${task.time}:00`);
+            const diffMinutes = Math.floor((dueDateTime - now) / (1000 * 60));
+
+            // හරියටම පැයකට කලින් (විනාඩි 60 තිබියදී) සහ මීට පෙර නොටිෆයි කර නැත්නම්
+            if (diffMinutes === 60 && !notifiedTasks.has(task.dbId)) {
+                if (Notification.permission === "granted") {
+                    new Notification("⏰ Deadline Reminder!", {
+                        body: `Your ${task.type} "${task.name}" is due in 1 hour (${task.time})!`,
+                        icon: "https://cdn-icons-png.flaticon.com/512/2921/2921222.png",
+                        requireInteraction: true
+                    });
+                }
+                notifiedTasks.add(task.dbId);
+            }
+        });
+    }, 60000); 
 }
 
 // --- View Switcher Logic ---
@@ -608,7 +603,7 @@ async function loadGlobalReviews() {
     }
 }
 
-// --- TASK & DEADLINE MANAGER (UPDATED FOR BACKGROUND CRON) ---
+// --- TASK & DEADLINE MANAGER ---
 const addTaskBtn = document.getElementById('add-task-btn');
 if (addTaskBtn) {
     addTaskBtn.addEventListener('click', async () => {
@@ -628,16 +623,7 @@ if (addTaskBtn) {
             return;
         }
 
-        // 👈 userEmail සහ cronEmailSent එකතු කර ඇත
-        const taskData = { 
-            name, 
-            date, 
-            time, 
-            type, 
-            userEmail: currentUser.email, 
-            cronEmailSent: false 
-        };
-
+        const taskData = { name, date, time, type };
         try {
             const docRef = await addDoc(collection(db, "users", currentUser.uid, "tasks"), taskData);
             taskData.dbId = docRef.id;
@@ -648,7 +634,7 @@ if (addTaskBtn) {
             taskTimeInput.value = '';
             taskTypeSelect.selectedIndex = 0;
             renderTasksUI();
-            alert("✅ Deadline added successfully! Background email reminder is scheduled.");
+            alert("✅ Deadline added successfully!");
         } catch (e) {
             alert("Error adding task: " + e.message);
         }
