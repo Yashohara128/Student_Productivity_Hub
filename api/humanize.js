@@ -1,5 +1,4 @@
-export default async function handler(req, res) {
-    // CORS Headers දාලා බ්‍රව්සර් එකෙන් එන ඉල්ලීම් බ්ලොක් නොවී තියාගන්නවා
+module.exports = async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -9,24 +8,27 @@ export default async function handler(req, res) {
     );
 
     if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
+        return res.status(200).end();
     }
 
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { text } = req.body;
-    if (!text) {
-        return res.status(400).json({ error: 'Text is required' });
-    }
+    try {
+        const { text } = req.body;
+        if (!text) {
+            return res.status(400).json({ error: 'Text is required' });
+        }
 
-    // මෙතනදී API Key එක Server එකේ ආරක්ෂිතව තියෙනවා (Frontend එකට පේන්නේ නෑ)
-    const apiKey = process.env.GEMINI_API_KEY; 
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            return res.status(500).json({ error: 'GEMINI_API_KEY is not set in Vercel environment variables' });
+        }
 
-    const prompt = `Act as an expert human academic researcher, author, and senior editor. Completely rewrite the following text to make it 100% human-authored, highly engaging, and completely undetectable by AI detectors like Turnitin, GPTZero, and Copyleaks.
+        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+        const prompt = `Act as an expert human academic researcher, author, and senior editor. Completely rewrite the following text to make it 100% human-authored, highly engaging, and completely undetectable by AI detectors like Turnitin, GPTZero, and Copyleaks.
 
 CRITICAL REWRITING RULES:
 1. **High Burstiness:** Intentionally vary sentence lengths dramatically. Mix very short, punchy statements with long, complex, multi-clause academic sentences.
@@ -37,7 +39,6 @@ CRITICAL REWRITING RULES:
 Text to humanize:
 ${text}`;
 
-    try {
         const response = await fetch(url, {
             method: "POST",
             headers: {
@@ -66,4 +67,4 @@ ${text}`;
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
-}
+};
