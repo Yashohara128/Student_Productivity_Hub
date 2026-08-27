@@ -1,5 +1,5 @@
 // ==========================================
-// STUDENT PRODUCTIVITY HUB - APP.JS (FINAL & FULLY WORKING)
+// STUDENT PRODUCTIVITY HUB - APP.JS (COMPLETE & INTEGRATED)
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -57,6 +57,37 @@ const CLASS_THRESHOLDS = {
     SECOND_LOWER: 3.00,
     PASS: 2.00
 };
+
+// --- Dynamic Greeting Function (Time & Date) ---
+function updateDynamicGreeting(userName) {
+    const greetingEl = document.getElementById('welcome-greeting');
+    if (!greetingEl) return;
+
+    const now = new Date();
+    const hours = now.getHours();
+    
+    let timeGreeting = "";
+    let emoji = "";
+
+    if (hours >= 5 && hours < 12) {
+        timeGreeting = "Good Morning";
+        emoji = "☀️";
+    } else if (hours >= 12 && hours < 17) {
+        timeGreeting = "Good Afternoon";
+        emoji = "🌤️";
+    } else if (hours >= 17 && hours < 21) {
+        timeGreeting = "Good Evening";
+        emoji = "🌆";
+    } else {
+        timeGreeting = "Good Night";
+        emoji = "🌙";
+    }
+
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const formattedDate = now.toLocaleDateString('en-US', options);
+
+    greetingEl.innerHTML = `${emoji} ${timeGreeting}, <span style="color: var(--text-color); font-weight: 600;">${userName}</span>! <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 2px;">📅 ${formattedDate}</span>`;
+}
 
 // --- View Switcher Logic ---
 function showView(viewName) {
@@ -124,7 +155,7 @@ if (pdfUpload) {
     });
 }
 
-// --- GROQ AI HUMANIZER & PLAGIARISM LOGIC ---
+// --- GROQ AI HUMANIZER & PLAGIARISM CHECKER ---
 const checkPlagiarismBtn = document.getElementById('check-plagiarism-btn');
 const plagiarismText = document.getElementById('plagiarism-text');
 const plagiarismResult = document.getElementById('plagiarism-result');
@@ -253,6 +284,16 @@ if (checkPlagiarismBtn) {
                 percentPlagiarized = 85.5; 
             }
 
+            let sourcesHTML = "";
+            if (result.sources && result.sources.length > 0) {
+                sourcesHTML = "<br><b>🔗 Matched Web Sources:</b><br>";
+                result.sources.forEach(src => {
+                    sourcesHTML += `• <a href="${src.url || '#'}" target="_blank" style="color: #38bdf8; text-decoration: underline;">${src.title || src.url}</a><br>`;
+                });
+            } else {
+                sourcesHTML = "<br><small style='color: var(--text-muted);'>No direct external web matches found.</small>";
+            }
+
             const newTotalUsed = userData.wordCountUsed + inputWords;
             await updateDoc(userRef, {
                 wordCountUsed: newTotalUsed,
@@ -264,7 +305,7 @@ if (checkPlagiarismBtn) {
                 • Monthly Quota Used: <b>${newTotalUsed} / ${activeWordLimit} words</b><br>
                 • Plagiarism Detected: <b style="color: ${percentPlagiarized > 10 ? '#ef4444' : '#22c55e'};">${percentPlagiarized}%</b><br>
                 • Originality Score: <b style="color: #38bdf8;">${(100 - percentPlagiarized).toFixed(1)}% Unique</b><br>
-                <small style="color: var(--text-muted); display: block; margin-top: 4px;">Status: ${percentPlagiarized > 10 ? '⚠️ Plagiarized matches found online. Humanizing text below.' : '✅ Content is clean.'}</small>
+                ${sourcesHTML}
             `;
 
             checkPlagiarismBtn.innerText = "Humanizing via Groq AI...";
@@ -297,7 +338,7 @@ if (copyHumanizedBtn) {
     });
 }
 
-// --- CLEAN ACADEMIC PDF DOWNLOAD (Times New Roman, No Markdown) ---
+// --- CLEAN ACADEMIC PDF DOWNLOAD (Times New Roman, No Markdown Tags) ---
 if (downloadHumanizedPdfBtn) {
     downloadHumanizedPdfBtn.addEventListener('click', () => {
         const text = humanizedOutputText.value;
@@ -373,6 +414,7 @@ if (downloadHumanizedPdfBtn) {
 // --- IN-APP REVIEW SYSTEM LOGIC ---
 const reviewModal = document.getElementById('review-modal');
 const closeReviewModalBtn = document.getElementById('close-review-modal');
+const closeGotItBtn = document.getElementById('close-modal-btn');
 const reviewNowButtons = document.querySelectorAll('.review-now-btn');
 
 reviewNowButtons.forEach(btn => {
@@ -387,6 +429,12 @@ reviewNowButtons.forEach(btn => {
 
 if (closeReviewModalBtn) {
     closeReviewModalBtn.addEventListener('click', () => {
+        if (reviewModal) reviewModal.style.display = 'none';
+    });
+}
+
+if (closeGotItBtn) {
+    closeGotItBtn.addEventListener('click', () => {
         if (reviewModal) reviewModal.style.display = 'none';
     });
 }
@@ -641,18 +689,14 @@ if (logoutBtn) {
     });
 }
 
-const closeModalBtn = document.getElementById('close-modal-btn');
-if (closeModalBtn) {
-    closeModalBtn.addEventListener('click', () => {
-        const modal = document.getElementById('review-modal');
-        if (modal) modal.style.display = 'none';
-    });
-}
-
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
-        if (userNameDisplay) userNameDisplay.innerText = user.displayName;
+        const displayName = user.displayName ? user.displayName.split(" ")[0] : "Student";
+        
+        // Trigger Dynamic Greeting
+        updateDynamicGreeting(displayName);
+
         if (loginSection) loginSection.style.display = "none";
         if (appSection) appSection.style.display = "block";
         
