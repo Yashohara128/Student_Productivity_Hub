@@ -28,13 +28,12 @@ module.exports = async function handler(req, res) {
 
         const url = 'https://api.groq.com/openai/v1/chat/completions';
 
-        const prompt = `Act as an expert human academic researcher, author, and senior editor. Completely rewrite the following text to make it 100% human-authored, highly engaging, and completely undetectable by AI detectors like Turnitin, GPTZero, and Copyleaks.
+       const prompt = `Act as an exhausted human university literature student writing a rough draft late at night. Completely rewrite the following text so it sounds completely unpolished, highly erratic, and 100% human. 
 
-CRITICAL REWRITING RULES:
-1. **High Burstiness:** Intentionally vary sentence lengths dramatically. Mix very short, punchy statements with long, complex, multi-clause academic sentences.
-2. **High Perplexity:** Avoid predictable AI phrasing, robotic transitions, and cliches. Use rich, nuanced, and idiomatic academic vocabulary.
-3. **Cognitive Variance:** Introduce natural human imperfections in thought flow.
-4. **Zero AI Footprint:** Ensure the structure looks like it was written by an exhausted university professor or a brilliant graduate student late at night.
+CRITICAL RULES TO AVOID AI DETECTORS:
+1. **Extreme Burstiness:** Make sentence lengths completely chaotic. Follow a massive, winding, multi-clause academic sentence with a very short, blunt, 3-word sentence.
+2. **Imperfect Flow:** Use conversational human transitions, occasional slight informal phrasing, and non-robotic flow. Avoid all standard AI transition words (like "Furthermore", "In conclusion", "Moreover", "It is important to note").
+3. **High Perplexity:** Use unique, vivid, and highly descriptive vocabulary that a real human author would use instead of generic AI words.
 
 Text to humanize:
 ${text}`;
