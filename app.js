@@ -1,5 +1,5 @@
 // ==========================================
-// STUDENT PRODUCTIVITY HUB - APP.JS (COMPLETE & FINAL)
+// STUDENT PRODUCTIVITY HUB - APP.JS (100% WORKING & FINAL)
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -57,6 +57,20 @@ const CLASS_THRESHOLDS = {
     SECOND_LOWER: 3.00,
     PASS: 2.00
 };
+
+// --- Google Login Event Listener (FIXED) ---
+if (loginBtn) {
+    loginBtn.addEventListener('click', () => {
+        signInWithPopup(auth, provider)
+            .then((result) => {
+                console.log("Login Success:", result.user.displayName);
+            })
+            .catch((error) => {
+                console.error("Login Error:", error);
+                alert("Login Failed: " + error.message);
+            });
+    });
+}
 
 // --- Dynamic Greeting Function (Time & Date) ---
 function updateDynamicGreeting(userName) {
@@ -116,7 +130,7 @@ function checkDeadlineNotifications() {
 
 // --- Web3Forms Email Integration ---
 async function sendDeadlineEmail(taskName, taskDate, taskTime, taskType, userEmail) {
-    const accessKey = "bb33cf20-7257-424a-933e-384723d7e936"; // අවශ්‍ය නම් මෙතැනට ඔයාගේ වෙබ් 3 ෆෝම්ස් කී එක දාගන්න
+    const accessKey = "bb33cf20-7257-424a-933e-384723d7e936";
 
     const formData = {
         access_key: accessKey,
@@ -816,12 +830,6 @@ if (themeSelector) {
     const savedTheme = localStorage.getItem('theme') || 'system';
     themeSelector.value = savedTheme;
     applyTheme(savedTheme);
-}
-
-if (loginBtn) {
-    loginBtn.addEventListener('click', () => {
-        signInWithPopup(auth, provider).catch((error) => alert("Login Failed: " + error.message));
-    });
 }
 
 if (logoutBtn) {
