@@ -2,9 +2,9 @@
 // VERCEL CRON FUNCTION: api/check-deadlines.js
 // ==========================================
 
-import admin from 'firebase-admin';
+const admin = require('firebase-admin');
 
-// Firebase Admin SDK ඉනිෂල් කරන්න (Environment variables හරහා)
+// Firebase Admin SDK ඉනිෂල් කරන්න
 if (!admin.apps.length) {
     try {
         admin.initializeApp({
@@ -21,7 +21,7 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
     try {
         const now = new Date();
         console.log("Background deadline check running at:", now.toISOString());
@@ -37,10 +37,10 @@ export default async function handler(req, res) {
             const dueDateTime = new Date(`${task.date}T${task.time}:00`);
             const diffMinutes = Math.floor((dueDateTime - now) / (1000 * 60));
 
-            let notificationType = null; // 'dayBefore' හෝ 'fiveHours'
+            let notificationType = null; 
             let messageContent = "";
 
-            // 1. 📅 දවසකට කලින් (පැය 24කට ආසන්න වෙලාවකදී - විනාඩි 1420ත් 1460ත් අතර)
+            // 1. 📅 දවසකට කලින් (විනාඩි 1420ත් 1460ත් අතර)
             if (!task.dayBeforeSent && diffMinutes >= 1420 && diffMinutes <= 1460) {
                 notificationType = 'dayBefore';
                 messageContent = `📅 *1-Day Deadline Reminder*\n\nHi!\nYour task *"${task.name}"* (${task.type}) is due tomorrow (${task.date} at ${task.time}).\n\nMake sure to complete it on time! ⏳`;
@@ -51,13 +51,12 @@ export default async function handler(req, res) {
                 messageContent = `🚨 *Urgent! 5-Hour Deadline Alert*\n\nHi!\nYour task *"${task.name}"* (${task.type}) is due in *5 hours* today (${task.date} at ${task.time}).\n\nHurry up and finish it! 🚀`;
             }
 
-            // යවන්න මැසේජ් එකක් තියෙනවා නම් පමණක් ඉදිරියට යයි
             if (notificationType && messageContent) {
                 let userEmail = task.userEmail;
                 let userWhatsapp = null;
 
                 try {
-                    const pathSegments = docSnap.ref.path.split('/'); // users/{userId}/tasks/{taskId}
+                    const pathSegments = docSnap.ref.path.split('/');
                     if (pathSegments.length >= 2) {
                         const actualUserId = pathSegments[1];
                         const userDoc = await db.collection('users').doc(actualUserId).get();
@@ -83,7 +82,7 @@ export default async function handler(req, res) {
                             access_key: process.env.WEB3FORMS_ACCESS_KEY || "bb33cf20-7257-424a-933e-384723d7e936",
                             subject: `⏰ [${notificationType === 'dayBefore' ? '1-Day Notice' : '5-Hour Urgent'}] ${task.type} - ${task.name}`,
                             email: userEmail,
-                            message: messageContent.replace(/\*/g, '') // Email එකට boldකුත් නැතිව plain text යැවීමට
+                            message: messageContent.replace(/\*/g, '')
                         })
                     });
                     const emailResult = await emailResponse.json();
@@ -120,7 +119,6 @@ export default async function handler(req, res) {
                     }
                 }
 
-                // යැවීම සාර්ථක නම් අදාළ ටයිප් එකට අදාළව ෆ්ලැග් එක සේව් කරයි (නැවත එම ಅಲර්ට් එකම නොයෑමට)
                 if (successFlag) {
                     notificationsSentCount++;
                     if (notificationType === 'dayBefore') {
@@ -137,4 +135,4 @@ export default async function handler(req, res) {
         console.error("Cron Error:", error);
         return res.status(500).json({ error: error.message });
     }
-}
+};
