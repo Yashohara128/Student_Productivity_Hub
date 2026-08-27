@@ -24,6 +24,7 @@
         </select>
     </div>
 
+    <!-- Pricing Modal -->
     <div id="pricing-modal" class="modal-overlay" style="display: none;">
         <div class="glass-card modal-box" style="max-width: 600px;">
             <h3 style="color: var(--heading-gradient-1); margin-bottom: 0.5rem;">⭐ Upgrade to Pro Plan</h3>
@@ -63,6 +64,7 @@
         </div>
     </div>
 
+    <!-- In-App Review & Feedback Modal -->
     <div id="review-modal" class="modal-overlay">
         <div class="glass-card modal-box" style="max-width: 480px; text-align: left;">
             <h4 class="modal-title" style="margin-top:0; text-align: center;">⭐ Rate & Review Student Hub</h4>
@@ -118,6 +120,7 @@
             
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding: 0.5rem 0; border-bottom: 1px solid var(--card-border);">
                 <div style="display: flex; align-items: center; gap: 15px;">
+                    <!-- Dynamic Greeting Target ID -->
                     <h3 id="welcome-greeting" style="font-size: 1rem; color: var(--heading-gradient-1);">👋 Welcome, <span id="user-name">Student</span>!</h3>
                     <button onclick="openPricingModal()" class="btn-review" style="font-size: 0.7rem; padding: 0.2rem 0.6rem; cursor: pointer;">⭐ Upgrade Plan</button>
                 </div>
@@ -321,9 +324,11 @@
 
                 <div class="glass-card form-section">
                     <h3>Add New Task / Deadline</h3>
-                    <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr 1fr; gap: 0.8rem; margin-bottom: 1rem;">
+                    <!-- Updated Grid with Time Input -->
+                    <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 0.8rem; margin-bottom: 1rem;">
                         <input type="text" id="task-name" placeholder="Task Name (e.g. DSA Assignment 1)">
                         <input type="date" id="task-date">
+                        <input type="time" id="task-time">
                         <select id="task-type">
                             <option value="" disabled selected>Type</option>
                             <option value="Assignment">Assignment</option>
@@ -385,6 +390,7 @@
                     <h3>Mr.G.K.M.P.Y Ganewaththa</h3>
                     <p>Bsc(Hons) in Networking & Mobile Computing</p>
                     <p>Faculty Of IT - Intake 16</p>
+                    <p>Horizon Campus</p>
                 </div>
 
                 <h4>💡 Help Us Improve & Share Your Feedback!</h4>
