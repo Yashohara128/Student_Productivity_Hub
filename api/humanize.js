@@ -46,7 +46,7 @@ ${text}`;
                 "Authorization": `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: "llama-3.1-70b-versatile", // නිවැරදි මෝඩල් නම මෙන්න මෙහෙමයි
+                model: "openai/gpt-oss-120b", // ඩොකියුමන්ට් එකේ නිල වශයෙන් රෙකමන්ඩ් කර ඇති අලුත්ම මොඩල් එක
                 messages: [
                     { role: "user", content: prompt }
                 ],
