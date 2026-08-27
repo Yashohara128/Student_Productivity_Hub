@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/api/humanize", "destination": "/api/humanize.js" }
+  ]
+}
