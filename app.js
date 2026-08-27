@@ -1,5 +1,5 @@
 // ==========================================
-// STUDENT PRODUCTIVITY HUB - APP.JS (FINAL AUTH & APP CODE)
+// STUDENT PRODUCTIVITY HUB - APP.JS (FINAL & READY)
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -608,7 +608,7 @@ async function loadGlobalReviews() {
     }
 }
 
-// --- TASK & DEADLINE MANAGER ---
+// --- TASK & DEADLINE MANAGER (UPDATED FOR BACKGROUND CRON) ---
 const addTaskBtn = document.getElementById('add-task-btn');
 if (addTaskBtn) {
     addTaskBtn.addEventListener('click', async () => {
@@ -628,20 +628,27 @@ if (addTaskBtn) {
             return;
         }
 
-        const taskData = { name, date, time, type };
+        // 👈 userEmail සහ cronEmailSent එකතු කර ඇත
+        const taskData = { 
+            name, 
+            date, 
+            time, 
+            type, 
+            userEmail: currentUser.email, 
+            cronEmailSent: false 
+        };
+
         try {
             const docRef = await addDoc(collection(db, "users", currentUser.uid, "tasks"), taskData);
             taskData.dbId = docRef.id;
             tasks.push(taskData);
             
-            sendDeadlineEmail(name, date, time, type, currentUser.email);
-
             taskNameInput.value = '';
             taskDateInput.value = '';
             taskTimeInput.value = '';
             taskTypeSelect.selectedIndex = 0;
             renderTasksUI();
-            alert("✅ Deadline added & Email reminder sent successfully!");
+            alert("✅ Deadline added successfully! Background email reminder is scheduled.");
         } catch (e) {
             alert("Error adding task: " + e.message);
         }
