@@ -46,7 +46,7 @@ ${text}`;
                 "Authorization": `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: "openai/gpt-oss-120b", // ඩොකියුමන්ට් එකේ නිල වශයෙන් රෙකමන්ඩ් කර ඇති අලුත්ම මොඩල් එක
+                model: "openai/gpt-oss-120b",
                 messages: [
                     { role: "user", content: prompt }
                 ],
