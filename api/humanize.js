@@ -28,14 +28,10 @@ module.exports = async function handler(req, res) {
 
         const url = 'https://api.groq.com/openai/v1/chat/completions';
 
-       const prompt = `Act as an exhausted human university literature student writing a rough draft late at night. Completely rewrite the following text so it sounds completely unpolished, highly erratic, and 100% human. 
+        // සේෆ්ටි ෆිල්ටර්ස් වලට නොසෑහෙන තරම් සරල සහ පැහැදිලි ඇකඩමික් ප්‍රොම්ට් එකක්
+        const prompt = `Rewrite the following academic text to make it exceptionally natural, highly engaging, and written in a refined human scholarly tone with varied sentence structures and rich vocabulary.
 
-CRITICAL RULES TO AVOID AI DETECTORS:
-1. **Extreme Burstiness:** Make sentence lengths completely chaotic. Follow a massive, winding, multi-clause academic sentence with a very short, blunt, 3-word sentence.
-2. **Imperfect Flow:** Use conversational human transitions, occasional slight informal phrasing, and non-robotic flow. Avoid all standard AI transition words (like "Furthermore", "In conclusion", "Moreover", "It is important to note").
-3. **High Perplexity:** Use unique, vivid, and highly descriptive vocabulary that a real human author would use instead of generic AI words.
-
-Text to humanize:
+Text to rewrite:
 ${text}`;
 
         const response = await fetch(url, {
@@ -49,7 +45,7 @@ ${text}`;
                 messages: [
                     { role: "user", content: prompt }
                 ],
-                temperature: 0.9
+                temperature: 0.7
             })
         });
 
