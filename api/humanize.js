@@ -1,35 +1,9 @@
-module.exports = async function handler(req, res) {
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-    );
+const prompt = `Completely rewrite and reimagine the following text as if a human university student wrote it in a rushed, highly engaging, and slightly imperfect essay style.
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
-
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
-
-    try {
-        const { text } = req.body;
-        if (!text) {
-            return res.status(400).json({ error: 'Text is required' });
-        }
-
-        const apiKey = process.env.GROQ_API_KEY;
-        if (!apiKey) {
-            return res.status(500).json({ error: 'GROQ_API_KEY is not set in environment variables' });
-        }
-
-        const url = 'https://api.groq.com/openai/v1/chat/completions';
-
-        // සේෆ්ටි ෆිල්ටර්ස් වලට නොසෑහෙන තරම් සරල සහ පැහැදිලි ඇකඩමික් ප්‍රොම්ට් එකක්
-        const prompt = `Rewrite the following academic text to make it exceptionally natural, highly engaging, and written in a refined human scholarly tone with varied sentence structures and rich vocabulary.
+CRITICAL RULES TO BYPASS AI DETECTORS:
+1. **Extreme Burstiness:** Make sentence lengths wildly chaotic. Mix an extremely short, punchy 4-word sentence with a long, winding, multi-clause academic sentence. 
+2. **Zero AI Cliche Words:** Strictly ban all typical AI transition words like "Furthermore", "Moreover", "In conclusion", "It is important to note", "Delve", "Tapestry". Use natural, human-like connective thoughts.
+3. **Irregular Rhythm:** Avoid a uniform, predictable rhythm. Make the flow feel human, organic, and slightly unpredictable.
 
 Text to rewrite:
 ${text}`;
