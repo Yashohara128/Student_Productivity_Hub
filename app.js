@@ -1,9 +1,9 @@
 // ==========================================
-// STUDENT PRODUCTIVITY HUB - APP.JS (100% WORKING & FINAL)
+// STUDENT PRODUCTIVITY HUB - APP.JS (REDIRECT LOGIN & COMPLETE)
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -58,19 +58,23 @@ const CLASS_THRESHOLDS = {
     PASS: 2.00
 };
 
-// --- Google Login Event Listener (FIXED) ---
+// --- Google Login via Redirect (Brave & Popup Blocker Proof) ---
 if (loginBtn) {
     loginBtn.addEventListener('click', () => {
-        signInWithPopup(auth, provider)
-            .then((result) => {
-                console.log("Login Success:", result.user.displayName);
-            })
-            .catch((error) => {
-                console.error("Login Error:", error);
-                alert("Login Failed: " + error.message);
-            });
+        signInWithRedirect(auth, provider);
     });
 }
+
+// Handle Redirect Result
+getRedirectResult(auth)
+    .then((result) => {
+        if (result && result.user) {
+            console.log("Login Success:", result.user.displayName);
+        }
+    }).catch((error) => {
+        console.error("Login Error:", error);
+        alert("Login Failed: " + error.message);
+    });
 
 // --- Dynamic Greeting Function (Time & Date) ---
 function updateDynamicGreeting(userName) {
