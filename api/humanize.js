@@ -17,16 +17,13 @@ module.exports = async function handler(req, res) {
 
     try {
         const { text } = req.body;
-        console.log("Received text for humanizing, length:", text ? text.length : 0);
-
         if (!text) {
             return res.status(400).json({ error: 'Text is required' });
         }
 
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            console.error("ERROR: GEMINI_API_KEY is missing in environment variables!");
-            return res.status(500).json({ error: 'GEMINI_API_KEY is not set in Vercel environment variables' });
+            return res.status(500).json({ error: 'GEMINI_API_KEY is not set in environment variables' });
         }
 
         const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
@@ -60,17 +57,19 @@ ${text}`;
         });
 
         const data = await response.json();
-        console.log("Gemini API response status:", response.status);
-        
-        if (data.candidates && data.candidates[0].content.parts[0].text) {
+        console.log("Gemini API Response:", JSON.stringify(data));
+
+        if (data.error) {
+            return res.status(500).json({ error: data.error.message || 'Gemini API returned an error' });
+        }
+
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0].text) {
             const humanizedResult = data.candidates[0].content.parts[0].text.trim();
             return res.status(200).json({ result: humanizedResult });
         } else {
-            console.error("Gemini API returned error structure:", JSON.stringify(data));
-            return res.status(500).json({ error: 'Gemini API structure error', details: data });
+            return res.status(500).json({ error: 'Gemini API structure error: ' + JSON.stringify(data) });
         }
     } catch (error) {
-        console.error("Catch block error in serverless function:", error);
         return res.status(500).json({ error: error.message });
     }
 };
