@@ -104,7 +104,6 @@ function checkDeadlineNotifications() {
             const dueDateTime = new Date(`${task.date}T${task.time}:00`);
             const diffMinutes = Math.floor((dueDateTime - now) / (1000 * 60));
 
-            // Notify if due in exactly 1 hour
             if (diffMinutes === 60) {
                 new Notification("⏰ Deadline Reminder!", {
                     body: `Your ${task.type} "${task.name}" is due in 1 hour (${task.time})!`,
@@ -112,7 +111,32 @@ function checkDeadlineNotifications() {
                 });
             }
         });
-    }, 60000); // Check every minute
+    }, 60000);
+}
+
+// --- Web3Forms Email Integration ---
+async function sendDeadlineEmail(taskName, taskDate, taskTime, taskType, userEmail) {
+    const accessKey = "bb33cf20-7257-424a-933e-384723d7e936"; // අවශ්‍ය නම් මෙතැනට ඔයාගේ වෙබ් 3 ෆෝම්ස් කී එක දාගන්න
+
+    const formData = {
+        access_key: accessKey,
+        subject: `⏰ Deadline Reminder: ${taskType} - ${taskName}`,
+        email: userEmail,
+        message: `Hello!\n\nThis is a reminder for your upcoming academic task:\n\n• Task Name: ${taskName}\n• Type: ${taskType}\n• Due Date: ${taskDate} at ${taskTime}\n\nPlease complete it on time.\n\nBest regards,\nStudent Productivity Hub`
+    };
+
+    try {
+        await fetch("https://api.web3forms.com/submit", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify(formData)
+        });
+    } catch (error) {
+        console.error("Email fetch error:", error);
+    }
 }
 
 // --- View Switcher Logic ---
@@ -559,7 +583,7 @@ async function loadGlobalReviews() {
     }
 }
 
-// --- TASK & DEADLINE MANAGER WITH TIME ---
+// --- TASK & DEADLINE MANAGER WITH TIME & EMAIL REMINDER ---
 const addTaskBtn = document.getElementById('add-task-btn');
 if (addTaskBtn) {
     addTaskBtn.addEventListener('click', async () => {
@@ -585,12 +609,15 @@ if (addTaskBtn) {
             taskData.dbId = docRef.id;
             tasks.push(taskData);
             
+            // Send Email Notification via Web3Forms
+            sendDeadlineEmail(name, date, time, type, currentUser.email);
+
             taskNameInput.value = '';
             taskDateInput.value = '';
             taskTimeInput.value = '';
             taskTypeSelect.selectedIndex = 0;
             renderTasksUI();
-            alert("✅ Deadline & Time added successfully!");
+            alert("✅ Deadline added & Email reminder sent successfully!");
         } catch (e) {
             alert("Error adding task: " + e.message);
         }
@@ -624,7 +651,6 @@ function renderTasksUI() {
         const today = new Date();
         const dueDateTime = new Date(`${task.date}T${task.time || '23:59'}:00`);
         const diffTime = dueDateTime - today;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
         let badgeColor = task.type === 'Exam' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(56, 189, 248, 0.15)';
         let badgeTextColor = task.type === 'Exam' ? '#ef4444' : '#38bdf8';
@@ -814,7 +840,6 @@ onAuthStateChanged(auth, async (user) => {
         currentUser = user;
         const displayName = user.displayName ? user.displayName.split(" ")[0] : "Student";
         
-        // Trigger Dynamic Greeting & Push Notifications
         updateDynamicGreeting(displayName);
         checkDeadlineNotifications();
 
