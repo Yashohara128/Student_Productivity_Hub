@@ -1,4 +1,4 @@
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
 
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            return res.status(500).json({ error: 'Gemini API Key is missing in Vercel Environment Variables' });
+            return res.status(500).json({ error: 'GEMINI_API_KEY is missing in Vercel Environment Variables' });
         }
 
         const name = studentName || "Yashohara";
@@ -22,20 +22,13 @@ module.exports = async (req, res) => {
 
         const systemInstructionText = `You are a super friendly, enthusiastic, and warm AI study buddy! 🎓✨ Always address the user by their name (${name}) affectionately. Use a cheerful, welcoming tone with emojis, make learning feel fun and stress-free.`;
 
-        // 🟢 Gemini Native Endpoint (gemini-1.5-flash)
+        // 🟢 Direct Native Gemini Fetch with v1beta
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                system_instruction: {
-                    parts: [{ text: systemInstructionText }]
-                },
                 contents: [
-                    {
-                        parts: [{ text: fullUserPrompt }]
-                    }
+                    { role: "user", parts: [{ text: systemInstructionText + "\n\n" + fullUserPrompt }] }
                 ]
             })
         });
@@ -43,6 +36,7 @@ module.exports = async (req, res) => {
         const data = await response.json();
         
         if (data.error) {
+            console.error("Gemini API Error Detail:", data.error);
             return res.status(500).json({ error: data.error.message || 'Gemini API Error' });
         }
 
@@ -52,7 +46,7 @@ module.exports = async (req, res) => {
 
         return res.status(200).json({ success: true, reply: aiReply.trim() });
     } catch (error) {
-        console.error("Gemini Chat Agent Error:", error);
+        console.error("Server Crash Error:", error);
         return res.status(500).json({ error: error.message });
     }
-};
+}
