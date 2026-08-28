@@ -1,7 +1,3 @@
-// ==========================================
-// STUDENT PRODUCTIVITY HUB - APP.JS (100% FULL & COMPLETE)
-// ==========================================
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
@@ -20,7 +16,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
-provider.setCustomParameters({ prompt: 'select_account' }); // 🟢 Allow multiple Gmail choosing
+provider.setCustomParameters({ prompt: 'select_account' });
 
 const loginSection = document.getElementById('login-section');
 const appSection = document.getElementById('app-section');
@@ -81,7 +77,7 @@ if (loginBtn) {
     });
 }
 
-// --- Dynamic Greeting with Date Restored ---
+// --- Dynamic Greeting ---
 function updateDynamicGreeting(userName) {
     const greetingEl = document.getElementById('welcome-greeting');
     if (!greetingEl) return;
@@ -125,6 +121,30 @@ if (cardPlagiarism) cardPlagiarism.addEventListener('click', () => showView('pla
 if (backToHubGpa) backToHubGpa.addEventListener('click', () => showView('hub'));
 if (backToHubShortNotes) backToHubShortNotes.addEventListener('click', () => showView('hub'));
 if (backToHubPlagiarism) backToHubPlagiarism.addEventListener('click', () => showView('hub'));
+
+// --- AI Agent Open / Close Toggle Logic (PC & Mobile) ---
+const aiToggleBtn = document.getElementById('ai-toggle-btn');
+const aiAgentSidebar = document.getElementById('ai-agent-sidebar');
+
+if (aiToggleBtn && aiAgentSidebar) {
+    aiToggleBtn.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+            aiAgentSidebar.classList.toggle('mobile-open');
+            if (aiAgentSidebar.classList.contains('mobile-open')) {
+                aiToggleBtn.innerHTML = "✕ Close Chat";
+            } else {
+                aiToggleBtn.innerHTML = "🤖 AI Chat";
+            }
+        } else {
+            aiAgentSidebar.classList.toggle('collapsed');
+            if (aiAgentSidebar.classList.contains('collapsed')) {
+                aiToggleBtn.innerHTML = "🤖 Open AI Chat";
+            } else {
+                aiToggleBtn.innerHTML = "✕ Close Chat";
+            }
+        }
+    });
+}
 
 // --- Review Modal Close & Submit Logic ---
 const reviewModal = document.getElementById('review-modal');
@@ -437,7 +457,7 @@ if (generateNotesBtn) {
         if (noteLoading) noteLoading.style.display = 'block';
         if (noteResultSection) noteResultSection.style.display = 'none';
         generateNotesBtn.disabled = true;
-        generateNotesBtn.innerText = "Generating via Groq AI...";
+        generateNotesBtn.innerText = "Generating via Gemini AI...";
 
         try {
             const response = await fetch('/api/shortnotes', {
@@ -614,7 +634,7 @@ if (downloadNotesPdfBtn) {
                     <p>Generated via Student Productivity Hub • AI Academic Assistant</p>
                 </div>
                 <div class="content-body">${finalHtmlContent}</div>
-                <div class="footer-note">Official Academic Study Material Report | Powered by Groq AI & Student Productivity Hub</div>
+                <div class="footer-note">Official Academic Study Material Report | Powered by Gemini AI & Student Productivity Hub</div>
                 <script>window.onload = function() { window.print(); }</script>
             </body>
             </html>
@@ -1120,7 +1140,7 @@ if (pdfUpload) {
     });
 }
 
-// --- GROQ AI HUMANIZER & PLAGIARISM CHECKER (SAFE WORD COUNT DEDUCTION) ---
+// --- HUMANIZER & PLAGIARISM CHECKER ---
 const checkPlagiarismBtn = document.getElementById('check-plagiarism-btn');
 const plagiarismText = document.getElementById('plagiarism-text');
 const plagiarismResult = document.getElementById('plagiarism-result');
@@ -1226,8 +1246,7 @@ if (checkPlagiarismBtn) {
                 sourcesHTML = "<br><small style='color: var(--text-muted);'>No direct external web matches found.</small>";
             }
 
-            // 🟢 Humanize කෝල් කිරීම සහ එරර් ආවොත් වර්ඩ්ස් අඩු නොවීම තහවුරු කිරීම
-            checkPlagiarismBtn.innerText = "Humanizing via AI...";
+            checkPlagiarismBtn.innerText = "Humanizing via Gemini AI...";
             const humanizeResponse = await trueAIHumanizer(text);
 
             if (humanizeResponse.error) {
@@ -1237,7 +1256,6 @@ if (checkPlagiarismBtn) {
                 return;
             }
 
-            // 🟢 සියල්ල සාර්ථක නම් පමණක් වර්ඩ්ස් අඩු කිරීම
             const newTotalUsed = userData.wordCountUsed + inputWords;
             await updateDoc(userRef, { wordCountUsed: newTotalUsed, lastResetMonth: currentMonth });
 
@@ -1316,10 +1334,7 @@ if (downloadHumanizedDocxBtn) {
             </html>
         `;
 
-        const blob = new Blob(['\ufeff' + wordContent], {
-            type: 'application/msword'
-        });
-
+        const blob = new Blob(['\ufeff' + wordContent], { type: 'application/msword' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
