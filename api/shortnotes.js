@@ -1,5 +1,5 @@
 // ==========================================
-// VERCEL FUNCTION: api/shortnotes.js (Max Safe Limit for Groq Free Tier - 8k TPM)
+// VERCEL FUNCTION: api/shortnotes.js (Strict Output Cleaner)
 // ==========================================
 
 module.exports = async (req, res) => {
@@ -18,9 +18,8 @@ module.exports = async (req, res) => {
             return res.status(500).json({ error: 'Groq API Key is missing in Vercel Environment Variables' });
         }
 
-        // Groq Free Tier 8000 TPM සීමාවට යටත්ව දිය හැකි උපරිම ආරක්ෂිත සීමාව (අකුරු ~15,000 ක් / වචන ~2,500ක් පමණ)
         const maxChars = 15000;
-        const safeText = text.length > maxChars ? text.slice(0, maxChars) + "\n\n[Note: Text was automatically trimmed to fit maximum free tier token limits.]" : text;
+        const safeText = text.length > maxChars ? text.slice(0, maxChars) + "\n\n[Note: Text was automatically trimmed.]" : text;
 
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -33,7 +32,7 @@ module.exports = async (req, res) => {
                 messages: [
                     {
                         role: "system",
-                        content: "You are an elite academic professor and professional note-taker. Generate structured, comprehensive academic short notes incorporating headings (#, ##), bold keywords (**), bullet points, and Markdown tables (| Col 1 | Col 2 |)."
+                        content: "You are an elite academic professor and professional note-taker. DO NOT output any internal monologue, reasoning, planning, or thinking process. Output ONLY the final structured academic short notes starting directly with the main heading (#), incorporating headings, bold keywords (**), bullet points, and Markdown tables."
                     },
                     {
                         role: "user",
@@ -41,7 +40,7 @@ module.exports = async (req, res) => {
                     }
                 ],
                 temperature: 0.3,
-                max_tokens: 2500 // 🟢 උපරිම අවුට්පුට් ටෝකන් ප්‍රමාණය 8000 TPM සීමාව ඇතුළේ මැක්සිමම් කර ඇත
+                max_tokens: 2500
             })
         });
 
@@ -55,8 +54,14 @@ module.exports = async (req, res) => {
             ? data.choices[0].message.content 
             : "No response generated.";
 
-        // <think> ටැග්ස් සහ ඇතුළේ තියෙන ටෙක්ස්ට් සම්පූර්ණයෙන්ම ඉවත් කිරීම
-        notesResult = notesResult.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        // 1. <think> ටැග්ස් සම්පූර්ණයෙන්ම ඉවත් කිරීම
+        notesResult = notesResult.replace(/<think>[\s\S]*?<\/think>/gi, '');
+
+        // 2. ටැග්ස් නොදා "Here's a thinking process:" වගේ ඒවා ආවොත් ඒවා සහ මැද තියෙන අනවශ්‍ය ඇනලයිසින් කොටස් ඉවත් කර හැරීම
+        notesResult = notesResult.replace(/Here'?s a thinking process:[\s\S]*?(?=# |\*\*|$)/i, '');
+
+        // 3. මුලින් තියෙන හිස් අවකාශ පිරිසිදු කිරීම
+        notesResult = notesResult.trim();
 
         return res.status(200).json({ success: true, result: notesResult });
 
