@@ -1,5 +1,5 @@
 // ==========================================
-// VERCEL FUNCTION: api/shortnotes.js (Groq AI with Safe Text Limiting)
+// VERCEL FUNCTION: api/shortnotes.js (Groq AI with Table & Structured Notes)
 // ==========================================
 
 module.exports = async (req, res) => {
@@ -18,8 +18,7 @@ module.exports = async (req, res) => {
             return res.status(500).json({ error: 'Groq API Key is missing in Vercel Environment Variables' });
         }
 
-        // Groq Free Tier Limit එක (8000 TPM) පැනර් නොසිටින්න ටෙක්ස්ට් එක අක්ෂර 20,000 කට (సుమారు 4000-5000 tokens) සීමා කිරීම
-        const maxChars = 20000;
+        const maxChars = 50000;
         const safeText = text.length > maxChars ? text.slice(0, maxChars) + "\n\n[Note: Text was automatically trimmed to fit free tier limits.]" : text;
 
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -33,7 +32,7 @@ module.exports = async (req, res) => {
                 messages: [
                     {
                         role: "system",
-                        content: "You are an expert academic assistant and professional note-taker. Create exceptionally well-structured, clear, and comprehensive academic short notes with key definitions, core concepts, bullet points, and important takeaways based on the provided lecture text."
+                        content: "You are an elite academic professor and professional note-taker. Create exceptionally structured, comprehensive academic short notes, incorporating clear headings (#, ##), bold keywords (**), bullet points, and Markdown tables (| Column 1 | Column 2 |) for comparative data (such as feature comparisons, differences, and lists) matching professional reference templates[cite: 1]."
                     },
                     {
                         role: "user",
