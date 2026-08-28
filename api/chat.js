@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
                     }
                 ],
                 temperature: 0.7,
-                max_tokens: 3000
+                max_tokens: 1000 // 🟢 ටෝකන් ඉතිරි කර ගැනීමට ഒප්ටිමයිස් කර ඇත
             })
         });
 
@@ -53,13 +53,8 @@ module.exports = async (req, res) => {
             ? data.choices[0].message.content 
             : "No response generated.";
 
-        // 1. <think> ටැග්ස් සම්පූර්ණයෙන්ම ඉවත් කිරීම
         aiReply = aiReply.replace(/<think>[\s\S]*?<\/think>/gi, '');
-
-        // 2. අනවශ්‍ය thinking process හෝ preamble කෑලි ආවොත් ඒවා ඉවත් කිරීම
         aiReply = aiReply.replace(/Here'?s a thinking process:[\s\S]*?(?=# |\*\*|$)/i, '');
-
-        // 3. පිරිසිදු කර trim කිරීම
         aiReply = aiReply.trim();
 
         return res.status(200).json({ success: true, reply: aiReply });
