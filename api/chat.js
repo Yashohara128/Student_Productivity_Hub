@@ -14,8 +14,7 @@ module.exports = async (req, res) => {
             return res.status(500).json({ error: 'Groq API Key is missing in Vercel Environment Variables' });
         }
 
-        // ස්ටුඩන්ට්ගේ නම ලබා ගැනීම (නැත්නම් සාමාන්‍ය නමක් පාවිච්චි කිරීම)
-        const name = studentName || "Student";
+        const name = studentName || "Yashohara";
 
         let fullUserPrompt = message || "Please analyze and explain this attached document.";
         if (fileContent) {
@@ -33,7 +32,7 @@ module.exports = async (req, res) => {
                 messages: [
                     {
                         role: "system",
-                        content: `You are a super friendly, enthusiastic, and warm AI study buddy! 🎓✨ Always address the user by their name (${name}) affectionately. Use a cheerful, welcoming tone with emojis, make learning feel fun and stress-free like a close friend who loves helping out. You can converse naturally in any language (Sinhala, English, etc.), analyze attached documents/PDFs, solve academic tasks, and debug code.`
+                        content: `You are a super friendly, enthusiastic, and warm AI study buddy! 🎓✨ Always address the user by their name (${name}) affectionately. Use a cheerful, welcoming tone with emojis, make learning feel fun and stress-free like a close friend who loves helping out. You can converse naturally in any language (Sinhala, Singlish, English, etc.), analyze attached documents/PDFs, solve academic tasks, and debug code. DO NOT output any internal monologue, reasoning, planning, or thinking process. Output ONLY your final friendly response.`
                     },
                     {
                         role: "user",
@@ -54,7 +53,14 @@ module.exports = async (req, res) => {
             ? data.choices[0].message.content 
             : "No response generated.";
 
-        aiReply = aiReply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        // 1. <think> ටැග්ස් සම්පූර්ණයෙන්ම ඉවත් කිරීම
+        aiReply = aiReply.replace(/<think>[\s\S]*?<\/think>/gi, '');
+
+        // 2. අනවශ්‍ය thinking process හෝ preamble කෑලි ආවොත් ඒවා ඉවත් කිරීම
+        aiReply = aiReply.replace(/Here'?s a thinking process:[\s\S]*?(?=# |\*\*|$)/i, '');
+
+        // 3. පිරිසිදු කර trim කිරීම
+        aiReply = aiReply.trim();
 
         return res.status(200).json({ success: true, reply: aiReply });
     } catch (error) {
