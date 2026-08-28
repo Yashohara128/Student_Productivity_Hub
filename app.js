@@ -4,7 +4,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBjzE30NZXDZsT-DuC9cBrksOjg0UsQM34",
@@ -92,13 +92,13 @@ function updateDynamicGreeting(userName) {
     let timeGreeting = "";
     let emoji = "";
 
-    if (hours >= 4 && hours < 12) {
+    if (hours >= 5 && hours < 12) {
         timeGreeting = "Good Morning";
         emoji = "☀️";
-    } else if (hours >= 12 && hours < 15) {
+    } else if (hours >= 12 && hours < 17) {
         timeGreeting = "Good Afternoon";
         emoji = "🌤️";
-    } else if (hours >= 16 && hours < 20) {
+    } else if (hours >= 17 && hours < 21) {
         timeGreeting = "Good Evening";
         emoji = "🌆";
     } else {
@@ -151,6 +151,7 @@ const noteResultSection = document.getElementById('note-result-section');
 const generatedNotesOutput = document.getElementById('generated-notes-output');
 const copyNotesBtn = document.getElementById('copy-notes-btn');
 const downloadNotesTxtBtn = document.getElementById('download-notes-txt-btn');
+const downloadNotesPdfBtn = document.getElementById('download-notes-pdf-btn');
 
 let extractedNoteText = "";
 
@@ -196,9 +197,10 @@ if (generateNotesBtn) {
         const customPromptInput = document.getElementById('note-custom-prompt');
         const customPrompt = customPromptInput ? customPromptInput.value.trim() : "";
 
-        noteLoading.style.display = 'block';
-        noteResultSection.style.display = 'none';
+        if (noteLoading) noteLoading.style.display = 'block';
+        if (noteResultSection) noteResultSection.style.display = 'none';
         generateNotesBtn.disabled = true;
+        generateNotesBtn.innerText = "Generating via Groq AI...";
 
         try {
             const response = await fetch('/api/shortnotes', {
@@ -219,14 +221,15 @@ if (generateNotesBtn) {
 
             if (data.result) {
                 generatedNotesOutput.value = data.result;
-                noteResultSection.style.display = 'block';
+                if (noteResultSection) noteResultSection.style.display = 'block';
             }
         } catch (error) {
             console.error("Short Notes API Error:", error);
             alert("❌ Failed to connect to server for generating short notes.");
         } finally {
-            noteLoading.style.display = 'none';
+            if (noteLoading) noteLoading.style.display = 'none';
             generateNotesBtn.disabled = false;
+            generateNotesBtn.innerText = "✨ Generate Short Notes";
         }
     });
 }
@@ -254,6 +257,89 @@ if (downloadNotesTxtBtn) {
         a.download = 'Lecture_Short_Notes.txt';
         a.click();
         URL.revokeObjectURL(url);
+    });
+}
+
+if (downloadNotesPdfBtn) {
+    downloadNotesPdfBtn.addEventListener('click', () => {
+        const text = generatedNotesOutput.value;
+        if (!text) {
+            alert("⚠️ No short notes available to download!");
+            return;
+        }
+
+        let cleanText = text
+            .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+            .replace(/\*(.*?)\*/g, '<i>$1</i>')
+            .replace(/^[*\-]\s+/gm, '• ');
+
+        let printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Lecture Short Notes</title>
+                <style>
+                    body {
+                        font-family: 'Poppins', Arial, sans-serif;
+                        font-size: 11pt;
+                        line-height: 1.7;
+                        color: #111;
+                        margin: 20mm 20mm;
+                    }
+                    h1 {
+                        font-size: 18pt;
+                        text-align: center;
+                        color: #0f172a;
+                        text-transform: uppercase;
+                        border-bottom: 2px solid #3b82f6;
+                        padding-bottom: 10px;
+                        margin-bottom: 5px;
+                    }
+                    .subtitle {
+                        text-align: center;
+                        font-size: 9pt;
+                        color: #64748b;
+                        margin-bottom: 30px;
+                    }
+                    h2, h3 {
+                        color: #1e293b;
+                        margin-top: 22px;
+                        margin-bottom: 8px;
+                    }
+                    p {
+                        margin-bottom: 12px;
+                        text-align: justify;
+                    }
+                    ul, ol {
+                        margin-bottom: 12px;
+                        padding-left: 20px;
+                    }
+                    li {
+                        margin-bottom: 6px;
+                    }
+                    @media print {
+                        body {
+                            margin: 15mm;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Lecture Short Notes</h1>
+                <div class="subtitle">Generated via Student Productivity Hub • AI Short Note Generator</div>
+                <div>
+                    ${cleanText.split('\n\n').map(para => `<p>${para.replace(/\n/g, '<br>')}</p>`).join('')}
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                    }
+                </script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
     });
 }
 
@@ -450,7 +536,87 @@ if (downloadHumanizedPdfBtn) {
     });
 }
 
-// --- REVIEW SYSTEM ---
+// --- REAL-TIME COMMUNITY REVIEWS (FOOTER & MODAL) ---
+function loadPublicReviews() {
+    const container = document.getElementById('public-reviews-container');
+    if (!container) return;
+
+    onSnapshot(collection(db, "global_reviews"), (querySnapshot) => {
+        let reviewsList = [];
+        querySnapshot.forEach((doc) => {
+            reviewsList.push(doc.data());
+        });
+
+        reviewsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        if (reviewsList.length === 0) {
+            container.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">No reviews yet. Be the first to share your feedback!</div>`;
+            return;
+        }
+
+        let html = '';
+        reviewsList.forEach(rev => {
+            let stars = '⭐'.repeat(rev.rating);
+            html += `
+                <div style="background: var(--input-bg); border: 1px solid var(--input-border); padding: 10px 14px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
+                        <b style="color: var(--text-color);">${rev.userName}</b>
+                        <span>${stars}</span>
+                    </div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 4px 0 0 0; line-height: 1.4;">${rev.comment}</p>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }, (error) => {
+        console.error("Error loading public reviews:", error);
+        container.innerHTML = `<div style="text-align: center; color: #ef4444; font-size: 0.8rem;">Failed to load reviews.</div>`;
+    });
+}
+
+function loadGlobalReviews() {
+    const modalReviewsContainer = document.getElementById('modal-reviews-container');
+    if (!modalReviewsContainer) return;
+
+    onSnapshot(collection(db, "global_reviews"), (querySnapshot) => {
+        let reviewsList = [];
+        querySnapshot.forEach((doc) => {
+            reviewsList.push(doc.data());
+        });
+
+        reviewsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        if (reviewsList.length === 0) {
+            modalReviewsContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">No reviews yet. Be the first to review!</div>`;
+            return;
+        }
+
+        let html = '';
+        reviewsList.forEach(rev => {
+            let stars = '⭐'.repeat(rev.rating);
+            html += `
+                <div style="background: var(--input-bg); border: 1px solid var(--input-border); padding: 8px 10px; border-radius: 6px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
+                        <b style="color: var(--text-color);">${rev.userName}</b>
+                        <span>${stars}</span>
+                    </div>
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin: 3px 0 0 0;">${rev.comment}</p>
+                </div>
+            `;
+        });
+
+        modalReviewsContainer.innerHTML = html;
+    }, (error) => {
+        console.error("Error loading modal reviews:", error);
+        modalReviewsContainer.innerHTML = `<div style="text-align: center; color: #ef4444; font-size: 0.8rem;">Failed to load reviews.</div>`;
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadPublicReviews();
+});
+
 const reviewModal = document.getElementById('review-modal');
 const closeReviewModalBtn = document.getElementById('close-review-modal');
 const closeGotItBtn = document.getElementById('close-modal-btn');
@@ -468,7 +634,6 @@ if (closeGotItBtn) closeGotItBtn.addEventListener('click', () => reviewModal.sty
 const modalSubmitReviewBtn = document.getElementById('modal-submit-review-btn');
 const modalReviewRating = document.getElementById('modal-review-rating');
 const modalReviewComment = document.getElementById('modal-review-comment');
-const modalReviewsContainer = document.getElementById('modal-reviews-container');
 
 if (modalSubmitReviewBtn) {
     modalSubmitReviewBtn.addEventListener('click', async () => {
@@ -487,26 +652,14 @@ if (modalSubmitReviewBtn) {
             });
             alert("✅ Thank you for your feedback!");
             modalReviewComment.value = '';
-            loadGlobalReviews();
-        } catch (e) { alert("❌ Failed to submit review."); }
-        finally { modalSubmitReviewBtn.innerText = "Submit Review"; modalSubmitReviewBtn.disabled = false; }
+            modalReviewRating.selectedIndex = 0;
+        } catch (e) { 
+            alert("❌ Failed to submit review: " + e.message); 
+        } finally { 
+            modalSubmitReviewBtn.innerText = "Submit Review"; 
+            modalSubmitReviewBtn.disabled = false; 
+        }
     });
-}
-
-async function loadGlobalReviews() {
-    if (!modalReviewsContainer) return;
-    try {
-        const querySnapshot = await getDocs(collection(db, "global_reviews"));
-        let list = [];
-        querySnapshot.forEach(doc => list.push(doc.data()));
-        list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        if (list.length === 0) { modalReviewsContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">No reviews yet.</div>`; return; }
-        let html = '';
-        list.forEach(rev => {
-            html += `<div style="background: var(--input-bg); border: 1px solid var(--input-border); padding: 8px 10px; border-radius: 6px;"><div style="display: flex; justify-content: space-between; font-size: 0.8rem;"><b>${rev.userName}</b><span>${'⭐'.repeat(rev.rating)}</span></div><p style="font-size: 0.78rem; color: var(--text-muted); margin: 3px 0 0 0;">${rev.comment}</p></div>`;
-        });
-        modalReviewsContainer.innerHTML = html;
-    } catch (e) { modalReviewsContainer.innerHTML = `<div style="text-align: center; color: #ef4444; font-size: 0.8rem;">Failed to load reviews.</div>`; }
 }
 
 // --- PRICING & PAYHERE PAYMENT LOGIC ---
@@ -666,8 +819,13 @@ if (addBtn) {
             gradeLetter = otherGradeLetter.value;
             const rawPoint = customGradePointInput.value.trim();
             if (!name || !year || !semester || isNaN(credit) || !gradeLetter) { alert("Please fill all fields correctly!"); return; }
-            if (gradeLetter === "Repeat") { gradePoint = -1; gradeText = "Repeat (RA)"; }
-            else { gradePoint = parseFloat(rawPoint); gradeText = `${gradeLetter} (${gradePoint.toFixed(2)})`; }
+            if (gradeLetter === "Repeat" || gradeLetter === "Absent" || gradeLetter === "Medical") { 
+                gradePoint = -1; 
+                gradeText = gradeLetter === "Repeat" ? "Repeat (RA)" : gradeLetter; 
+            } else { 
+                gradePoint = parseFloat(rawPoint); 
+                gradeText = `${gradeLetter} (${gradePoint.toFixed(2)})`; 
+            }
             isCustom = true;
         } else {
             gradePoint = parseFloat(gradeSelect.value);
@@ -747,87 +905,38 @@ if (resetAllBtn) {
 const downloadPdfBtn = document.getElementById('download-pdf');
 if (downloadPdfBtn) {
     downloadPdfBtn.addEventListener('click', () => {
-        if (!degreeInput || degreeInput.value.trim() === "") {
-            alert("⚠️ Please enter your Degree Program name and click 'OK' before downloading the certificate!");
-            if (degreeInput) degreeInput.focus();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-        }
-
+        if (!degreeInput || degreeInput.value.trim() === "") { alert("⚠️ Enter degree name first!"); degreeInput.focus(); return; }
         const activeSubjects = getActiveSubjects();
-        if (activeSubjects.length === 0) {
-            alert("⚠️ You must add at least one subject in this profile to download your certificate!");
-            const subNameInput = document.getElementById('subject-name');
-            if (subNameInput) subNameInput.focus();
-            window.scrollTo({ top: 300, behavior: 'smooth' });
-            return;
-        }
+        if (activeSubjects.length === 0) { alert("⚠️ Add at least one subject!"); return; }
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        
         const degree = degreeInput.value;
-        // ස්ටුඩන්ට් ගේ නම ලොගින් වෙලා තියෙන විදිහට හරියටම ගැනීම
         const studentName = currentUser ? (currentUser.displayName || currentUser.email) : (userNameDisplay ? userNameDisplay.innerText : "Student");
-        
-        const cgpaEl = document.getElementById('cgpa-display');
-        const classEl = document.getElementById('class-display');
-        const cgpa = cgpaEl ? cgpaEl.innerText : "0.00";
-        const prediction = classEl ? classEl.innerText : "Pending";
+        const cgpa = document.getElementById('cgpa-display').innerText;
+        const prediction = document.getElementById('class-display').innerText;
 
-        doc.setDrawColor(30, 41, 59);
-        doc.setLineWidth(1.5);
-        doc.rect(10, 10, 190, 277);
-
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(18);
-        doc.text("ACADEMIC PERFORMANCE REPORT", 105, 25, null, null, "center");
-        
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        doc.text(`Student: ${studentName}`, 20, 36);
-        doc.text(`Degree: ${degree}`, 20, 43);
-        
-        doc.setLineWidth(0.5);
+        doc.setDrawColor(30, 41, 59); doc.setLineWidth(1.5); doc.rect(10, 10, 190, 277);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.text("ACADEMIC PERFORMANCE REPORT", 105, 25, null, null, "center");
+        doc.setFontSize(10); doc.setFont("helvetica", "normal");
+        doc.text(`Student: ${studentName}`, 20, 36); doc.text(`Degree: ${degree}`, 20, 43);
         doc.line(20, 48, 190, 48);
 
         let yPos = 56;
-
-        const years = [1, 2, 3, 4];
-        years.forEach(year => {
-            const yearSubjects = activeSubjects.filter(s => s.year == year);
-            if (yearSubjects.length === 0) return;
-
+        [1, 2, 3, 4].forEach(year => {
             [1, 2].forEach(sem => {
-                const semSubjects = activeSubjects.filter(s => s.year == year && s.semester == sem);
-                if (semSubjects.length === 0) return;
-
-                if (yPos > 230) {
-                    doc.addPage();
-                    yPos = 25;
-                }
-
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(11);
-                doc.text(`Year ${year} - Semester ${sem}`, 20, yPos);
-                yPos += 6;
-
-                doc.setFillColor(240, 240, 240);
-                doc.rect(20, yPos, 170, 7, "F");
-
+                const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
+                if (semSubs.length === 0) return;
+                if (yPos > 230) { doc.addPage(); yPos = 25; }
+                doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+                doc.text(`Year ${year} - Semester ${sem}`, 20, yPos); yPos += 6;
+                doc.setFillColor(240, 240, 240); doc.rect(20, yPos, 170, 7, "F");
                 doc.setFontSize(9);
-                doc.text("Subject Name", 25, yPos + 5);
-                doc.text("Credits", 115, yPos + 5);
-                doc.text("Grade", 140, yPos + 5);
-                doc.text("Point", 165, yPos + 5);
+                doc.text("Subject Name", 25, yPos + 5); doc.text("Credits", 115, yPos + 5); doc.text("Grade", 140, yPos + 5); doc.text("Point", 165, yPos + 5);
                 yPos += 9;
-
                 doc.setFont("helvetica", "normal");
-                semSubjects.forEach(sub => {
-                    if (yPos > 265) {
-                        doc.addPage();
-                        yPos = 25;
-                    }
+                semSubs.forEach(sub => {
+                    if (yPos > 265) { doc.addPage(); yPos = 25; }
                     doc.text(sub.name, 25, yPos);
                     doc.text(String(sub.credit), 118, yPos);
                     doc.text(sub.gradeText, 140, yPos);
@@ -838,30 +947,15 @@ if (downloadPdfBtn) {
             });
         });
 
-        if (yPos > 210) {
-            doc.addPage();
-            yPos = 25;
-        }
-
-        // CGPA Box එක
-        doc.setDrawColor(30, 41, 59);
-        doc.setFillColor(248, 250, 252);
-        doc.roundedRect(20, yPos, 170, 22, 2, 2, "FD");
-
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
+        if (yPos > 210) { doc.addPage(); yPos = 25; }
+        doc.setFillColor(248, 250, 252); doc.roundedRect(20, yPos, 170, 22, 2, 2, "FD");
+        doc.setFont("helvetica", "bold"); doc.setFontSize(11);
         doc.text(`Overall Cumulative CGPA: ${cgpa}`, 25, yPos + 8);
         doc.text(`Predicted Class: ${prediction}`, 25, yPos + 16);
         yPos += 30;
 
-        // පීඩීඑෆ් එකේ යටින්ම ග්‍රේඩ්ස් වල අර්ථකථන (Notes) පෙන්වීම
-        if (yPos > 220) {
-            doc.addPage();
-            yPos = 25;
-        }
-
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(9.5);
+        if (yPos > 220) { doc.addPage(); yPos = 25; }
+        doc.setFont("helvetica", "bold"); doc.setFontSize(9.5);
         doc.text("Grade Descriptions & Notes:", 20, yPos);
         yPos += 6;
 
@@ -874,7 +968,6 @@ if (downloadPdfBtn) {
             "• Absent: Absent - Need Medical or Re-sitting Exam",
             "• Medical: Medical Subject - Retake Exam"
         ];
-
         gradeNotes.forEach(note => {
             doc.text(note, 22, yPos);
             yPos += 4.5;
@@ -883,6 +976,7 @@ if (downloadPdfBtn) {
         doc.save(`Transcript_${studentName.replace(/\s+/g, '_')}.pdf`);
     });
 }
+
 function calculateSemesterGPA(year, semester) {
     const subs = getActiveSubjects().filter(s => s.year == year && s.semester == semester && s.gradePoint !== -1);
     let creds = subs.reduce((acc, s) => acc + s.credit, 0);
@@ -913,15 +1007,12 @@ function determineDegreeClass(cgpa) {
 }
 
 function getStatusAdvice(gradeText) {
-    // Absent හෝ Absant වගේ වැරදුනත් අල්ලාගන්න පුළුවන් විදිහට
     if (gradeText.toLowerCase().includes("absent") || gradeText.toLowerCase().includes("absant")) {
         return '<br><small style="color: #f87171;">Absent - Need Medical or Re-sitting Exam</small>';
     }
-
-    if (gradeText.includes("Medical")) {
+    if (gradeText.toLowerCase().includes("medical")) {
         return '<br><small style="color: #f87171;">Medical Subject - Retake Exam</small>';
     }
- 
     if (gradeText === "NC-C" || gradeText === "F") {
         return '<br><small style="color: #f87171;">Retake Exam & C/A Next Attempt</small>';
     }
