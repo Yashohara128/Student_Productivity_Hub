@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
                     }
                 ],
                 temperature: 0.3,
-                max_tokens: 80000 // 🟢 Token සීමාව වැඩි කළා (Thinking + Full Notes සඳහා ප්‍රමාණවත් වන පරිදි)
+                max_tokens: 16384 // 🟢 Token සීමාව වැඩි කළා (Thinking + Full Notes සඳහා ප්‍රමාණවත් වන පරිදි)
             })
         });
 
