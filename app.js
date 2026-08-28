@@ -20,6 +20,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
+provider.setCustomParameters({ prompt: 'select_account' }); // 🟢 Allow multiple Gmail choosing
 
 const loginSection = document.getElementById('login-section');
 const appSection = document.getElementById('app-section');
@@ -241,7 +242,7 @@ window.startPayHerePayment = function(planName, amount, wordLimit) {
     payhere.startPayment(payment);
 };
 
-// --- PERSISTENT AI STUDY AGENT WITH FRIENDLY ERROR HANDLING & ATTACHMENTS ---
+// --- PERSISTENT AI STUDY AGENT ---
 const aiChatMessages = document.getElementById('ai-chat-messages');
 const aiChatInput = document.getElementById('ai-chat-input');
 const aiSendBtn = document.getElementById('ai-send-btn');
@@ -1119,7 +1120,7 @@ if (pdfUpload) {
     });
 }
 
-// --- GROQ AI HUMANIZER & PLAGIARISM CHECKER ---
+// --- GROQ AI HUMANIZER & PLAGIARISM CHECKER (SAFE WORD COUNT DEDUCTION) ---
 const checkPlagiarismBtn = document.getElementById('check-plagiarism-btn');
 const plagiarismText = document.getElementById('plagiarism-text');
 const plagiarismResult = document.getElementById('plagiarism-result');
@@ -1140,14 +1141,12 @@ async function trueAIHumanizer(inputText) {
         const data = await response.json();
         
         if (data.error) {
-            alert("⚠️ AI Daily Limit reached for Humanizer, Yashohara! 😅 Podi welawak idala ayith try karanna, mama ready innawa! 💛✨");
-            return inputText;
+            return { error: true, message: data.error };
         }
-        return data.result || inputText;
+        return { error: false, result: data.result || inputText };
     } catch (error) {
         console.error("Network Fetch Error:", error);
-        alert("⚠️ Connection issue detected while humanizing. Please try again! 🚀");
-        return inputText;
+        return { error: true, message: error.message };
     }
 }
 
@@ -1227,20 +1226,22 @@ if (checkPlagiarismBtn) {
                 sourcesHTML = "<br><small style='color: var(--text-muted);'>No direct external web matches found.</small>";
             }
 
+            // 🟢 Humanize කෝල් කිරීම සහ එරර් ආවොත් වර්ඩ්ස් අඩු නොවීම තහවුරු කිරීම
+            checkPlagiarismBtn.innerText = "Humanizing via AI...";
+            const humanizeResponse = await trueAIHumanizer(text);
+
+            if (humanizeResponse.error) {
+                alert("⚠️ AI Limit reached during Humanizing, Yashohara! 😅 Word quota එකෙන් කිසිම වර්ඩ් එකක් අඩු වුණේ නැහැ. පස්සේ ට්‍රයි කරන්න! 💛✨");
+                checkPlagiarismBtn.innerText = "Scan for Plagiarism & AI";
+                checkPlagiarismBtn.disabled = false;
+                return;
+            }
+
+            // 🟢 සියල්ල සාර්ථක නම් පමණක් වර්ඩ්ස් අඩු කිරීම
             const newTotalUsed = userData.wordCountUsed + inputWords;
             await updateDoc(userRef, { wordCountUsed: newTotalUsed, lastResetMonth: currentMonth });
 
-            plagiarismStats.innerHTML = `
-                <b>📌 Original Scan Report:</b><br>
-                • Monthly Quota Used: <b>${newTotalUsed} / ${activeWordLimit} words</b><br>
-                • Plagiarism Detected: <b style="color: ${percentPlagiarized > 10 ? '#ef4444' : '#22c55e'};">${percentPlagiarized}%</b><br>
-                • Originality Score: <b style="color: #38bdf8;">${(100 - percentPlagiarized).toFixed(1)}% Unique</b><br>
-                ${sourcesHTML}
-            `;
-
-            checkPlagiarismBtn.innerText = "Humanizing via AI...";
-            const humanizedVersion = await trueAIHumanizer(text);
-            if (humanizedOutputText) humanizedOutputText.value = humanizedVersion;
+            if (humanizedOutputText) humanizedOutputText.value = humanizeResponse.result;
 
             const humanizedStatsEl = document.getElementById('humanized-stats');
             if (humanizedStatsEl) {
@@ -1250,6 +1251,14 @@ if (checkPlagiarismBtn) {
                     • Tone Status: <b style="color: #38bdf8;">100% Natural Academic Human Tone</b>
                 `;
             }
+
+            plagiarismStats.innerHTML = `
+                <b>📌 Original Scan Report:</b><br>
+                • Monthly Quota Used: <b>${newTotalUsed} / ${activeWordLimit} words</b><br>
+                • Plagiarism Detected: <b style="color: ${percentPlagiarized > 10 ? '#ef4444' : '#22c55e'};">${percentPlagiarized}%</b><br>
+                • Originality Score: <b style="color: #38bdf8;">${(100 - percentPlagiarized).toFixed(1)}% Unique</b><br>
+                ${sourcesHTML}
+            `;
 
             if (humanizeBox) humanizeBox.style.display = 'block';
         } catch (error) {
@@ -1294,7 +1303,7 @@ if (downloadHumanizedDocxBtn) {
         let wordContent = `
             <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
             <head>
-                <title>Humanized Assignment Report</title>
+                <title>Humanizer Report</title>
                 <style>
                     body { font-family: 'Times New Roman', serif; margin: 25mm; }
                     h1 { text-align: center; font-size: 18pt; font-family: 'Times New Roman', serif; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; color: #1e293b; }
