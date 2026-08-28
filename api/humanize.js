@@ -1,16 +1,8 @@
-module.exports = async function handler(req, res) {
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-    );
+// ==========================================
+// VERCEL FUNCTION: api/humanize.js (Groq AI)
+// ==========================================
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
-
+module.exports = async (req, res) => {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -18,50 +10,50 @@ module.exports = async function handler(req, res) {
     try {
         const { text } = req.body;
         if (!text) {
-            return res.status(400).json({ error: 'Text is required' });
+            return res.status(400).json({ error: 'Text content is required' });
         }
 
-        const apiKey = process.env.GROQ_API_KEY;
-        if (!apiKey) {
-            return res.status(500).json({ error: 'GROQ_API_KEY is not set in environment variables' });
+        const groqApiKey = process.env.GROQ_API_KEY;
+        if (!groqApiKey) {
+            return res.status(500).json({ error: 'Groq API Key is missing in Vercel Environment Variables' });
         }
 
-        const url = 'https://api.groq.com/openai/v1/chat/completions';
-
-        // සේෆ්ටි ෆිල්ටර්ස් වලට නොසෑහෙන තරම් සරල සහ පැහැදිලි ඇකඩමික් ප්‍රොම්ට් එකක්
-        const prompt = `Rewrite the following academic text to make it exceptionally natural, highly engaging, and written in a refined human scholarly tone with varied sentence structures and rich vocabulary. Also, include 2 to 3 professionally formatted academic sources (in APA 7th edition style) related to the topic at the very end under a "References" section.
-
-Text to rewrite:
-${text}`;
-
-        const response = await fetch(url, {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${apiKey}`
+                "Authorization": `Bearer ${groqApiKey}`,
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "openai/gpt-oss-120b",
+                model: "qwen/qwen3.6-27b",
                 messages: [
-                    { role: "user", content: prompt }
+                    {
+                        role: "system",
+                        content: "You are an expert human writer and professional editor. Rewrite the given AI or robotic academic text into a 100% natural, fluent, human-like academic tone while preserving the core meaning and avoiding any AI detection patterns."
+                    },
+                    {
+                        role: "user",
+                        content: `Humanize this text:\n\n${text}`
+                    }
                 ],
-                temperature: 0.7
+                temperature: 0.7,
+                max_tokens: 3000
             })
         });
 
         const data = await response.json();
 
         if (data.error) {
-            return res.status(500).json({ error: data.error.message || 'Groq API returned an error' });
+            return res.status(500).json({ error: data.error.message || 'Groq API Error' });
         }
 
-        if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
-            const humanizedResult = data.choices[0].message.content.trim();
-            return res.status(200).json({ result: humanizedResult });
-        } else {
-            return res.status(500).json({ error: 'API structure error: ' + JSON.stringify(data) });
-        }
+        const resultText = data.choices && data.choices[0] && data.choices[0].message 
+            ? data.choices[0].message.content 
+            : text;
+
+        return res.status(200).json({ success: true, result: resultText });
     } catch (error) {
+        console.error("Groq Humanizer Server Error:", error);
         return res.status(500).json({ error: error.message });
     }
 };
