@@ -1,5 +1,5 @@
 // ==========================================
-// VERCEL FUNCTION: api/humanize.js (Groq AI)
+// VERCEL FUNCTION: api/humanize.js (Groq AI with Think Tag Stripper)
 // ==========================================
 
 module.exports = async (req, res) => {
@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
                 messages: [
                     {
                         role: "system",
-                        content: "You are an expert human writer and professional editor. Rewrite the given AI or robotic academic text into a 100% natural, fluent, human-like academic tone while preserving the core meaning and avoiding any AI detection patterns."
+                        content: "You are an expert human writer and professional editor. Rewrite the given AI or robotic academic text into a 100% natural, fluent, human-like academic tone while preserving the core meaning and avoiding any AI detection patterns. Return ONLY the final humanized text."
                     },
                     {
                         role: "user",
@@ -47,9 +47,12 @@ module.exports = async (req, res) => {
             return res.status(500).json({ error: data.error.message || 'Groq AI Error' });
         }
 
-        const resultText = data.choices && data.choices[0] && data.choices[0].message 
+        let resultText = data.choices && data.choices[0] && data.choices[0].message 
             ? data.choices[0].message.content 
             : text;
+
+        // <think>...</think> ටැග්ස් සහ අභ්‍යන්තර තින්කිං ප්‍රොසෙස් එක සම්පූර්ණයෙන්ම ඉවත් කිරීම
+        resultText = resultText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
         return res.status(200).json({ success: true, result: resultText });
     } catch (error) {
