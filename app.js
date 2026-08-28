@@ -1,5 +1,5 @@
 // ==========================================
-// STUDENT PRODUCTIVITY HUB - APP.JS (100% COMPLETE & WORKING)
+// STUDENT PRODUCTIVITY HUB - APP.JS (100% FULL & COMPLETE)
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -125,11 +125,14 @@ if (backToHubGpa) backToHubGpa.addEventListener('click', () => showView('hub'));
 if (backToHubShortNotes) backToHubShortNotes.addEventListener('click', () => showView('hub'));
 if (backToHubPlagiarism) backToHubPlagiarism.addEventListener('click', () => showView('hub'));
 
-// --- Review Modal Close & Toggle Logic (FIXED) ---
+// --- Review Modal Close & Submit Logic ---
 const reviewModal = document.getElementById('review-modal');
 const closeReviewModalBtn = document.getElementById('close-review-modal');
 const closeGotItBtn = document.getElementById('close-modal-btn');
 const reviewNowButtons = document.querySelectorAll('.review-now-btn');
+const modalSubmitReviewBtn = document.getElementById('modal-submit-review-btn');
+const modalReviewRating = document.getElementById('modal-review-rating');
+const modalReviewComment = document.getElementById('modal-review-comment');
 
 reviewNowButtons.forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -137,28 +140,48 @@ reviewNowButtons.forEach(btn => {
         if (reviewModal) { reviewModal.style.display = 'flex'; loadGlobalReviews(); }
     });
 });
-if (closeReviewModalBtn) {
-    closeReviewModalBtn.addEventListener('click', () => {
-        if (reviewModal) reviewModal.style.display = 'none';
-    });
-}
-if (closeGotItBtn) {
-    closeGotItBtn.addEventListener('click', () => {
-        if (reviewModal) reviewModal.style.display = 'none';
+if (closeReviewModalBtn) closeReviewModalBtn.addEventListener('click', () => { if (reviewModal) reviewModal.style.display = 'none'; });
+if (closeGotItBtn) closeGotItBtn.addEventListener('click', () => { if (reviewModal) reviewModal.style.display = 'none'; });
+
+if (modalSubmitReviewBtn) {
+    modalSubmitReviewBtn.addEventListener('click', async () => {
+        if (!currentUser) { alert("⚠️ Please login first!"); return; }
+        const comment = modalReviewComment.value.trim();
+        const rating = parseInt(modalReviewRating.value);
+        if (!comment) { alert("⚠️ Please write a comment!"); return; }
+
+        modalSubmitReviewBtn.innerText = "Submitting...";
+        modalSubmitReviewBtn.disabled = true;
+        try {
+            await addDoc(collection(db, "global_reviews"), {
+                userName: currentUser.displayName || "Student",
+                userEmail: currentUser.email,
+                rating, comment, createdAt: new Date().toISOString()
+            });
+            alert("✅ Thank you for your feedback!");
+            modalReviewComment.value = '';
+            modalReviewRating.selectedIndex = 0;
+        } catch (e) { 
+            alert("❌ Failed to submit review: " + e.message); 
+        } finally { 
+            modalSubmitReviewBtn.innerText = "Submit Review"; 
+            modalSubmitReviewBtn.disabled = false; 
+        }
     });
 }
 
 function loadGlobalReviews() {
     const modalReviewsContainer = document.getElementById('modal-reviews-container');
-    if (!modalReviewsContainer) return;
-
+    const publicReviewsContainer = document.getElementById('public-reviews-container');
+    
     onSnapshot(collection(db, "global_reviews"), (querySnapshot) => {
         let reviewsList = [];
         querySnapshot.forEach((doc) => { reviewsList.push(doc.data()); });
         reviewsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         if (reviewsList.length === 0) {
-            modalReviewsContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">No reviews yet. Be the first to review!</div>`;
+            if (modalReviewsContainer) modalReviewsContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">No reviews yet. Be the first to review!</div>`;
+            if (publicReviewsContainer) publicReviewsContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">No reviews yet. Be the first to share your feedback!</div>`;
             return;
         }
 
@@ -166,7 +189,7 @@ function loadGlobalReviews() {
         reviewsList.forEach(rev => {
             let stars = '⭐'.repeat(rev.rating);
             html += `
-                <div style="background: var(--input-bg); border: 1px solid var(--input-border); padding: 8px 10px; border-radius: 6px;">
+                <div style="background: var(--input-bg); border: 1px solid var(--input-border); padding: 8px 10px; border-radius: 6px; margin-bottom: 6px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
                         <b style="color: var(--text-color);">${rev.userName}</b>
                         <span>${stars}</span>
@@ -175,9 +198,48 @@ function loadGlobalReviews() {
                 </div>
             `;
         });
-        modalReviewsContainer.innerHTML = html;
+        if (modalReviewsContainer) modalReviewsContainer.innerHTML = html;
+        if (publicReviewsContainer) publicReviewsContainer.innerHTML = html;
     });
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadGlobalReviews();
+});
+
+// --- Pricing & PayHere Integration ---
+window.openPricingModal = function() { document.getElementById('pricing-modal').style.display = 'flex'; };
+window.closePricingModal = function() { document.getElementById('pricing-modal').style.display = 'none'; };
+
+window.startPayHerePayment = function(planName, amount, wordLimit) {
+    if (!currentUser) return;
+    var payment = {
+        "sandbox": true,
+        "merchant_id": "YOUR_MERCHANT_ID",
+        "return_url": "https://unlimitedfreepatracker.site.je/success.html",
+        "cancel_url": "https://unlimitedfreepatracker.site.je/cancel.html",
+        "notify_url": "https://your-backend-server.com/notify",
+        "order_id": `PRO_${planName.toUpperCase()}_${Date.now()}`,
+        "items": `Student Hub - ${planName.toUpperCase()} Plan`,
+        "currency": "LKR",
+        "amount": amount.toFixed(2),
+        "first_name": currentUser.displayName.split(" ")[0] || "Student",
+        "last_name": currentUser.displayName.split(" ")[1] || "User",
+        "email": currentUser.email,
+        "phone": "0771234567",
+        "address": "Sri Lanka", "city": "Colombo", "country": "Sri Lanka"
+    };
+
+    payhere.onCompleted = async function orderId(orderId) {
+        alert(`🎉 Payment Successful! Welcome to the ${planName.toUpperCase()} Plan.`);
+        await updateDoc(doc(db, "users", currentUser.uid), { plan: planName, wordLimit, isPaid: true, upgradeDate: new Date().toISOString() });
+        closePricingModal();
+        location.reload();
+    };
+    payhere.onDismissed = () => alert("⚠️ Payment cancelled.");
+    payhere.onError = (err) => alert("❌ Payment Error: " + err);
+    payhere.startPayment(payment);
+};
 
 // --- AI PDF SHORT NOTE GENERATOR LOGIC ---
 const notePdfUpload = document.getElementById('note-pdf-upload');
@@ -946,7 +1008,7 @@ if (checkPlagiarismBtn) {
 
             checkPlagiarismBtn.innerText = "Scanning Web...";
             plagiarismResult.style.display = 'none';
-            humanizeBox.style.display = 'none';
+            if (humanizeBox) humanizeBox.style.display = 'none';
 
             const apiKey = "e52d65e1d8mshc4a85875ea5c502p18f622jsn296fe9b1c2d2";
             const apiHost = "plagiarism-checker-and-auto-citation-generator-multi-lingual.p.rapidapi.com";
@@ -990,15 +1052,18 @@ if (checkPlagiarismBtn) {
 
             checkPlagiarismBtn.innerText = "Humanizing via AI...";
             const humanizedVersion = await trueAIHumanizer(text);
-            humanizedOutputText.value = humanizedVersion;
+            if (humanizedOutputText) humanizedOutputText.value = humanizedVersion;
 
-            document.getElementById('humanized-stats').innerHTML = `
-                <b>✨ Post-Humanize Status:</b><br>
-                • Risk Level: <b style="color: #22c55e;">0.0% (Clean & Undetectable)</b><br>
-                • Tone Status: <b style="color: #38bdf8;">100% Natural Academic Human Tone</b>
-            `;
+            const humanizedStatsEl = document.getElementById('humanized-stats');
+            if (humanizedStatsEl) {
+                humanizedStatsEl.innerHTML = `
+                    <b>✨ Post-Humanize Status:</b><br>
+                    • Risk Level: <b style="color: #22c55e;">0.0% (Clean & Undetectable)</b><br>
+                    • Tone Status: <b style="color: #38bdf8;">100% Natural Academic Human Tone</b>
+                `;
+            }
 
-            humanizeBox.style.display = 'block';
+            if (humanizeBox) humanizeBox.style.display = 'block';
         } catch (error) {
             console.error("API Error:", error);
             alert("❌ Plagiarism scan failed.");
