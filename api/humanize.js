@@ -25,7 +25,7 @@ module.exports = async (req, res) => {
                 messages: [
                     {
                         role: "system",
-                        content: "You are an expert human writer and editor. Rewrite the given text to sound 100% natural, human-written, engaging, and undetectable by AI detectors, while strictly retaining the original academic meaning. DO NOT output any thinking process or preamble, output ONLY the humanized text."
+                        content: "You are an expert human writer and editor. Rewrite the given text to sound 100% natural, human-written, engaging, and undetectable by AI detectors, while strictly retaining the original academic meaning. CRITICAL INSTRUCTION: Do NOT output any thinking process, reasoning, markdown headers about steps, or <think> tags. Output ONLY the final humanized text paragraph."
                     },
                     {
                         role: "user",
@@ -33,7 +33,7 @@ module.exports = async (req, res) => {
                     }
                 ],
                 temperature: 0.7,
-                max_tokens: 1000 // 🟢 ටෝකන් ඉතිරි කර ගැනීමට 1000 දක්වා අඩු කර ඇත
+                max_tokens: 1000
             })
         });
 
@@ -46,7 +46,18 @@ module.exports = async (req, res) => {
             ? data.choices[0].message.content 
             : text;
 
-        humanizedText = humanizedText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        // 🟢 පවර්ෆුල් ක්ලීනර් මඟින් සියලුම thinking artifacts ඉවත් කිරීම
+        humanizedText = humanizedText.replace(/<think>[\s\S]*?<\/think>/gi, '');
+        humanizedText = humanizedText.replace(/Here'?s a thinking process:[\s\S]*?(?=\n\n|$)/gi, '');
+        humanizedText = humanizedText.replace(/\*\*Analyze User Input:\*\*[\s\S]*?(?=\n\n|$)/gi, '');
+        
+        // මොඩල් එක කවදාවත් හිතන්නේ නැති විදිහට අන්तिम පැරග්‍රාෆ් එක හෝ පිරිසිදු ටෙක්ස්ට් එක පමණක් ලබා ගැනීම
+        const cleanedParts = humanizedText.split(/(?:Refined for Academic Tone|Draft \d|Final check)/i);
+        if (cleanedParts.length > 1) {
+            humanizedText = cleanedParts[cleanedParts.length - 1];
+        }
+
+        humanizedText = humanizedText.trim();
 
         return res.status(200).json({ success: true, result: humanizedText });
     } catch (error) {
