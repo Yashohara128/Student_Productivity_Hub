@@ -828,10 +828,20 @@ function determineDegreeClass(cgpa) {
 }
 
 function getStatusAdvice(gradeText) {
-    if (gradeText.includes("Repeat")) return '<br><small style="color: #f87171;">Repeat Subject</small>';
-    if (gradeText === "NC-C" || gradeText === "F") return '<br><small style="color: #f87171;">Retake Exam & C/A</small>';
-    if (gradeText === "NC-E" || gradeText === "NE") return '<br><small style="color: #f87171;">Retake Exam</small>';
-    if (gradeText === "Absent" || gradeText === "Medical") return '<br><small style="color: #f87171;">Retake Exam</small>';
+    // Absent හෝ Absant වගේ වැරදුනත් අල්ලාගන්න පුළුවන් විදිහට
+    if (gradeText.toLowerCase().includes("absent") || gradeText.toLowerCase().includes("absant")) {
+        return '<br><small style="color: #f87171;">Absent - Need Medical or Re-sitting Exam</small>';
+    }
+ 
+    if (gradeText === "NC-C" || gradeText === "F") {
+        return '<br><small style="color: #f87171;">Retake Exam & C/A</small>';
+    }
+    if (gradeText === "NC-E") {
+        return '<br><small style="color: #fbbf24;">Please Complete Your Exam Next Attempt</small>';
+    }
+    if (gradeText === "NE") {
+        return '<br><small style="color: #60a5fa;">Exam & CA Pending. Maintain 80% Attendance</small>';
+    }
     return "";
 }
 
