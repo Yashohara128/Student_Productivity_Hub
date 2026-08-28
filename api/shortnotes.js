@@ -1,5 +1,5 @@
 // ==========================================
-// VERCEL FUNCTION: api/shortnotes.js (Groq AI with Table & Structured Notes)
+// VERCEL FUNCTION: api/shortnotes.js (100% Fixed)
 // ==========================================
 
 module.exports = async (req, res) => {
@@ -19,7 +19,7 @@ module.exports = async (req, res) => {
         }
 
         const maxChars = 50000;
-        const safeText = text.length > maxChars ? text.slice(0, maxChars) + "\n\n[Note: Text was automatically trimmed to fit free tier limits.]" : text;
+        const safeText = text.length > maxChars ? text.slice(0, maxChars) + "\n\n[Note: Text was automatically trimmed to fit limits.]" : text;
 
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -50,13 +50,16 @@ module.exports = async (req, res) => {
             return res.status(500).json({ error: data.error.message || 'Groq API Error' });
         }
 
-       let notesResult = data.choices && data.choices[0] && data.choices[0].message 
+        let notesResult = data.choices && data.choices[0] && data.choices[0].message 
             ? data.choices[0].message.content 
             : "No response generated.";
 
         // <think> ටැග්ස් ඉවත් කිරීම
         notesResult = notesResult.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
         
+        // 🟢 මෙන්න මේ රෙස්පොන්ස් එක තමයි මිස් වෙලා තිබුණේ! දැන් හරියටම දාලා තියෙන්නේ.
+        return res.status(200).json({ success: true, result: notesResult });
+
     } catch (error) {
         console.error("Groq AI Server Error:", error);
         return res.status(500).json({ error: error.message });
