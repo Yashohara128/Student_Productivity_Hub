@@ -50,11 +50,13 @@ module.exports = async (req, res) => {
             return res.status(500).json({ error: data.error.message || 'Groq API Error' });
         }
 
-        const notesResult = data.choices && data.choices[0] && data.choices[0].message 
+       let notesResult = data.choices && data.choices[0] && data.choices[0].message 
             ? data.choices[0].message.content 
             : "No response generated.";
 
-        return res.status(200).json({ success: true, result: notesResult });
+        // <think> ටැග්ස් ඉවත් කිරීම
+        notesResult = notesResult.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        
     } catch (error) {
         console.error("Groq AI Server Error:", error);
         return res.status(500).json({ error: error.message });
