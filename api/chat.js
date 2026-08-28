@@ -4,14 +4,19 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const { message } = req.body;
-        if (!message) {
-            return res.status(400).json({ error: 'Message is required' });
+        const { message, fileContent } = req.body;
+        if (!message && !fileContent) {
+            return res.status(400).json({ error: 'Message or file content is required' });
         }
 
         const groqApiKey = process.env.GROQ_API_KEY;
         if (!groqApiKey) {
             return res.status(500).json({ error: 'Groq API Key is missing in Vercel Environment Variables' });
+        }
+
+        let fullUserPrompt = message || "Please analyze and explain this attached document.";
+        if (fileContent) {
+            fullUserPrompt = `Attached Document / Study Material Content:\n${fileContent.slice(0, 15000)}\n\nUser Question/Task: ${message || "Please summarize or analyze this document."}`;
         }
 
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -25,15 +30,15 @@ module.exports = async (req, res) => {
                 messages: [
                     {
                         role: "system",
-                        content: "You are an elite, friendly, and student-friendly AI Study Assistant. You can converse in any language (Sinhala, Tamil, English, etc.) and help students solve academic tasks, code debugging, explanations, and general questions."
+                        content: "You are an elite, friendly, and student-friendly AI Study Assistant. You can converse in any language (Sinhala, Tamil, English, etc.), analyze attached documents/PDFs, solve academic tasks, code debugging, and answer student questions."
                     },
                     {
                         role: "user",
-                        content: message
+                        content: fullUserPrompt
                     }
                 ],
                 temperature: 0.7,
-                max_tokens: 2000
+                max_tokens: 3000
             })
         });
 
