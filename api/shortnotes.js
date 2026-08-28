@@ -1,5 +1,5 @@
 // ==========================================
-// VERCEL FUNCTION: api/shortnotes.js (Groq AI)
+// VERCEL FUNCTION: api/shortnotes.js (Groq AI with Safe Text Limiting)
 // ==========================================
 
 module.exports = async (req, res) => {
@@ -18,6 +18,10 @@ module.exports = async (req, res) => {
             return res.status(500).json({ error: 'Groq API Key is missing in Vercel Environment Variables' });
         }
 
+        // Groq Free Tier Limit එක (8000 TPM) පැනර් නොසිටින්න ටෙක්ස්ට් එක අක්ෂර 20,000 කට (సుమారు 4000-5000 tokens) සීමා කිරීම
+        const maxChars = 20000;
+        const safeText = text.length > maxChars ? text.slice(0, maxChars) + "\n\n[Note: Text was automatically trimmed to fit free tier limits.]" : text;
+
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -25,7 +29,7 @@ module.exports = async (req, res) => {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "qwen/qwen3.6-27b", // 👈 මෙන්න මෙතන මොඩල් නම වෙනස් කළා
+                model: "qwen/qwen3.6-27b",
                 messages: [
                     {
                         role: "system",
@@ -33,11 +37,11 @@ module.exports = async (req, res) => {
                     },
                     {
                         role: "user",
-                        content: `${prompt}\n\nStudy Material / Lecture Text:\n${text}`
+                        content: `${prompt}\n\nStudy Material / Lecture Text:\n${safeText}`
                     }
                 ],
                 temperature: 0.3,
-                max_tokens: 4000
+                max_tokens: 3000
             })
         });
 
