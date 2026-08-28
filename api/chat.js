@@ -25,7 +25,7 @@ module.exports = async (req, res) => {
                 messages: [
                     {
                         role: "system",
-                        content: "You are an elite, friendly, and student-friendly AI Study Assistant. You can converse in any language (Sinhala, Tamil, English, etc.) and help students solve academic tasks, code debugging, explanations, and general questions. Be clear, precise, and supportive."
+                        content: "You are an elite, friendly, and student-friendly AI Study Assistant. You can converse in any language (Sinhala, Tamil, English, etc.) and help students solve academic tasks, code debugging, explanations, and general questions."
                     },
                     {
                         role: "user",
