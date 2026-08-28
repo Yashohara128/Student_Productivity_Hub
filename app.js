@@ -1,4 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+import { initIEEEModule } from './ieee.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
@@ -697,6 +698,9 @@ onAuthStateChanged(auth, async (user) => {
         const studentName = user.displayName ? user.displayName.split(" ")[0] : "Yashohara";
         updateDynamicGreeting(studentName);
         
+        // 🟢 මෙන්න මෙතැනට දාන්න
+        initIEEEModule();
+
         if (aiChatMessages) {
             aiChatMessages.innerHTML = `
                 <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 10px; border-radius: 8px; color: var(--text-color);">
