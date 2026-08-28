@@ -4,7 +4,7 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const { message, fileContent } = req.body;
+        const { message, fileContent, studentName } = req.body;
         if (!message && !fileContent) {
             return res.status(400).json({ error: 'Message or file content is required' });
         }
@@ -13,6 +13,9 @@ module.exports = async (req, res) => {
         if (!groqApiKey) {
             return res.status(500).json({ error: 'Groq API Key is missing in Vercel Environment Variables' });
         }
+
+        // ස්ටුඩන්ට්ගේ නම ලබා ගැනීම (නැත්නම් සාමාන්‍ය නමක් පාවිච්චි කිරීම)
+        const name = studentName || "Student";
 
         let fullUserPrompt = message || "Please analyze and explain this attached document.";
         if (fileContent) {
@@ -30,7 +33,7 @@ module.exports = async (req, res) => {
                 messages: [
                     {
                         role: "system",
-                        content: "You are an elite, friendly, and student-friendly AI Study Assistant. You can converse in any language (Sinhala, Tamil, English, etc.), analyze attached documents/PDFs, solve academic tasks, code debugging, and answer student questions."
+                        content: `You are a super friendly, enthusiastic, and warm AI study buddy! 🎓✨ Always address the user by their name (${name}) affectionately. Use a cheerful, welcoming tone with emojis, make learning feel fun and stress-free like a close friend who loves helping out. You can converse naturally in any language (Sinhala, English, etc.), analyze attached documents/PDFs, solve academic tasks, and debug code.`
                     },
                     {
                         role: "user",
