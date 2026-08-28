@@ -32,6 +32,7 @@ const dashboardHub = document.getElementById('dashboard-hub');
 const viewGpa = document.getElementById('view-gpa');
 const viewShortNotes = document.getElementById('view-shortnotes');
 const viewPlagiarism = document.getElementById('view-plagiarism');
+const viewIeee = document.getElementById('view-ieee');
 
 // Card Triggers
 const cardGpa = document.getElementById('card-gpa');
@@ -54,6 +55,16 @@ const CLASS_THRESHOLDS = {
     SECOND_LOWER: 3.00,
     PASS: 2.00
 };
+
+// 🟢 ලොග් වී සිටින යුසර්ගේ නම (First Name) ලබාගැනීමට පොදු ෆන්ෂන් එක
+function getStudentFirstName() {
+    if (currentUser && currentUser.displayName) {
+        return currentUser.displayName.split(" ")[0];
+    } else if (currentUser && currentUser.email) {
+        return currentUser.email.split('@')[0];
+    }
+    return "Student";
+}
 
 function getActiveMode() {
     return localStorage.getItem('active_uni_mode') || 'horizon';
@@ -102,6 +113,7 @@ function showView(viewName) {
     if (viewGpa) viewGpa.style.display = 'none';
     if (viewShortNotes) viewShortNotes.style.display = 'none';
     if (viewPlagiarism) viewPlagiarism.style.display = 'none';
+    if (viewIeee) viewIeee.style.display = 'none';
 
     if (viewName === 'hub') {
         if (dashboardHub) dashboardHub.style.display = 'block';
@@ -111,6 +123,8 @@ function showView(viewName) {
         if (viewShortNotes) viewShortNotes.style.display = 'block';
     } else if (viewName === 'plagiarism') {
         if (viewPlagiarism) viewPlagiarism.style.display = 'block';
+    } else if (viewName === 'ieee') {
+        if (viewIeee) viewIeee.style.display = 'block';
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -176,7 +190,7 @@ if (modalSubmitReviewBtn) {
         modalSubmitReviewBtn.disabled = true;
         try {
             await addDoc(collection(db, "global_reviews"), {
-                userName: currentUser.displayName || "Yashohara",
+                userName: currentUser.displayName || getStudentFirstName(),
                 userEmail: currentUser.email,
                 rating, comment, createdAt: new Date().toISOString()
             });
@@ -245,7 +259,7 @@ window.startPayHerePayment = function(planName, amount, wordLimit) {
         "items": `Student Hub - ${planName.toUpperCase()} Plan`,
         "currency": "LKR",
         "amount": amount.toFixed(2),
-        "first_name": currentUser.displayName ? currentUser.displayName.split(" ")[0] : "Yashohara",
+        "first_name": getStudentFirstName(),
         "last_name": "Student",
         "email": currentUser.email,
         "phone": "0771234567",
@@ -337,7 +351,7 @@ async function sendQueryToAIAgent() {
     `;
     aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
 
-    const activeStudentName = currentUser && currentUser.displayName ? currentUser.displayName.split(" ")[0] : "Yashohara";
+    const activeStudentName = getStudentFirstName();
 
     try {
         const response = await fetch('/api/chat', {
@@ -393,7 +407,7 @@ if (aiChatInput) {
 }
 if (aiClearBtn) {
     aiClearBtn.addEventListener('click', () => {
-        const activeStudentName = currentUser && currentUser.displayName ? currentUser.displayName.split(" ")[0] : "Yashohara";
+        const activeStudentName = getStudentFirstName();
         aiChatMessages.innerHTML = `
             <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 10px; border-radius: 8px; color: var(--text-color);">
                 👋 Hey ${activeStudentName}! Chat cleared. How can I help you with your studies today? 🎓✨
@@ -695,10 +709,10 @@ if (themeSelector) {
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
-        const studentName = user.displayName ? user.displayName.split(" ")[0] : "Yashohara";
+        const studentName = getStudentFirstName();
         updateDynamicGreeting(studentName);
         
-        // 🟢 මෙන්න මෙතැනට දාන්න
+        // 🟢 IEEE Citation Module Initialize කිරීම
         initIEEEModule();
 
         if (aiChatMessages) {
@@ -881,7 +895,7 @@ if (downloadPdfBtn) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         const degree = degreeInput.value;
-        const studentName = currentUser ? (currentUser.displayName || currentUser.email) : (userNameDisplay ? userNameDisplay.innerText : "Yashohara");
+        const studentName = currentUser ? (currentUser.displayName || currentUser.email) : (userNameDisplay ? userNameDisplay.innerText : getStudentFirstName());
         const cgpa = document.getElementById('cgpa-display').innerText;
         const prediction = document.getElementById('class-display').innerText;
 
@@ -1254,7 +1268,9 @@ if (checkPlagiarismBtn) {
             const humanizeResponse = await trueAIHumanizer(text);
 
             if (humanizeResponse.error) {
-                alert("⚠️ AI Limit reached during Humanizing, Yashohara! 😅 Word quota එකෙන් කිසිම වර්ඩ් එකක් අඩු වුණේ නැහැ. පස්සේ ට්‍රයි කරන්න! 💛✨");
+                const activeName = getStudentFirstName();
+                alert(`⚠️ AI Limit reached during Humanizing, ${activeName}! 😅 Word quota එකෙන් කිසිම වර්ඩ් එකක් අඩු වුණේ නැහැ. පස්සේ ට්‍රයි කරන්න! 💛✨`);
+                
                 checkPlagiarismBtn.innerText = "Scan for Plagiarism & AI";
                 checkPlagiarismBtn.disabled = false;
                 return;
