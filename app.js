@@ -838,7 +838,7 @@ function getStatusAdvice(gradeText) {
     }
  
     if (gradeText === "NC-C" || gradeText === "F") {
-        return '<br><small style="color: #f87171;">Retake Exam & C/A</small>';
+        return '<br><small style="color: #f87171;">Retake Exam & C/A Next Attempt</small>';
     }
     if (gradeText === "NC-E") {
         return '<br><small style="color: #fbbf24;">Retake Your Exam Next Attempt</small>';
