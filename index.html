@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Productivity Hub & GPA Tracker</title>
+    <title>Student Productivity Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=48">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -24,6 +24,7 @@
         </select>
     </div>
 
+    <!-- Pricing Modal -->
     <div id="pricing-modal" class="modal-overlay" style="display: none;">
         <div class="glass-card modal-box" style="max-width: 600px;">
             <h3 style="color: var(--heading-gradient-1); margin-bottom: 0.5rem;">⭐ Upgrade to Pro Plan</h3>
@@ -63,6 +64,7 @@
         </div>
     </div>
 
+    <!-- Review Modal -->
     <div id="review-modal" class="modal-overlay" style="display: none;">
         <div class="glass-card modal-box" style="max-width: 480px; text-align: left; position: relative;">
             <button id="close-review-modal" style="position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-color); font-size: 1.2rem; cursor: pointer;">✕</button>
@@ -106,6 +108,7 @@
 
     <div class="container">
         
+        <!-- Login Section -->
         <div id="login-section" class="glass-card login-card">
             <h1>Welcome to Student Productivity Hub</h1>
             <p class="login-sub">Please login with Google to access your academic tools</p>
@@ -116,6 +119,7 @@
             </button>
         </div>
 
+        <!-- Main App Section -->
         <div id="app-section" style="display: none;">
             
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding: 0.5rem 0; border-bottom: 1px solid var(--card-border);">
@@ -128,6 +132,7 @@
                 </div>
             </div>
 
+            <!-- Dashboard Hub -->
             <div id="dashboard-hub" style="display: block;">
                 <div style="text-align: center; margin-bottom: 2rem;">
                     <h1 style="font-size: 2.2rem; font-weight: 600; background: linear-gradient(to right, var(--heading-gradient-1), var(--heading-gradient-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px;">Student Productivity Hub</h1>
@@ -145,7 +150,7 @@
                     <div class="glass-card feature-card" id="card-shortnotes">
                         <div style="font-size: 2.5rem; margin-bottom: 1rem;">📝</div>
                         <h2>AI PDF Short Note Generator</h2>
-                        <p>Upload your lecture or study PDF and instantly generate structured short notes with key points using Google AI.</p>
+                        <p>Upload your lecture or study PDF and instantly generate structured short notes with key points using Groq AI.</p>
                         <button class="btn-launch">Open Generator ➔</button>
                     </div>
 
@@ -158,6 +163,7 @@
                 </div>
             </div>
 
+            <!-- GPA Tracker View -->
             <div id="view-gpa" class="sub-interface" style="display: none;">
                 <div style="margin-bottom: 1.5rem;">
                     <button class="btn-back" id="back-to-hub-gpa">⬅ Back to Dashboard</button>
@@ -253,7 +259,7 @@
                             <option value="-1">NC-E</option>
                             <option value="-1">NE</option>
                             <option value="-1">F</option>
-                            <option value="-1">Absant</option>
+                            <option value="-1">Absent</option>
                             <option value="-1">Medical</option>
                         </select>
 
@@ -273,8 +279,9 @@
                                 <option value="D">D</option>
                                 <option value="E">E</option>
                                 <option value="F">F (Fail)</option>
-                                <option value="Repeat">Repeat (RA / Absent)</option>
+                                <option value="Absent">Absent</option>
                                 <option value="Medical">Medical</option>
+                                <option value="Repeat">Repeat (RA / Absent)</option>
                             </select>
                             <input type="number" step="0.01" id="custom-grade-point" placeholder="Enter Grade Point (e.g. 4.0, 3.7)" style="flex: 1;">
                         </div>
@@ -314,7 +321,7 @@
                 </div>
             </div>
 
-            <!-- 📝 AI PDF Short Note Generator View (Replaced Deadline Tracker) -->
+            <!-- AI PDF Short Note Generator View -->
             <div id="view-shortnotes" class="sub-interface" style="display: none;">
                 <div style="margin-bottom: 1.5rem;">
                     <button class="btn-back" id="back-to-hub-shortnotes">⬅ Back to Dashboard</button>
@@ -322,7 +329,7 @@
 
                 <div class="header">
                     <h1>📝 AI PDF Short Note Generator</h1>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Upload a lecture PDF and let Google AI generate structured short notes instantly</p>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Upload a lecture PDF and let Groq AI generate structured short notes instantly</p>
                 </div>
 
                 <div class="glass-card form-section">
@@ -342,7 +349,7 @@
                     <button id="generate-notes-btn" class="btn-add" style="width: 100%; margin-top: 0;">✨ Generate Short Notes</button>
 
                     <div id="note-loading" style="display: none; text-align: center; margin-top: 1.5rem; color: var(--heading-gradient-1);">
-                        <p>⏳ Extracting text and generating short notes using Google AI... Please wait.</p>
+                        <p>⏳ Extracting text and generating short notes using Groq AI... Please wait.</p>
                     </div>
 
                     <div id="note-result-section" style="margin-top: 1.5rem; display: none; padding: 1.2rem; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 0.5rem;">
@@ -352,12 +359,14 @@
                         
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                             <button id="copy-notes-btn" class="btn-download" style="font-size: 0.75rem !important; padding: 0.4rem 1rem !important;">📋 Copy Notes</button>
-                            <button id="download-notes-txt-btn" class="btn-download" style="font-size: 0.75rem !important; padding: 0.4rem 1rem !important; background: linear-gradient(to right, #16a34a, #22c55e) !important;">📥 Download as .txt</button>
+                            <button id="download-notes-txt-btn" class="btn-download" style="font-size: 0.75rem !important; padding: 0.4rem 1rem !important; background: linear-gradient(to right, #2563eb, #38bdf8) !important;">📥 Download as .txt</button>
+                            <button id="download-notes-pdf-btn" class="btn-download" style="font-size: 0.75rem !important; padding: 0.4rem 1rem !important; background: linear-gradient(to right, #16a34a, #22c55e) !important;">📄 Download as PDF</button>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Plagiarism Checker View -->
             <div id="view-plagiarism" class="sub-interface" style="display: none;">
                 <div style="margin-bottom: 1.5rem;">
                     <button class="btn-back" id="back-to-hub-plagiarism">⬅ Back to Dashboard</button>
@@ -401,6 +410,7 @@
                 </div>
             </div>
 
+            <!-- Footer Card with Real-time Community Reviews -->
             <div class="glass-card footer-card" style="margin-top: 2rem;">
                 <div class="footer-profile">
                     <img src="developer.jpeg" alt="Developer" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=Yasho'">
@@ -408,12 +418,19 @@
                     <h3>Mr.G.K.M.P.Y Ganewaththa</h3>
                     <p>Bsc(Hons) in Networking & Mobile Computing</p>
                     <p>Faculty Of IT - Intake 16</p>
-                    <P>Horizon Campus</P>
+                    <p>Horizon Campus</p>
                 </div>
 
                 <h4>💡 Help Us Improve & Share Your Feedback!</h4>
                 <p class="footer-desc">We'd love to hear your thoughts or feature suggestions to make this app even better.</p>
                 
+                <div style="margin: 1.5rem 0; text-align: left;">
+                    <h5 style="color: var(--heading-gradient-1); font-size: 0.95rem; margin-bottom: 8px; text-align: center;">💬 Student Community Feedback</h5>
+                    <div id="public-reviews-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; padding-right: 4px;">
+                        <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">Loading student reviews...</div>
+                    </div>
+                </div>
+
                 <div class="footer-btn-group">
                     <button class="btn-review review-now-btn" style="cursor: pointer;">⭐ Review Now</button>
                     <a href="https://wa.me/94762068122" target="_blank" class="btn-wa">💬 WhatsApp Contact</a>
