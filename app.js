@@ -241,7 +241,7 @@ window.startPayHerePayment = function(planName, amount, wordLimit) {
     payhere.startPayment(payment);
 };
 
-// --- PERSISTENT AI STUDY AGENT WITH FILE/PDF ATTACHMENT SUPPORT & FRIENDLY NAME GREETING ---
+// --- PERSISTENT AI STUDY AGENT WITH FRIENDLY ERROR HANDLING & ATTACHMENTS ---
 const aiChatMessages = document.getElementById('ai-chat-messages');
 const aiChatInput = document.getElementById('ai-chat-input');
 const aiSendBtn = document.getElementById('ai-send-btn');
@@ -315,8 +315,7 @@ async function sendQueryToAIAgent() {
     `;
     aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
 
-    // Get logged-in student name
-    const activeStudentName = currentUser && currentUser.displayName ? currentUser.displayName.split(" ")[0] : "Student";
+    const activeStudentName = currentUser && currentUser.displayName ? currentUser.displayName.split(" ")[0] : "Yashohara";
 
     try {
         const response = await fetch('/api/chat', {
@@ -333,7 +332,11 @@ async function sendQueryToAIAgent() {
         document.getElementById(loadingId).remove();
 
         if (data.error) {
-            aiChatMessages.innerHTML += `<div style="color: #ef4444; padding: 8px;">❌ Error: ${data.error}</div>`;
+            aiChatMessages.innerHTML += `
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: 8px; color: var(--text-color);">
+                    <b>🤖 AI Buddy:</b><br>Oyage daily limit eka poddak touch una wage, ${activeStudentName}! 😅 Podi welawak idala (seconds 20k wage) ayith message ekak danna, mama ready innawa! 💛✨
+                </div>
+            `;
             return;
         }
 
@@ -344,7 +347,11 @@ async function sendQueryToAIAgent() {
         `;
     } catch (err) {
         if (document.getElementById(loadingId)) document.getElementById(loadingId).remove();
-        aiChatMessages.innerHTML += `<div style="color: #ef4444; padding: 8px;">❌ Failed to connect to AI Agent.</div>`;
+        aiChatMessages.innerHTML += `
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: 8px; color: var(--text-color);">
+                <b>🤖 AI Buddy:</b><br>Oops! Podi connection issue ekak wage, ${activeStudentName}. Ayith try karමුද? 🚀✨
+            </div>
+        `;
     } finally {
         attachedAiFileText = "";
         if (aiFileIndicator) aiFileIndicator.style.display = 'none';
@@ -364,7 +371,7 @@ if (aiChatInput) {
 }
 if (aiClearBtn) {
     aiClearBtn.addEventListener('click', () => {
-        const activeStudentName = currentUser && currentUser.displayName ? currentUser.displayName.split(" ")[0] : "Student";
+        const activeStudentName = currentUser && currentUser.displayName ? currentUser.displayName.split(" ")[0] : "Yashohara";
         aiChatMessages.innerHTML = `
             <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 10px; border-radius: 8px; color: var(--text-color);">
                 👋 Hey ${activeStudentName}! Chat cleared. How can I help you with your studies today? 🎓✨
@@ -666,10 +673,9 @@ if (themeSelector) {
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
-        const studentName = user.displayName ? user.displayName.split(" ")[0] : "Student";
+        const studentName = user.displayName ? user.displayName.split(" ")[0] : "Yashohara";
         updateDynamicGreeting(studentName);
         
-        // Welcome message inside AI Agent chat
         if (aiChatMessages) {
             aiChatMessages.innerHTML = `
                 <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 10px; border-radius: 8px; color: var(--text-color);">
