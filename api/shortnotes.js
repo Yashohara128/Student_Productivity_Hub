@@ -25,7 +25,7 @@ module.exports = async (req, res) => {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "llama-3.1-70b-versatile", // 👈 මෙන්න මෙතන මොඩල් නම වෙනස් කළා
+                model: "qwen/qwen3.6-27b", // 👈 මෙන්න මෙතන මොඩල් නම වෙනස් කළා
                 messages: [
                     {
                         role: "system",
