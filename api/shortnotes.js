@@ -1,5 +1,5 @@
 // ==========================================
-// VERCEL FUNCTION: api/shortnotes.js (Fixed Token Limit)
+// VERCEL FUNCTION: api/shortnotes.js (Max Safe Limit for Groq Free Tier - 8k TPM)
 // ==========================================
 
 module.exports = async (req, res) => {
@@ -18,8 +18,9 @@ module.exports = async (req, res) => {
             return res.status(500).json({ error: 'Groq API Key is missing in Vercel Environment Variables' });
         }
 
-        const maxChars = 50000;
-        const safeText = text.length > maxChars ? text.slice(0, maxChars) + "\n\n[Note: Text was automatically trimmed.]" : text;
+        // Groq Free Tier 8000 TPM සීමාවට යටත්ව දිය හැකි උපරිම ආරක්ෂිත සීමාව (අකුරු ~15,000 ක් / වචන ~2,500ක් පමණ)
+        const maxChars = 15000;
+        const safeText = text.length > maxChars ? text.slice(0, maxChars) + "\n\n[Note: Text was automatically trimmed to fit maximum free tier token limits.]" : text;
 
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -32,7 +33,7 @@ module.exports = async (req, res) => {
                 messages: [
                     {
                         role: "system",
-                        content: "You are an elite academic professor and professional note-taker. Generate exceptionally structured, comprehensive academic short notes directly without truncation, incorporating clear headings (#, ##), bold keywords (**), bullet points, and Markdown tables (| Column 1 | Column 2 |) for comparative data."
+                        content: "You are an elite academic professor and professional note-taker. Generate structured, comprehensive academic short notes incorporating headings (#, ##), bold keywords (**), bullet points, and Markdown tables (| Col 1 | Col 2 |)."
                     },
                     {
                         role: "user",
@@ -40,7 +41,7 @@ module.exports = async (req, res) => {
                     }
                 ],
                 temperature: 0.3,
-                max_tokens: 16384 // 🟢 Token සීමාව වැඩි කළා (Thinking + Full Notes සඳහා ප්‍රමාණවත් වන පරිදි)
+                max_tokens: 2500 // 🟢 උපරිම අවුට්පුට් ටෝකන් ප්‍රමාණය 8000 TPM සීමාව ඇතුළේ මැක්සිමම් කර ඇත
             })
         });
 
