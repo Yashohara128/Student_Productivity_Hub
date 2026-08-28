@@ -154,7 +154,7 @@ if (modalSubmitReviewBtn) {
         modalSubmitReviewBtn.disabled = true;
         try {
             await addDoc(collection(db, "global_reviews"), {
-                userName: currentUser.displayName || "Student",
+                userName: currentUser.displayName || "Yashohara",
                 userEmail: currentUser.email,
                 rating, comment, createdAt: new Date().toISOString()
             });
@@ -223,8 +223,8 @@ window.startPayHerePayment = function(planName, amount, wordLimit) {
         "items": `Student Hub - ${planName.toUpperCase()} Plan`,
         "currency": "LKR",
         "amount": amount.toFixed(2),
-        "first_name": currentUser.displayName.split(" ")[0] || "Student",
-        "last_name": currentUser.displayName.split(" ")[1] || "User",
+        "first_name": currentUser.displayName ? currentUser.displayName.split(" ")[0] : "Yashohara",
+        "last_name": "Student",
         "email": currentUser.email,
         "phone": "0771234567",
         "address": "Sri Lanka", "city": "Colombo", "country": "Sri Lanka"
@@ -504,7 +504,7 @@ if (downloadNotesDocxBtn) {
                 <title>Lecture Short Notes - Student Productivity Hub</title>
                 <style>
                     body { font-family: 'Times New Roman', serif; margin: 25mm; }
-                    .header-box { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 25px; }
+                    .header-box { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 25mm; }
                     .header-box h1 { color: #0f172a; font-size: 18pt; margin: 0; }
                     .header-box p { color: #64748b; font-size: 10pt; margin: 5px 0 0 0; }
                 </style>
@@ -856,7 +856,7 @@ if (downloadPdfBtn) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         const degree = degreeInput.value;
-        const studentName = currentUser ? (currentUser.displayName || currentUser.email) : (userNameDisplay ? userNameDisplay.innerText : "Student");
+        const studentName = currentUser ? (currentUser.displayName || currentUser.email) : (userNameDisplay ? userNameDisplay.innerText : "Yashohara");
         const cgpa = document.getElementById('cgpa-display').innerText;
         const prediction = document.getElementById('class-display').innerText;
 
@@ -1138,13 +1138,15 @@ async function trueAIHumanizer(inputText) {
             body: JSON.stringify({ text: inputText })
         });
         const data = await response.json();
+        
         if (data.error) {
-            alert("❌ Humanizer Error: " + data.error);
+            alert("⚠️ AI Daily Limit reached for Humanizer, Yashohara! 😅 Podi welawak idala ayith try karanna, mama ready innawa! 💛✨");
             return inputText;
         }
         return data.result || inputText;
     } catch (error) {
         console.error("Network Fetch Error:", error);
+        alert("⚠️ Connection issue detected while humanizing. Please try again! 🚀");
         return inputText;
     }
 }
