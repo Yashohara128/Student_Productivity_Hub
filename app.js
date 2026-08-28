@@ -1,5 +1,5 @@
 // ==========================================
-// STUDENT PRODUCTIVITY HUB - APP.JS (100% COMPLETE & ERROR-FREE)
+// STUDENT PRODUCTIVITY HUB - APP.JS (100% COMPLETE & WORKING)
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -124,6 +124,60 @@ if (cardPlagiarism) cardPlagiarism.addEventListener('click', () => showView('pla
 if (backToHubGpa) backToHubGpa.addEventListener('click', () => showView('hub'));
 if (backToHubShortNotes) backToHubShortNotes.addEventListener('click', () => showView('hub'));
 if (backToHubPlagiarism) backToHubPlagiarism.addEventListener('click', () => showView('hub'));
+
+// --- Review Modal Close & Toggle Logic (FIXED) ---
+const reviewModal = document.getElementById('review-modal');
+const closeReviewModalBtn = document.getElementById('close-review-modal');
+const closeGotItBtn = document.getElementById('close-modal-btn');
+const reviewNowButtons = document.querySelectorAll('.review-now-btn');
+
+reviewNowButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (reviewModal) { reviewModal.style.display = 'flex'; loadGlobalReviews(); }
+    });
+});
+if (closeReviewModalBtn) {
+    closeReviewModalBtn.addEventListener('click', () => {
+        if (reviewModal) reviewModal.style.display = 'none';
+    });
+}
+if (closeGotItBtn) {
+    closeGotItBtn.addEventListener('click', () => {
+        if (reviewModal) reviewModal.style.display = 'none';
+    });
+}
+
+function loadGlobalReviews() {
+    const modalReviewsContainer = document.getElementById('modal-reviews-container');
+    if (!modalReviewsContainer) return;
+
+    onSnapshot(collection(db, "global_reviews"), (querySnapshot) => {
+        let reviewsList = [];
+        querySnapshot.forEach((doc) => { reviewsList.push(doc.data()); });
+        reviewsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        if (reviewsList.length === 0) {
+            modalReviewsContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">No reviews yet. Be the first to review!</div>`;
+            return;
+        }
+
+        let html = '';
+        reviewsList.forEach(rev => {
+            let stars = '⭐'.repeat(rev.rating);
+            html += `
+                <div style="background: var(--input-bg); border: 1px solid var(--input-border); padding: 8px 10px; border-radius: 6px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
+                        <b style="color: var(--text-color);">${rev.userName}</b>
+                        <span>${stars}</span>
+                    </div>
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin: 3px 0 0 0;">${rev.comment}</p>
+                </div>
+            `;
+        });
+        modalReviewsContainer.innerHTML = html;
+    });
+}
 
 // --- AI PDF SHORT NOTE GENERATOR LOGIC ---
 const notePdfUpload = document.getElementById('note-pdf-upload');
@@ -385,14 +439,14 @@ onAuthStateChanged(auth, async (user) => {
         updateDynamicGreeting(user.displayName ? user.displayName.split(" ")[0] : "Student");
         if (loginSection) loginSection.style.display = "none";
         if (appSection) appSection.style.display = "block";
-        if (document.getElementById('review-modal')) document.getElementById('review-modal').style.display = 'flex';
+        if (reviewModal) reviewModal.style.display = 'flex';
         showView('hub');
         await loadSubjectsFromDB();
     } else {
         currentUser = null;
         if (loginSection) loginSection.style.display = "block";
         if (appSection) appSection.style.display = "none";
-        if (document.getElementById('review-modal')) document.getElementById('review-modal').style.display = 'none';
+        if (reviewModal) reviewModal.style.display = 'none';
     }
 });
 
