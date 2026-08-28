@@ -1,5 +1,5 @@
 // ==========================================
-// STUDENT PRODUCTIVITY HUB - APP.JS (COMPLETE & READY)
+// STUDENT PRODUCTIVITY HUB - APP.JS (COMPLETE & UPDATED)
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -269,6 +269,9 @@ if (downloadNotesPdfBtn) {
         }
 
         let cleanText = text
+            .replace(/^#\s+(.*)$/gm, '<h1>$1</h1>')
+            .replace(/^##\s+(.*)$/gm, '<h2>$1</h2>')
+            .replace(/^###\s+(.*)$/gm, '<h3>$1</h3>')
             .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
             .replace(/\*(.*?)\*/g, '<i>$1</i>')
             .replace(/^[*\-]\s+/gm, '• ');
@@ -278,59 +281,108 @@ if (downloadNotesPdfBtn) {
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Lecture Short Notes</title>
+                <title>Lecture Short Notes - Student Productivity Hub</title>
+                <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
                 <style>
                     body {
-                        font-family: 'Poppins', Arial, sans-serif;
-                        font-size: 11pt;
-                        line-height: 1.7;
-                        color: #111;
-                        margin: 20mm 20mm;
-                    }
-                    h1 {
-                        font-size: 18pt;
-                        text-align: center;
-                        color: #0f172a;
-                        text-transform: uppercase;
-                        border-bottom: 2px solid #3b82f6;
-                        padding-bottom: 10px;
-                        margin-bottom: 5px;
-                    }
-                    .subtitle {
-                        text-align: center;
-                        font-size: 9pt;
-                        color: #64748b;
-                        margin-bottom: 30px;
-                    }
-                    h2, h3 {
+                        font-family: 'Poppins', sans-serif;
+                        font-size: 10.5pt;
+                        line-height: 1.6;
                         color: #1e293b;
-                        margin-top: 22px;
+                        margin: 0;
+                        padding: 15mm 20mm;
+                        background: #ffffff;
+                    }
+                    .header-box {
+                        background: linear-gradient(135deg, #0f172a, #1e293b);
+                        color: white;
+                        padding: 20px;
+                        border-radius: 8px;
+                        margin-bottom: 25px;
+                        text-align: center;
+                    }
+                    .header-box h1 {
+                        font-size: 16pt;
+                        margin: 0 0 5px 0;
+                        color: #38bdf8;
+                        border: none;
+                        padding: 0;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+                    .header-box p {
+                        font-size: 9pt;
+                        color: #94a3b8;
+                        margin: 0;
+                    }
+                    h1, h2, h3 {
+                        color: #0f172a;
+                        font-weight: 600;
+                        margin-top: 18px;
                         margin-bottom: 8px;
                     }
+                    h2 {
+                        font-size: 12pt;
+                        border-bottom: 1.5px solid #e2e8f0;
+                        padding-bottom: 4px;
+                    }
+                    h3 {
+                        font-size: 11pt;
+                    }
                     p {
-                        margin-bottom: 12px;
+                        margin-bottom: 10px;
                         text-align: justify;
+                        color: #334155;
                     }
                     ul, ol {
-                        margin-bottom: 12px;
+                        margin-bottom: 10px;
                         padding-left: 20px;
+                        color: #334155;
                     }
                     li {
-                        margin-bottom: 6px;
+                        margin-bottom: 5px;
+                    }
+                    b {
+                        color: #0f172a;
+                    }
+                    .footer-note {
+                        margin-top: 30px;
+                        border-top: 1px solid #e2e8f0;
+                        padding-top: 10px;
+                        text-align: center;
+                        font-size: 8pt;
+                        color: #94a3b8;
                     }
                     @media print {
                         body {
-                            margin: 15mm;
+                            padding: 10mm 15mm;
+                        }
+                        .header-box {
+                            -webkit-print-color-adjust: exact;
+                            print-color-adjust: exact;
                         }
                     }
                 </style>
             </head>
             <body>
-                <h1>Lecture Short Notes</h1>
-                <div class="subtitle">Generated via Student Productivity Hub • AI Short Note Generator</div>
-                <div>
-                    ${cleanText.split('\n\n').map(para => `<p>${para.replace(/\n/g, '<br>')}</p>`).join('')}
+                <div class="header-box">
+                    <h1>📚 Lecture Short Notes</h1>
+                    <p>Generated by Student Productivity Hub • Smart Academic Assistant</p>
                 </div>
+                
+                <div class="content-body">
+                    ${cleanText.split('\n\n').map(para => {
+                        if (para.startsWith('<h1>') || para.startsWith('<h2>') || para.startsWith('<h3>')) {
+                            return para;
+                        }
+                        return `<p>${para.replace(/\n/g, '<br>')}</p>`;
+                    }).join('')}
+                </div>
+
+                <div class="footer-note">
+                    Academic Performance & Study Material Report | Powered by Groq AI & Student Productivity Hub
+                </div>
+
                 <script>
                     window.onload = function() {
                         window.print();
