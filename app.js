@@ -747,38 +747,87 @@ if (resetAllBtn) {
 const downloadPdfBtn = document.getElementById('download-pdf');
 if (downloadPdfBtn) {
     downloadPdfBtn.addEventListener('click', () => {
-        if (!degreeInput || degreeInput.value.trim() === "") { alert("⚠️ Enter degree name first!"); degreeInput.focus(); return; }
+        if (!degreeInput || degreeInput.value.trim() === "") {
+            alert("⚠️ Please enter your Degree Program name and click 'OK' before downloading the certificate!");
+            if (degreeInput) degreeInput.focus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
         const activeSubjects = getActiveSubjects();
-        if (activeSubjects.length === 0) { alert("⚠️ Add at least one subject!"); return; }
+        if (activeSubjects.length === 0) {
+            alert("⚠️ You must add at least one subject in this profile to download your certificate!");
+            const subNameInput = document.getElementById('subject-name');
+            if (subNameInput) subNameInput.focus();
+            window.scrollTo({ top: 300, behavior: 'smooth' });
+            return;
+        }
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
+        
         const degree = degreeInput.value;
-        const name = userNameDisplay ? userNameDisplay.innerText : "Student";
-        const cgpa = document.getElementById('cgpa-display').innerText;
-        const prediction = document.getElementById('class-display').innerText;
+        // ස්ටුඩන්ට් ගේ නම ලොගින් වෙලා තියෙන විදිහට හරියටම ගැනීම
+        const studentName = currentUser ? (currentUser.displayName || currentUser.email) : (userNameDisplay ? userNameDisplay.innerText : "Student");
+        
+        const cgpaEl = document.getElementById('cgpa-display');
+        const classEl = document.getElementById('class-display');
+        const cgpa = cgpaEl ? cgpaEl.innerText : "0.00";
+        const prediction = classEl ? classEl.innerText : "Pending";
 
-        doc.setDrawColor(30, 41, 59); doc.setLineWidth(1.5); doc.rect(10, 10, 190, 277);
-        doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.text("ACADEMIC PERFORMANCE REPORT", 105, 25, null, null, "center");
-        doc.setFontSize(10); doc.setFont("helvetica", "normal");
-        doc.text(`Student: ${name}`, 20, 36); doc.text(`Degree: ${degree}`, 20, 43);
+        doc.setDrawColor(30, 41, 59);
+        doc.setLineWidth(1.5);
+        doc.rect(10, 10, 190, 277);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(18);
+        doc.text("ACADEMIC PERFORMANCE REPORT", 105, 25, null, null, "center");
+        
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Student: ${studentName}`, 20, 36);
+        doc.text(`Degree: ${degree}`, 20, 43);
+        
+        doc.setLineWidth(0.5);
         doc.line(20, 48, 190, 48);
 
         let yPos = 56;
-        [1, 2, 3, 4].forEach(year => {
+
+        const years = [1, 2, 3, 4];
+        years.forEach(year => {
+            const yearSubjects = activeSubjects.filter(s => s.year == year);
+            if (yearSubjects.length === 0) return;
+
             [1, 2].forEach(sem => {
-                const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
-                if (semSubs.length === 0) return;
-                if (yPos > 240) { doc.addPage(); yPos = 25; }
-                doc.setFont("helvetica", "bold"); doc.setFontSize(11);
-                doc.text(`Year ${year} - Semester ${sem}`, 20, yPos); yPos += 6;
-                doc.setFillColor(240, 240, 240); doc.rect(20, yPos, 170, 7, "F");
+                const semSubjects = activeSubjects.filter(s => s.year == year && s.semester == sem);
+                if (semSubjects.length === 0) return;
+
+                if (yPos > 230) {
+                    doc.addPage();
+                    yPos = 25;
+                }
+
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(11);
+                doc.text(`Year ${year} - Semester ${sem}`, 20, yPos);
+                yPos += 6;
+
+                doc.setFillColor(240, 240, 240);
+                doc.rect(20, yPos, 170, 7, "F");
+
                 doc.setFontSize(9);
-                doc.text("Subject Name", 25, yPos + 5); doc.text("Credits", 115, yPos + 5); doc.text("Grade", 140, yPos + 5); doc.text("Point", 165, yPos + 5);
+                doc.text("Subject Name", 25, yPos + 5);
+                doc.text("Credits", 115, yPos + 5);
+                doc.text("Grade", 140, yPos + 5);
+                doc.text("Point", 165, yPos + 5);
                 yPos += 9;
+
                 doc.setFont("helvetica", "normal");
-                semSubs.forEach(sub => {
-                    if (yPos > 265) { doc.addPage(); yPos = 25; }
+                semSubjects.forEach(sub => {
+                    if (yPos > 265) {
+                        doc.addPage();
+                        yPos = 25;
+                    }
                     doc.text(sub.name, 25, yPos);
                     doc.text(String(sub.credit), 118, yPos);
                     doc.text(sub.gradeText, 140, yPos);
@@ -789,15 +838,51 @@ if (downloadPdfBtn) {
             });
         });
 
-        if (yPos > 230) { doc.addPage(); yPos = 25; }
-        doc.setFillColor(248, 250, 252); doc.roundedRect(20, yPos, 170, 22, 2, 2, "FD");
-        doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+        if (yPos > 210) {
+            doc.addPage();
+            yPos = 25;
+        }
+
+        // CGPA Box එක
+        doc.setDrawColor(30, 41, 59);
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(20, yPos, 170, 22, 2, 2, "FD");
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
         doc.text(`Overall Cumulative CGPA: ${cgpa}`, 25, yPos + 8);
         doc.text(`Predicted Class: ${prediction}`, 25, yPos + 16);
-        doc.save(`Transcript_${name.replace(/\s+/g, '_')}.pdf`);
+        yPos += 30;
+
+        // පීඩීඑෆ් එකේ යටින්ම ග්‍රේඩ්ස් වල අර්ථකථන (Notes) පෙන්වීම
+        if (yPos > 220) {
+            doc.addPage();
+            yPos = 25;
+        }
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9.5);
+        doc.text("Grade Descriptions & Notes:", 20, yPos);
+        yPos += 6;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        const gradeNotes = [
+            "• F / NC-C: Retake Exam & C/A Next Attempt",
+            "• NC-E: Retake Your Exam Next Attempt",
+            "• NE: Exam & CA Pending. Maintain 80% Attendance",
+            "• Absent: Absent - Need Medical or Re-sitting Exam",
+            "• Medical: Medical Subject - Retake Exam"
+        ];
+
+        gradeNotes.forEach(note => {
+            doc.text(note, 22, yPos);
+            yPos += 4.5;
+        });
+
+        doc.save(`Transcript_${studentName.replace(/\s+/g, '_')}.pdf`);
     });
 }
-
 function calculateSemesterGPA(year, semester) {
     const subs = getActiveSubjects().filter(s => s.year == year && s.semester == semester && s.gradePoint !== -1);
     let creds = subs.reduce((acc, s) => acc + s.credit, 0);
