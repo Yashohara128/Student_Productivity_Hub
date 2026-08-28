@@ -183,7 +183,7 @@
 
                             <div class="glass-card feature-card" id="card-ieee">
                             <div style="font-size: 2.5rem; margin-bottom: 1rem;">📚</div>
-                            <h2>IEEE Citation Generator</h2>
+                            <h2>IEEE References Generator</h2>
                          <p>Instantly generate accurate IEEE 7th Edition academic references and citations for your research reports and dissertations.</p>
                           <button class="btn-launch">Open Generator ➔</button>
                          </div>
@@ -362,7 +362,68 @@
                         </div>
                     </div>
 
-                    <!-- AI PDF Short Note Generator View -->
+
+                    <!-- IEEE Citation Generator View -->
+<div id="view-ieee" class="sub-interface" style="display: none;">
+    <div style="margin-bottom: 1.5rem;">
+        <button class="btn-back" id="back-to-hub-ieee">⬅ Back to Dashboard</button>
+    </div>
+
+    <div class="header">
+        <h1>📚 IEEE Citation & Reference Generator</h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Format your research papers and book references into standard IEEE style</p>
+    </div>
+
+    <div class="glass-card form-section">
+        <h3>Reference Details</h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+                <label style="font-size: 0.8rem; font-weight: 500; display: block; margin-bottom: 0.4rem;">Source Type:</label>
+                <select id="ieee-source-type" style="width: 100%;">
+                    <option value="journal">Journal Article</option>
+                    <option value="book">Book</option>
+                    <option value="conference">Conference Proceedings</option>
+                    <option value="website">Website / Online Article</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size: 0.8rem; font-weight: 500; display: block; margin-bottom: 0.4rem;">Publication Year:</label>
+                <input type="text" id="ieee-year" placeholder="E.g. 2026">
+            </div>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.8rem; font-weight: 500; display: block; margin-bottom: 0.4rem;">Author(s) [Format: First initial. Last name]:</label>
+            <input type="text" id="ieee-author" placeholder="E.g. M. K. Perera and J. A. Silva">
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.8rem; font-weight: 500; display: block; margin-bottom: 0.4rem;">Article / Book / Paper Title:</label>
+            <input type="text" id="ieee-title" placeholder="E.g. Real-Time Data Structures in Mobile Computing">
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.8rem; font-weight: 500; display: block; margin-bottom: 0.4rem;" id="ieee-source-label">Journal / Publisher Name:</label>
+            <input type="text" id="ieee-source" placeholder="E.g. IEEE Transactions on Education">
+        </div>
+
+        <div id="ieee-url-box" style="margin-bottom: 1rem; display: none;">
+            <label style="font-size: 0.8rem; font-weight: 500; display: block; margin-bottom: 0.4rem;">Website URL:</label>
+            <input type="text" id="ieee-url" placeholder="E.g. https://example.com/article">
+        </div>
+
+        <button id="generate-ieee-btn" class="btn-add" style="width: 100%; margin-top: 0;">✨ Generate IEEE Reference</button>
+
+        <div id="ieee-result-section" style="margin-top: 1.5rem; display: none; padding: 1.2rem; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 0.5rem;">
+            <h4 style="color: var(--heading-gradient-1); margin-bottom: 0.5rem;">📋 Formatted IEEE Reference</h4>
+            <textarea id="ieee-output-text" rows="3" readonly style="width: 100%; padding: 0.8rem; border-radius: 0.5rem; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); font-size: 0.85rem; margin-bottom: 0.8rem; resize: vertical;"></textarea>
+            <button id="copy-ieee-btn" class="btn-download" style="font-size: 0.75rem !important; padding: 0.4rem 1rem !important;">📋 Copy Reference</button>
+        </div>
+    </div>
+</div>
+                
+             <!-- AI PDF Short Note Generator View -->
                     <div id="view-shortnotes" class="sub-interface" style="display: none;">
                         <div style="margin-bottom: 1.5rem;">
                             <button class="btn-back" id="back-to-hub-shortnotes">⬅ Back to Dashboard</button>
