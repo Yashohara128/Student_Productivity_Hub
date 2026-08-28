@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Productivity Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=49">
+    <link rel="stylesheet" href="style.css?v=50">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -24,6 +24,7 @@
         </select>
     </div>
 
+    <!-- Pricing Modal -->
     <div id="pricing-modal" class="modal-overlay" style="display: none;">
         <div class="glass-card modal-box" style="max-width: 600px;">
             <h3 style="color: var(--heading-gradient-1); margin-bottom: 0.5rem;">⭐ Upgrade to Pro Plan</h3>
@@ -63,6 +64,7 @@
         </div>
     </div>
 
+    <!-- Review Modal -->
     <div id="review-modal" class="modal-overlay" style="display: none;">
         <div class="glass-card modal-box" style="max-width: 480px; text-align: left; position: relative;">
             <button id="close-review-modal" style="position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-color); font-size: 1.2rem; cursor: pointer;">✕</button>
@@ -106,6 +108,7 @@
 
     <div class="container" style="max-width: 100% !important; padding: 0 !important;">
         
+        <!-- Login Section -->
         <div id="login-section" class="glass-card login-card" style="max-width: 450px; margin: 10vh auto; padding: 2rem;">
             <h1>Welcome to Student Productivity Hub</h1>
             <p class="login-sub">Please login with Google to access your academic tools</p>
@@ -116,25 +119,32 @@
             </button>
         </div>
 
+        <!-- Main App Section with Left AI Agent Sidebar -->
         <div id="app-section" style="display: none;">
             <div class="app-layout-container" style="display: flex; height: 100vh; overflow: hidden; background: var(--bg-color);">
                 
-                <aside class="ai-agent-sidebar" style="width: 320px; min-width: 320px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border-right: 1px solid var(--card-border); display: flex; flex-direction: column; justify-content: space-between; height: 100vh; z-index: 100;">
+                <!-- 🤖 Persistent Left AI Study Agent Sidebar (Theme-Aware Light/Dark) -->
+                <aside class="ai-agent-sidebar" style="width: 320px; min-width: 320px; background: var(--card-bg); color: var(--text-color); border-right: 1px solid var(--card-border); display: flex; flex-direction: column; justify-content: space-between; height: 100vh; z-index: 100;">
                     <div style="padding: 15px 20px; border-bottom: 1px solid var(--card-border); display: flex; align-items: center; justify-content: space-between;">
                         <h3 style="color: var(--heading-gradient-1); font-size: 1rem; margin: 0; display: flex; align-items: center; gap: 8px;">🤖 AI Study Agent</h3>
                         <span style="font-size: 0.65rem; background: #22c55e; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 600;">ONLINE</span>
                     </div>
 
+                    <!-- Chat Messages Container -->
                     <div id="ai-chat-messages" style="flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 0.85rem;">
                         <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 10px; border-radius: 8px; color: var(--text-color);">
-                            👋 Hello! I'm your AI Study Agent. Ask me anything in any language (Sinhala, English, etc.) to solve your tasks!
+                            👋 Hello! I'm your AI Study Agent. Ask me anything or attach documents/PDFs to analyze!
                         </div>
                     </div>
 
-                    <div style="padding: 15px; border-top: 1px solid var(--card-border); background: rgba(15, 23, 42, 0.8);">
-                        <div style="display: flex; gap: 8px;">
+                    <!-- Chat Input & File Attachment Form -->
+                    <div style="padding: 15px; border-top: 1px solid var(--card-border); background: var(--card-bg);">
+                        <div id="ai-file-indicator" style="font-size: 0.7rem; color: #38bdf8; margin-bottom: 5px; display: none;"></div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="file" id="ai-file-input" accept=".pdf,.txt,.doc,.docx" style="display: none;">
+                            <button id="ai-attach-btn" title="Attach Document / PDF" style="background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-color); padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">📎</button>
                             <textarea id="ai-chat-input" rows="2" placeholder="Ask anything..." style="flex: 1; padding: 8px; border-radius: 6px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); font-size: 0.8rem; resize: none;"></textarea>
-                            <button id="ai-send-btn" style="background: #3b82f6; color: white; border: none; padding: 0 12px; border-radius: 6px; cursor: pointer; font-weight: 600;">➤</button>
+                            <button id="ai-send-btn" style="background: #3b82f6; color: white; border: none; padding: 0 12px; height: 36px; border-radius: 6px; cursor: pointer; font-weight: 600;">➤</button>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
                             <button id="ai-clear-btn" style="background: none; border: none; color: var(--text-muted); font-size: 0.7rem; cursor: pointer;">Clear Chat</button>
@@ -143,6 +153,7 @@
                     </div>
                 </aside>
 
+                <!-- 💻 Right Dynamic Main Content Area -->
                 <main class="main-content" style="flex: 1; padding: 30px 40px; overflow-y: auto; height: 100vh;">
                     
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--card-border);">
@@ -150,6 +161,7 @@
                         <button onclick="openPricingModal()" class="btn-review" style="font-size: 0.7rem; padding: 0.3rem 0.6rem; cursor: pointer;">⭐ Upgrade Plan</button>
                     </div>
 
+                    <!-- Dashboard Hub -->
                     <div id="dashboard-hub" style="display: block;">
                         <div style="text-align: center; margin-bottom: 2rem;">
                             <h1 style="font-size: 2.2rem; font-weight: 600; background: linear-gradient(to right, var(--heading-gradient-1), var(--heading-gradient-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px;">Student Productivity Hub</h1>
@@ -180,6 +192,7 @@
                         </div>
                     </div>
 
+                    <!-- GPA Tracker View -->
                     <div id="view-gpa" class="sub-interface" style="display: none;">
                         <div style="margin-bottom: 1.5rem;">
                             <button class="btn-back" id="back-to-hub-gpa">⬅ Back to Dashboard</button>
@@ -337,6 +350,7 @@
                         </div>
                     </div>
 
+                    <!-- AI PDF Short Note Generator View -->
                     <div id="view-shortnotes" class="sub-interface" style="display: none;">
                         <div style="margin-bottom: 1.5rem;">
                             <button class="btn-back" id="back-to-hub-shortnotes">⬅ Back to Dashboard</button>
@@ -380,6 +394,7 @@
                         </div>
                     </div>
 
+                    <!-- Plagiarism Checker View -->
                     <div id="view-plagiarism" class="sub-interface" style="display: none;">
                         <div style="margin-bottom: 1.5rem;">
                             <button class="btn-back" id="back-to-hub-plagiarism">⬅ Back to Dashboard</button>
@@ -424,6 +439,7 @@
                         </div>
                     </div>
 
+                    <!-- Footer Card with Real-time Community Reviews -->
                     <div class="glass-card footer-card" style="margin-top: 3rem;">
                         <div class="footer-profile">
                             <img src="developer.jpeg" alt="Developer" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=Yasho'">
@@ -457,6 +473,6 @@
         
     </div>
 
-    <script type="module" src="app.js?v=49"></script>
+    <script type="module" src="app.js?v=50"></script>
 </body>
 </html>
