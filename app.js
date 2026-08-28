@@ -1,5 +1,5 @@
 // ==========================================
-// STUDENT PRODUCTIVITY HUB - APP.JS (100% FULL & COMPLETE)
+// STUDENT PRODUCTIVITY HUB - APP.JS (100% FULL & COMPLETE WITH WORD DOWNLOAD)
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -249,7 +249,7 @@ const noteLoading = document.getElementById('note-loading');
 const noteResultSection = document.getElementById('note-result-section');
 const generatedNotesOutput = document.getElementById('generated-notes-output');
 const copyNotesBtn = document.getElementById('copy-notes-btn');
-const downloadNotesTxtBtn = document.getElementById('download-notes-txt-btn');
+const downloadNotesDocxBtn = document.getElementById('download-notes-docx-btn'); // 🟢 Word Download Button
 const downloadNotesPdfBtn = document.getElementById('download-notes-pdf-btn');
 
 let extractedNoteText = "";
@@ -337,18 +337,61 @@ if (copyNotesBtn) {
     });
 }
 
-if (downloadNotesTxtBtn) {
-    downloadNotesTxtBtn.addEventListener('click', () => {
+// --- DOWNLOAD SHORT NOTES AS WORD DOCUMENT (.doc) ---
+if (downloadNotesDocxBtn) {
+    downloadNotesDocxBtn.addEventListener('click', () => {
         const text = generatedNotesOutput.value;
         if (!text) {
             alert("⚠️ No short notes available to download!");
             return;
         }
-        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+
+        let formattedHtml = text
+            .split('\n')
+            .map(line => {
+                let trimmed = line.trim();
+                if (trimmed.startsWith('# ')) {
+                    return `<h1 style="font-size: 16pt; color: #0f172a; font-family: 'Times New Roman', serif; border-bottom: 2px solid #38bdf8; padding-bottom: 4px; margin-top: 20px;">${trimmed.substring(2)}</h1>`;
+                } else if (trimmed.startsWith('## ')) {
+                    return `<h2 style="font-size: 13pt; color: #1e293b; font-family: 'Times New Roman', serif; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-top: 15px;">${trimmed.substring(3)}</h2>`;
+                } else if (trimmed.startsWith('### ')) {
+                    return `<h3 style="font-size: 11pt; color: #334155; font-family: 'Times New Roman', serif; margin-top: 10px;">${trimmed.substring(4)}</h3>`;
+                } else if (trimmed.startsWith('• ') || trimmed.startsWith('- ')) {
+                    return `<li style="font-family: 'Times New Roman', serif; font-size: 11pt; margin-bottom: 4px; color: #334155;">${trimmed.substring(2)}</li>`;
+                } else if (trimmed === '') {
+                    return `<br>`;
+                } else {
+                    return `<p style="font-family: 'Times New Roman', serif; font-size: 11pt; line-height: 1.6; text-align: justify; margin-bottom: 8px; color: #334155;">${trimmed}</p>`;
+                }
+            })
+            .join('');
+
+        let wordContent = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head>
+                <title>Lecture Short Notes - Student Productivity Hub</title>
+                <style>
+                    body { font-family: 'Times New Roman', serif; margin: 25mm; }
+                    .header-box { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 25px; }
+                    .header-box h1 { color: #0f172a; font-size: 18pt; margin: 0; }
+                    .header-box p { color: #64748b; font-size: 10pt; margin: 5px 0 0 0; }
+                </style>
+            </head>
+            <body>
+                <div class="header-box">
+                    <h1>📚 Lecture Short Notes</h1>
+                    <p>Generated via Student Productivity Hub • AI Academic Assistant</p>
+                </div>
+                ${formattedHtml}
+            </body>
+            </html>
+        `;
+
+        const blob = new Blob(['\ufeff' + wordContent], { type: 'application/msword' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'Lecture_Short_Notes.txt';
+        a.download = 'Lecture_Short_Notes.doc';
         a.click();
         URL.revokeObjectURL(url);
     });
