@@ -1,5 +1,5 @@
 // ==========================================
-// VERCEL FUNCTION: api/shortnotes.js (100% Fixed)
+// VERCEL FUNCTION: api/shortnotes.js (Fixed Token Limit)
 // ==========================================
 
 module.exports = async (req, res) => {
@@ -19,7 +19,7 @@ module.exports = async (req, res) => {
         }
 
         const maxChars = 50000;
-        const safeText = text.length > maxChars ? text.slice(0, maxChars) + "\n\n[Note: Text was automatically trimmed to fit limits.]" : text;
+        const safeText = text.length > maxChars ? text.slice(0, maxChars) + "\n\n[Note: Text was automatically trimmed.]" : text;
 
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
                 messages: [
                     {
                         role: "system",
-                        content: "You are an elite academic professor and professional note-taker. Create exceptionally structured, comprehensive academic short notes, incorporating clear headings (#, ##), bold keywords (**), bullet points, and Markdown tables (| Column 1 | Column 2 |) for comparative data (such as feature comparisons, differences, and lists) matching professional reference templates[cite: 1]."
+                        content: "You are an elite academic professor and professional note-taker. Generate exceptionally structured, comprehensive academic short notes directly without truncation, incorporating clear headings (#, ##), bold keywords (**), bullet points, and Markdown tables (| Column 1 | Column 2 |) for comparative data."
                     },
                     {
                         role: "user",
@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
                     }
                 ],
                 temperature: 0.3,
-                max_tokens: 3000
+                max_tokens: 80000 // 🟢 Token සීමාව වැඩි කළා (Thinking + Full Notes සඳහා ප්‍රමාණවත් වන පරිදි)
             })
         });
 
@@ -54,10 +54,9 @@ module.exports = async (req, res) => {
             ? data.choices[0].message.content 
             : "No response generated.";
 
-        // <think> ටැග්ස් ඉවත් කිරීම
+        // <think> ටැග්ස් සහ ඇතුළේ තියෙන ටෙක්ස්ට් සම්පූර්ණයෙන්ම ඉවත් කිරීම
         notesResult = notesResult.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-        
-        // 🟢 මෙන්න මේ රෙස්පොන්ස් එක තමයි මිස් වෙලා තිබුණේ! දැන් හරියටම දාලා තියෙන්නේ.
+
         return res.status(200).json({ success: true, result: notesResult });
 
     } catch (error) {
