@@ -1,5 +1,5 @@
 // ==========================================
-// STUDENT PRODUCTIVITY HUB - APP.JS (100% COMPLETE & WORKING)
+// STUDENT PRODUCTIVITY HUB - APP.JS (100% COMPLETE & ERROR-FREE)
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -66,7 +66,7 @@ function getActiveSubjects() {
     return allSubjects.filter(sub => (sub.mode || 'horizon') === activeMode);
 }
 
-// --- Google Login ---
+// --- Google Login via Popup ---
 if (loginBtn) {
     loginBtn.addEventListener('click', () => {
         signInWithPopup(auth, provider)
@@ -74,7 +74,7 @@ if (loginBtn) {
                 console.log("Login Success:", result.user.displayName);
             })
             .catch((error) => {
-                console.error("Login Error:", error);
+                console.error("Login Error Code:", error.code);
                 alert("❌ Login Failed: " + error.message);
             });
     });
@@ -94,7 +94,7 @@ function updateDynamicGreeting(userName) {
     else if (hours >= 17 && hours < 21) { timeGreeting = "Good Evening"; emoji = "🌆"; }
     else { timeGreeting = "Good Night"; emoji = "🌙"; }
 
-    const formattedDate = now.toLocaleDateString('en-US', { weekday: 'numeric', year: 'numeric', month: 'long', day: 'numeric' });
+    const formattedDate = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     greetingEl.innerHTML = `${emoji} ${timeGreeting}, <span style="color: var(--text-color); font-weight: 600;">${userName}</span>! <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 2px;">📅 ${formattedDate}</span>`;
 }
 
@@ -188,7 +188,7 @@ if (generateNotesBtn) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
                     text: extractedNoteText,
-                    prompt: customPrompt || "Generate well-structured, comprehensive academic short notes with key definitions, core concepts, bullet points, and comparative tables[cite: 1] for a university student."
+                    prompt: customPrompt || "Generate well-structured, comprehensive academic short notes with key definitions, core concepts, bullet points, and comparative tables for a university student."
                 })
             });
 
@@ -328,6 +328,460 @@ if (downloadNotesPdfBtn) {
             </html>
         `);
         printWindow.document.close();
+    });
+}
+
+// --- GPA TRACKER & UNIVERSITY MODES ---
+const universitySelector = document.getElementById('university-selector');
+const profileOkBtn = document.getElementById('profile-ok-btn');
+const gradeSelect = document.getElementById('grade');
+const otherUniBox = document.getElementById('other-uni-box');
+const otherGradeLetter = document.getElementById('other-grade-letter');
+const customGradePointInput = document.getElementById('custom-grade-point');
+
+function toggleUniversityMode(mode) {
+    if (!gradeSelect || !otherUniBox) return;
+    if (mode === 'other') { gradeSelect.style.display = 'none'; otherUniBox.style.display = 'flex'; }
+    else { gradeSelect.style.display = 'block'; otherUniBox.style.display = 'none'; }
+}
+
+if (profileOkBtn) {
+    profileOkBtn.addEventListener('click', () => {
+        if (!universitySelector || !degreeInput) return;
+        const mode = universitySelector.value;
+        const deg = degreeInput.value.trim();
+        if (!deg) { alert("⚠️ Please enter your Degree Program name!"); degreeInput.focus(); return; }
+        localStorage.setItem('active_uni_mode', mode);
+        localStorage.setItem(mode + '_degree', deg);
+        toggleUniversityMode(mode);
+        updateUI();
+        alert("✅ Profile switched successfully!");
+    });
+}
+
+const savedActiveMode = localStorage.getItem('active_uni_mode') || 'horizon';
+if (universitySelector) { universitySelector.value = savedActiveMode; toggleUniversityMode(savedActiveMode); }
+if (degreeInput) { degreeInput.value = localStorage.getItem(savedActiveMode + '_degree') || ''; }
+
+function applyTheme(theme) {
+    document.body.classList.remove('light-mode');
+    if (theme === 'light' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+        document.body.classList.add('light-mode');
+    }
+    renderGPAChart();
+}
+
+const themeSelector = document.getElementById('theme-selector');
+if (themeSelector) {
+    themeSelector.addEventListener('change', (e) => { localStorage.setItem('theme', e.target.value); applyTheme(e.target.value); });
+    themeSelector.value = localStorage.getItem('theme') || 'system';
+    applyTheme(themeSelector.value);
+}
+
+// --- Firebase Auth State & Loading Subjects ---
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        currentUser = user;
+        updateDynamicGreeting(user.displayName ? user.displayName.split(" ")[0] : "Student");
+        if (loginSection) loginSection.style.display = "none";
+        if (appSection) appSection.style.display = "block";
+        if (document.getElementById('review-modal')) document.getElementById('review-modal').style.display = 'flex';
+        showView('hub');
+        await loadSubjectsFromDB();
+    } else {
+        currentUser = null;
+        if (loginSection) loginSection.style.display = "block";
+        if (appSection) appSection.style.display = "none";
+        if (document.getElementById('review-modal')) document.getElementById('review-modal').style.display = 'none';
+    }
+});
+
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => { 
+        signOut(auth).then(() => { allSubjects = []; showView('hub'); updateUI(); }); 
+    });
+}
+
+async function loadSubjectsFromDB() {
+    try {
+        allSubjects = [];
+        if (!currentUser) return;
+        const querySnapshot = await getDocs(collection(db, "users", currentUser.uid, "subjects"));
+        querySnapshot.forEach(doc => { 
+            let sub = doc.data(); 
+            sub.dbId = doc.id; 
+            if (!sub.mode) sub.mode = 'horizon'; 
+            allSubjects.push(sub); 
+        });
+        updateUI();
+    } catch (e) { console.error("Error loading subjects:", e); }
+}
+
+window.editSubject = function(dbId) {
+    if (!degreeInput || degreeInput.value.trim() === "") { alert("⚠️ Please enter Degree Program name first!"); degreeInput.focus(); return; }
+    const sub = allSubjects.find(s => s.dbId === dbId);
+    if (!sub) return;
+    document.getElementById('subject-name').value = sub.name;
+    document.getElementById('subject-year').value = sub.year;
+    document.getElementById('subject-semester').value = sub.semester;
+    document.getElementById('credit').value = sub.credit;
+    const targetMode = sub.mode || 'horizon';
+    if (universitySelector) universitySelector.value = targetMode;
+    localStorage.setItem('active_uni_mode', targetMode);
+    toggleUniversityMode(targetMode);
+
+    if (sub.isCustom) {
+        if (otherGradeLetter) otherGradeLetter.value = sub.gradeLetter || "A";
+        if (customGradePointInput) customGradePointInput.value = sub.gradePoint === -1 ? 0 : sub.gradePoint;
+    } else {
+        if (gradeSelect) {
+            for (let i = 0; i < gradeSelect.options.length; i++) {
+                if (sub.gradeText && gradeSelect.options[i].text === sub.gradeText) { gradeSelect.selectedIndex = i; break; }
+            }
+        }
+    }
+    editingSubjectId = dbId;
+    if (addBtn) addBtn.innerText = "Update Subject";
+    document.getElementById('form-title').innerText = "Edit Subject";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+if (addBtn) {
+    addBtn.addEventListener('click', async () => {
+        if (!currentUser) return;
+        if (!degreeInput || degreeInput.value.trim() === "") { alert("⚠️ Please enter Degree name first!"); degreeInput.focus(); return; }
+
+        const name = document.getElementById('subject-name').value.trim();
+        const year = document.getElementById('subject-year').value;
+        const semester = document.getElementById('subject-semester').value;
+        const credit = parseFloat(document.getElementById('credit').value);
+        const activeMode = getActiveMode();
+
+        let gradePoint, gradeText, gradeLetter = "", isCustom = false;
+        if (activeMode === 'other') {
+            gradeLetter = otherGradeLetter.value;
+            const rawPoint = customGradePointInput.value.trim();
+            if (!name || !year || !semester || isNaN(credit) || !gradeLetter) { alert("Please fill all fields correctly!"); return; }
+            if (gradeLetter === "Repeat" || gradeLetter === "Absent" || gradeLetter === "Medical") { 
+                gradePoint = -1; 
+                gradeText = gradeLetter === "Repeat" ? "Repeat (RA)" : gradeLetter; 
+            } else { 
+                gradePoint = parseFloat(rawPoint); 
+                gradeText = `${gradeLetter} (${gradePoint.toFixed(2)})`; 
+            }
+            isCustom = true;
+        } else {
+            gradePoint = parseFloat(gradeSelect.value);
+            gradeText = gradeSelect.options[gradeSelect.selectedIndex].text;
+            if (!name || !year || !semester || isNaN(credit) || isNaN(gradePoint)) { alert("Please fill all fields!"); return; }
+        }
+
+        const subjectData = { name, year, semester, credit, gradePoint, gradeText, gradeLetter, isCustom, mode: activeMode };
+        addBtn.innerText = editingSubjectId ? "Updating..." : "Saving...";
+        addBtn.disabled = true;
+
+        try {
+            if (editingSubjectId) {
+                await updateDoc(doc(db, "users", currentUser.uid, "subjects", editingSubjectId), subjectData);
+                allSubjects = allSubjects.map(s => s.dbId === editingSubjectId ? { ...subjectData, dbId: editingSubjectId } : s);
+                editingSubjectId = null;
+            } else {
+                const docRef = await addDoc(collection(db, "users", currentUser.uid, "subjects"), subjectData);
+                subjectData.dbId = docRef.id;
+                allSubjects.push(subjectData);
+            }
+            document.getElementById('subject-name').value = '';
+            document.getElementById('subject-year').selectedIndex = 0;
+            document.getElementById('subject-semester').selectedIndex = 0;
+            document.getElementById('credit').selectedIndex = 0;
+            if (gradeSelect) gradeSelect.selectedIndex = 0;
+            addBtn.innerText = "Add to List";
+            document.getElementById('form-title').innerText = "Add New Subject";
+            updateUI();
+        } catch (e) { alert("Error saving subject: " + e.message); }
+        addBtn.disabled = false;
+    });
+}
+
+window.removeSubject = async function(dbId) {
+    if (!currentUser) return;
+    allSubjects = allSubjects.filter(sub => sub.dbId !== dbId);
+    updateUI();
+    try { await deleteDoc(doc(db, "users", currentUser.uid, "subjects", dbId)); } catch (e) { console.error(e); }
+};
+
+const eraseSemBtn = document.getElementById('erase-sem-btn');
+if (eraseSemBtn) {
+    eraseSemBtn.addEventListener('click', async () => {
+        if (!currentUser) return;
+        const year = document.getElementById('erase-year').value;
+        const semester = document.getElementById('erase-semester').value;
+        if (!year || !semester) { alert("Please select Year and Semester!"); return; }
+        if (!confirm(`Delete subjects for Year ${year}, Semester ${semester}?`)) return;
+
+        const targets = getActiveSubjects().filter(s => s.year == year && s.semester == semester);
+        try {
+            for (let sub of targets) await deleteDoc(doc(db, "users", currentUser.uid, "subjects", sub.dbId));
+            allSubjects = allSubjects.filter(s => !targets.some(t => t.dbId === s.dbId));
+            updateUI();
+            alert("Erasure successful!");
+        } catch (e) { alert("Error: " + e.message); }
+    });
+}
+
+const resetAllBtn = document.getElementById('reset-all-btn');
+if (resetAllBtn) {
+    resetAllBtn.addEventListener('click', async () => {
+        if (!currentUser) return;
+        const targets = getActiveSubjects();
+        if (targets.length === 0) { alert("No data to reset!"); return; }
+        if (!confirm("WARNING: Permanently delete all subjects in this profile?")) return;
+        try {
+            for (let sub of targets) await deleteDoc(doc(db, "users", currentUser.uid, "subjects", sub.dbId));
+            allSubjects = allSubjects.filter(s => (s.mode || 'horizon') !== getActiveMode());
+            updateUI();
+            alert("Profile data reset successfully!");
+        } catch (e) { alert("Error: " + e.message); }
+    });
+}
+
+const downloadPdfBtn = document.getElementById('download-pdf');
+if (downloadPdfBtn) {
+    downloadPdfBtn.addEventListener('click', () => {
+        if (!degreeInput || degreeInput.value.trim() === "") { alert("⚠️ Enter degree name first!"); degreeInput.focus(); return; }
+        const activeSubjects = getActiveSubjects();
+        if (activeSubjects.length === 0) { alert("⚠️ Add at least one subject!"); return; }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const degree = degreeInput.value;
+        const studentName = currentUser ? (currentUser.displayName || currentUser.email) : (userNameDisplay ? userNameDisplay.innerText : "Student");
+        const cgpa = document.getElementById('cgpa-display').innerText;
+        const prediction = document.getElementById('class-display').innerText;
+
+        doc.setDrawColor(30, 41, 59); doc.setLineWidth(1.5); doc.rect(10, 10, 190, 277);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.text("ACADEMIC PERFORMANCE REPORT", 105, 25, null, null, "center");
+        doc.setFontSize(10); doc.setFont("helvetica", "normal");
+        doc.text(`Student: ${studentName}`, 20, 36); doc.text(`Degree: ${degree}`, 20, 43);
+        doc.line(20, 48, 190, 48);
+
+        let yPos = 56;
+        [1, 2, 3, 4].forEach(year => {
+            [1, 2].forEach(sem => {
+                const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
+                if (semSubs.length === 0) return;
+                if (yPos > 230) { doc.addPage(); yPos = 25; }
+                doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+                doc.text(`Year ${year} - Semester ${sem}`, 20, yPos); yPos += 6;
+                doc.setFillColor(240, 240, 240); doc.rect(20, yPos, 170, 7, "F");
+                doc.setFontSize(9);
+                doc.text("Subject Name", 25, yPos + 5); doc.text("Credits", 115, yPos + 5); doc.text("Grade", 140, yPos + 5); doc.text("Point", 165, yPos + 5);
+                yPos += 9;
+                doc.setFont("helvetica", "normal");
+                semSubs.forEach(sub => {
+                    if (yPos > 265) { doc.addPage(); yPos = 25; }
+                    doc.text(sub.name, 25, yPos);
+                    doc.text(String(sub.credit), 118, yPos);
+                    doc.text(sub.gradeText, 140, yPos);
+                    doc.text(sub.gradePoint === -1 ? "-" : sub.gradePoint.toFixed(2), 165, yPos);
+                    yPos += 7;
+                });
+                yPos += 5;
+            });
+        });
+
+        if (yPos > 210) { doc.addPage(); yPos = 25; }
+        doc.setFillColor(248, 250, 252); doc.roundedRect(20, yPos, 170, 22, 2, 2, "FD");
+        doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+        doc.text(`Overall Cumulative CGPA: ${cgpa}`, 25, yPos + 8);
+        doc.text(`Predicted Class: ${prediction}`, 25, yPos + 16);
+        yPos += 30;
+
+        if (yPos > 220) { doc.addPage(); yPos = 25; }
+        doc.setFont("helvetica", "bold"); doc.setFontSize(9.5);
+        doc.text("Grade Descriptions & Notes:", 20, yPos);
+        yPos += 6;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        const gradeNotes = [
+            "• F / NC-C: Retake Exam & C/A Next Attempt",
+            "• NC-E: Retake Your Exam Next Attempt",
+            "• NE: Exam & CA Pending. Maintain 80% Attendance",
+            "• Absent: Absent - Need Medical or Re-sitting Exam",
+            "• Medical: Medical Subject - Retake Exam"
+        ];
+        gradeNotes.forEach(note => {
+            doc.text(note, 22, yPos);
+            yPos += 4.5;
+        });
+
+        doc.save(`Transcript_${studentName.replace(/\s+/g, '_')}.pdf`);
+    });
+}
+
+function calculateSemesterGPA(year, semester) {
+    const subs = getActiveSubjects().filter(s => s.year == year && s.semester == semester && s.gradePoint !== -1);
+    let creds = subs.reduce((acc, s) => acc + s.credit, 0);
+    let pts = subs.reduce((acc, s) => acc + (s.credit * s.gradePoint), 0);
+    return creds === 0 ? "0.00" : (pts / creds).toFixed(2);
+}
+
+function calculateYearGPA(year) {
+    const subs = getActiveSubjects().filter(s => s.year == year && s.gradePoint !== -1);
+    let creds = subs.reduce((acc, s) => acc + s.credit, 0);
+    let pts = subs.reduce((acc, s) => acc + (s.credit * s.gradePoint), 0);
+    return creds === 0 ? "0.00" : (pts / creds).toFixed(2);
+}
+
+function calculateOverallCGPA() {
+    const subs = getActiveSubjects().filter(s => s.gradePoint !== -1);
+    let creds = subs.reduce((acc, s) => acc + s.credit, 0);
+    let pts = subs.reduce((acc, s) => acc + (s.credit * s.gradePoint), 0);
+    return creds === 0 ? "0.00" : (pts / creds).toFixed(2);
+}
+
+function determineDegreeClass(cgpa) {
+    if (cgpa >= CLASS_THRESHOLDS.FIRST_CLASS) return "First Class";
+    if (cgpa >= CLASS_THRESHOLDS.SECOND_UPPER) return "Second Class (Upper)";
+    if (cgpa >= CLASS_THRESHOLDS.SECOND_LOWER) return "Second Class (Lower)";
+    if (cgpa >= CLASS_THRESHOLDS.PASS) return "Pass";
+    return "Below Pass mark (< 2.00)";
+}
+
+function getStatusAdvice(gradeText) {
+    if (gradeText.toLowerCase().includes("absent") || gradeText.toLowerCase().includes("absant")) {
+        return '<br><small style="color: #f87171;">Absent - Need Medical or Re-sitting Exam</small>';
+    }
+    if (gradeText.toLowerCase().includes("medical")) {
+        return '<br><small style="color: #f87171;">Medical Subject - Retake Exam</small>';
+    }
+    if (gradeText === "NC-C" || gradeText === "F") {
+        return '<br><small style="color: #f87171;">Retake Exam & C/A Next Attempt</small>';
+    }
+    if (gradeText === "NC-E") {
+        return '<br><small style="color: #fbbf24;">Retake Your Exam Next Attempt</small>';
+    }
+    if (gradeText === "NE") {
+        return '<br><small style="color: #60a5fa;">Exam & CA Pending. Maintain 80% Attendance</small>';
+    }
+    return "";
+}
+
+function renderGPAChart() {
+    const activeSubjects = getActiveSubjects();
+    const ctx = document.getElementById('gpaChart');
+    if (!ctx) return;
+
+    let labels = [], semGPAs = [], cumulativeGPAs = [];
+    [1, 2, 3, 4].forEach(year => {
+        [1, 2].forEach(sem => {
+            const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
+            if (semSubs.length > 0) {
+                labels.push(`Y${year} S${sem}`);
+                let creds = 0, pts = 0;
+                semSubs.forEach(sub => { if (sub.gradePoint !== -1) { creds += sub.credit; pts += (sub.credit * sub.gradePoint); } });
+                semGPAs.push(creds > 0 ? (pts / creds).toFixed(2) : 0);
+            }
+        });
+    });
+
+    let totalC = 0, totalP = 0;
+    [1, 2, 3, 4].forEach(year => {
+        [1, 2].forEach(sem => {
+            const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
+            if (semSubs.length > 0) {
+                semSubs.forEach(sub => { if (sub.gradePoint !== -1) { totalC += sub.credit; totalP += (sub.credit * sub.gradePoint); } });
+                cumulativeGPAs.push(totalC > 0 ? (totalP / totalC).toFixed(2) : 0);
+            }
+        });
+    });
+
+    const isLight = document.body.classList.contains('light-mode');
+    const textColor = isLight ? '#0f172a' : '#e2e8f0';
+    const gridColor = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.05)';
+
+    if (myChart) myChart.destroy();
+    myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: 'Semester GPA', data: semGPAs, borderColor: '#a855f7', backgroundColor: 'rgba(168, 85, 247, 0.1)', borderWidth: 2, tension: 0.3, fill: true },
+                { label: 'Cumulative CGPA', data: cumulativeGPAs, borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', borderWidth: 3, tension: 0.3, fill: true }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: textColor, font: { family: 'Poppins' } } } },
+            scales: {
+                y: { min: 0, max: 4.3, grid: { color: gridColor }, ticks: { color: textColor } },
+                x: { grid: { color: gridColor }, ticks: { color: textColor } }
+            }
+        }
+    });
+}
+
+function updateUI() {
+    const activeSubjects = getActiveSubjects();
+    const currentGPA = parseFloat(calculateOverallCGPA());
+    const cgpaDisplay = document.getElementById('cgpa-display');
+    const classDisplay = document.getElementById('class-display');
+
+    if (cgpaDisplay) cgpaDisplay.innerText = currentGPA.toFixed(2);
+    if (classDisplay) classDisplay.innerText = activeSubjects.length > 0 ? determineDegreeClass(currentGPA) : "Pending...";
+
+    const goalContent = document.getElementById('goal-content');
+    if (goalContent) {
+        const thresholds = [
+            { name: "Pass", min: CLASS_THRESHOLDS.PASS },
+            { name: "Second Class (Lower)", min: CLASS_THRESHOLDS.SECOND_LOWER },
+            { name: "Second Class (Upper)", min: CLASS_THRESHOLDS.SECOND_UPPER },
+            { name: "First Class", min: CLASS_THRESHOLDS.FIRST_CLASS }
+        ];
+        let html = '';
+        thresholds.forEach(t => {
+            const isActive = currentGPA >= t.min;
+            const diff = (t.min - currentGPA).toFixed(2);
+            html += `<div class="goal-item ${isActive ? 'goal-active' : ''}"><div>${isActive ? '✅' : '🎯'} <b>${t.name} (>= ${t.min.toFixed(2)})</b></div>${!isActive ? `<small style="color:#38bdf8; margin-top:2px;">Need <b>${diff}</b> more points</small>` : `<small style="color:#22c55e; margin-top:2px;">Target Achieved!</small>`}</div>`;
+        });
+        goalContent.innerHTML = html;
+    }
+
+    renderGPAChart();
+
+    const container = document.getElementById('academic-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (activeSubjects.length === 0) {
+        container.innerHTML = `<div class="glass-card empty-state" style="text-align: center; color: var(--text-muted); padding: 2rem;">No subjects added in this profile yet.</div>`;
+        return;
+    }
+
+    [1, 2, 3, 4].forEach(year => {
+        const yearSubs = activeSubjects.filter(s => s.year == year);
+        if (yearSubs.length === 0) return;
+        const yearGPA = calculateYearGPA(year);
+
+        let yearHTML = `<div class="glass-card year-card"><div class="year-header"><div class="year-title">Year ${year}</div><div style="font-size: 1rem; font-weight: 500;">Year GPA: <span style="color: #38bdf8; font-weight: 600;">${yearGPA}</span></div></div>`;
+
+        [1, 2].forEach(sem => {
+            const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
+            if (semSubs.length === 0) return;
+            const semGPA = calculateSemesterGPA(year, sem);
+
+            yearHTML += `<div class="semester-box"><div class="semester-header"><div class="semester-title">Semester ${sem}</div><div style="font-size: 0.85rem; color: var(--text-muted);">Semester GPA: <span style="color: #a855f7; font-weight: 600;">${semGPA}</span></div></div><div class="table-responsive"><table><thead><tr><th>Subject Name</th><th>Credits</th><th>Grade / Status</th><th>Action</th></tr></thead><tbody>`;
+
+            semSubs.forEach(sub => {
+                let displayGrade = sub.gradePoint === -1 ? sub.gradeText + getStatusAdvice(sub.gradeText) : sub.gradePoint.toFixed(2);
+                yearHTML += `<tr><td>${sub.name}</td><td>${sub.credit}</td><td style="line-height: 1.3; padding: 8px 0;">${displayGrade}</td><td><button onclick="editSubject('${sub.dbId}')" class="btn-edit">Edit</button> <button onclick="removeSubject('${sub.dbId}')" class="btn-remove">Remove</button></td></tr>`;
+            });
+
+            yearHTML += `</tbody></table></div></div>`;
+        });
+        yearHTML += `</div>`;
+        container.innerHTML += yearHTML;
     });
 }
 
@@ -517,25 +971,5 @@ if (downloadHumanizedPdfBtn) {
         let printWindow = window.open('', '_blank');
         printWindow.document.write(`<html><head><title>Report</title><style>body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.8;margin:25mm 20mm;text-align:justify;}h1{font-size:18pt;text-align:center;border-bottom:2px solid #333;padding-bottom:10px;}</style></head><body><h1>Humanized Assignment Report</h1><div>${cleanText.split('\n\n').map(p=>`<p>${p}</p>`).join('')}</div><script>window.onload=()=>window.print();</script></body></html>`);
         printWindow.document.close();
-    });
-}
-
-// --- GPA TRACKER & FIREBASE AUTH ---
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        currentUser = user;
-        updateDynamicGreeting(user.displayName ? user.displayName.split(" ")[0] : "Student");
-        if (loginSection) loginSection.style.display = "none";
-        if (appSection) appSection.style.display = "block";
-    } else {
-        currentUser = null;
-        if (loginSection) loginSection.style.display = "block";
-        if (appSection) appSection.style.display = "none";
-    }
-});
-
-if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-        signOut(auth).then(() => { allSubjects = []; showView('hub'); });
     });
 }
