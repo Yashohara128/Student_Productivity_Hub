@@ -943,6 +943,7 @@ const humanizeBox = document.getElementById('humanize-box');
 const humanizedOutputText = document.getElementById('humanized-output-text');
 const copyHumanizedBtn = document.getElementById('copy-humanized-btn');
 const downloadHumanizedPdfBtn = document.getElementById('download-humanized-pdf-btn');
+const downloadHumanizedDocxBtn = document.getElementById('download-humanized-docx-btn');
 
 async function trueAIHumanizer(inputText) {
     try {
@@ -1090,5 +1091,44 @@ if (downloadHumanizedPdfBtn) {
         let printWindow = window.open('', '_blank');
         printWindow.document.write(`<html><head><title>Report</title><style>body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.8;margin:25mm 20mm;text-align:justify;}h1{font-size:18pt;text-align:center;border-bottom:2px solid #333;padding-bottom:10px;}</style></head><body><h1>Humanized Assignment Report</h1><div>${cleanText.split('\n\n').map(p=>`<p>${p}</p>`).join('')}</div><script>window.onload=()=>window.print();</script></body></html>`);
         printWindow.document.close();
+    });
+}
+
+if (downloadHumanizedDocxBtn) {
+    downloadHumanizedDocxBtn.addEventListener('click', () => {
+        const text = humanizedOutputText.value;
+        if (!text) {
+            alert("⚠️ No humanized text available to download!");
+            return;
+        }
+
+        let formattedHtml = text.split('\n\n').map(p => `<p style="font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.8; text-align: justify; margin-bottom: 15px;">${p.replace(/\n/g, '<br>')}</p>`).join('');
+
+        let wordContent = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head>
+                <title>Humanized Assignment Report</title>
+                <style>
+                    body { font-family: 'Times New Roman', serif; margin: 25mm; }
+                    h1 { text-align: center; font-size: 18pt; font-family: 'Times New Roman', serif; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; color: #1e293b; }
+                </style>
+            </head>
+            <body>
+                <h1>Humanized Assignment Report</h1>
+                ${formattedHtml}
+            </body>
+            </html>
+        `;
+
+        const blob = new Blob(['\ufeff' + wordContent], {
+            type: 'application/msword'
+        });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Humanized_Assignment_Report.doc';
+        a.click();
+        URL.revokeObjectURL(url);
     });
 }
