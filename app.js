@@ -832,12 +832,16 @@ function getStatusAdvice(gradeText) {
     if (gradeText.toLowerCase().includes("absent") || gradeText.toLowerCase().includes("absant")) {
         return '<br><small style="color: #f87171;">Absent - Need Medical or Re-sitting Exam</small>';
     }
+
+    if (gradeText.includes("Medical")) {
+        return '<br><small style="color: #f87171;">Medical Subject - Retake Exam</small>';
+    }
  
     if (gradeText === "NC-C" || gradeText === "F") {
         return '<br><small style="color: #f87171;">Retake Exam & C/A</small>';
     }
     if (gradeText === "NC-E") {
-        return '<br><small style="color: #fbbf24;">Please Complete Your Exam Next Attempt</small>';
+        return '<br><small style="color: #fbbf24;">Retake Your Exam Next Attempt</small>';
     }
     if (gradeText === "NE") {
         return '<br><small style="color: #60a5fa;">Exam & CA Pending. Maintain 80% Attendance</small>';
