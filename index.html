@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Productivity Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=50">
+    <link rel="stylesheet" href="style.css?v=51">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -15,6 +15,11 @@
     
     <div class="bg-glow circle-1"></div>
     <div class="bg-glow circle-2"></div>
+
+    <!-- 🟢 PC & Mobile Universal AI Agent Toggle Button -->
+    <button id="ai-toggle-btn" style="position: fixed; bottom: 20px; left: 20px; z-index: 9999; background: linear-gradient(135deg, #38bdf8, #2563eb); color: #0f172a; border: none; border-radius: 50px; padding: 10px 18px; font-weight: 600; font-size: 0.85rem; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+        🤖 AI Chat
+    </button>
 
     <div style="position: fixed; top: 15px; right: 20px; z-index: 9999;">
         <select id="theme-selector" style="padding: 0.4rem 0.6rem; border-radius: 0.4rem; font-size: 0.75rem; cursor: pointer;">
@@ -123,8 +128,8 @@
         <div id="app-section" style="display: none;">
             <div class="app-layout-container" style="display: flex; height: 100vh; overflow: hidden; background: var(--bg-color);">
                 
-                <!-- 🤖 Persistent Left AI Study Agent Sidebar (Theme-Aware Light/Dark) -->
-                <aside class="ai-agent-sidebar" style="width: 320px; min-width: 320px; background: var(--card-bg); color: var(--text-color); border-right: 1px solid var(--card-border); display: flex; flex-direction: column; justify-content: space-between; height: 100vh; z-index: 100;">
+                <!-- 🤖 Persistent Left AI Study Agent Sidebar -->
+                <aside id="ai-agent-sidebar" class="ai-agent-sidebar" style="width: 320px; min-width: 320px; background: var(--card-bg); color: var(--text-color); border-right: 1px solid var(--card-border); display: flex; flex-direction: column; justify-content: space-between; height: 100vh; z-index: 100;">
                     <div style="padding: 15px 20px; border-bottom: 1px solid var(--card-border); display: flex; align-items: center; justify-content: space-between;">
                         <h3 style="color: var(--heading-gradient-1); font-size: 1rem; margin: 0; display: flex; align-items: center; gap: 8px;">🤖 AI Study Agent</h3>
                         <span style="font-size: 0.65rem; background: #22c55e; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 600;">ONLINE</span>
@@ -358,7 +363,7 @@
 
                         <div class="header">
                             <h1>📝 AI PDF Short Note Generator</h1>
-                            <p style="color: var(--text-muted); font-size: 0.9rem;">Upload a lecture PDF and let Groq AI generate structured short notes instantly</p>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Upload a lecture PDF and let Gemini AI generate structured short notes instantly</p>
                         </div>
 
                         <div class="glass-card form-section">
@@ -378,7 +383,7 @@
                             <button id="generate-notes-btn" class="btn-add" style="width: 100%; margin-top: 0;">✨ Generate Short Notes</button>
 
                             <div id="note-loading" style="display: none; text-align: center; margin-top: 1.5rem; color: var(--heading-gradient-1);">
-                                <p>⏳ Extracting text and generating short notes using Groq AI... Please wait.</p>
+                                <p>⏳ Extracting text and generating short notes using Gemini AI... Please wait.</p>
                             </div>
 
                             <div id="note-result-section" style="margin-top: 1.5rem; display: none; padding: 1.2rem; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 0.5rem;">
@@ -473,6 +478,6 @@
         
     </div>
 
-    <script type="module" src="app.js?v=50"></script>
+    <script type="module" src="app.js?v=51"></script>
 </body>
 </html>
