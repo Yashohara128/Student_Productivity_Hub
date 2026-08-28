@@ -241,7 +241,7 @@ window.startPayHerePayment = function(planName, amount, wordLimit) {
     payhere.startPayment(payment);
 };
 
-// --- PERSISTENT AI STUDY AGENT WITH FILE/PDF ATTACHMENT SUPPORT ---
+// --- PERSISTENT AI STUDY AGENT WITH FILE/PDF ATTACHMENT SUPPORT & FRIENDLY NAME GREETING ---
 const aiChatMessages = document.getElementById('ai-chat-messages');
 const aiChatInput = document.getElementById('ai-chat-input');
 const aiSendBtn = document.getElementById('ai-send-btn');
@@ -310,18 +310,22 @@ async function sendQueryToAIAgent() {
     const loadingId = 'ai-loading-' + Date.now();
     aiChatMessages.innerHTML += `
         <div id="${loadingId}" style="background: var(--input-bg); padding: 8px 12px; border-radius: 8px; color: var(--text-muted); font-style: italic;">
-            🤖 AI Agent is analyzing...
+            🤖 AI Agent is thinking...
         </div>
     `;
     aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+
+    // Get logged-in student name
+    const activeStudentName = currentUser && currentUser.displayName ? currentUser.displayName.split(" ")[0] : "Student";
 
     try {
         const response = await fetch('/api/chat', {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
-                message: text || "Please summarize and explain the attached document.", 
-                fileContent: attachedAiFileText 
+                message: text || "Please summarize and explain this attached document.", 
+                fileContent: attachedAiFileText,
+                studentName: activeStudentName
             })
         });
 
@@ -342,7 +346,6 @@ async function sendQueryToAIAgent() {
         if (document.getElementById(loadingId)) document.getElementById(loadingId).remove();
         aiChatMessages.innerHTML += `<div style="color: #ef4444; padding: 8px;">❌ Failed to connect to AI Agent.</div>`;
     } finally {
-        // Reset attached file after sending
         attachedAiFileText = "";
         if (aiFileIndicator) aiFileIndicator.style.display = 'none';
         if (aiFileInput) aiFileInput.value = '';
@@ -361,9 +364,10 @@ if (aiChatInput) {
 }
 if (aiClearBtn) {
     aiClearBtn.addEventListener('click', () => {
+        const activeStudentName = currentUser && currentUser.displayName ? currentUser.displayName.split(" ")[0] : "Student";
         aiChatMessages.innerHTML = `
             <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 10px; border-radius: 8px; color: var(--text-color);">
-                🧹 Chat cleared. How can I help you with your studies?
+                👋 Hey ${activeStudentName}! Chat cleared. How can I help you with your studies today? 🎓✨
             </div>
         `;
         attachedAiFileText = "";
@@ -662,7 +666,18 @@ if (themeSelector) {
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
-        updateDynamicGreeting(user.displayName ? user.displayName.split(" ")[0] : "Student");
+        const studentName = user.displayName ? user.displayName.split(" ")[0] : "Student";
+        updateDynamicGreeting(studentName);
+        
+        // Welcome message inside AI Agent chat
+        if (aiChatMessages) {
+            aiChatMessages.innerHTML = `
+                <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 10px; border-radius: 8px; color: var(--text-color);">
+                    👋 Hey ${studentName}! I'm your AI Study Agent. Ask me anything or attach documents/PDFs to analyze! 🎓✨
+                </div>
+            `;
+        }
+
         if (loginSection) loginSection.style.display = "none";
         if (appSection) appSection.style.display = "block";
         if (reviewModal) reviewModal.style.display = 'flex';
