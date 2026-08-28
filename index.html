@@ -106,10 +106,10 @@
         </div>
     </div>
 
-    <div class="container">
+    <div class="container" style="max-width: 100% !important; padding: 0 !important;">
         
         <!-- Login Section -->
-        <div id="login-section" class="glass-card login-card">
+        <div id="login-section" class="glass-card login-card" style="max-width: 450px; margin: 10vh auto; padding: 2rem;">
             <h1>Welcome to Student Productivity Hub</h1>
             <p class="login-sub">Please login with Google to access your academic tools</p>
             
@@ -119,326 +119,347 @@
             </button>
         </div>
 
-        <!-- Main App Section -->
+        <!-- Main App Section with Sidebar Layout -->
         <div id="app-section" style="display: none;">
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding: 0.5rem 0; border-bottom: 1px solid var(--card-border);">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <h3 id="welcome-greeting" style="font-size: 1rem; color: var(--heading-gradient-1);">👋 Welcome, <span id="user-name">Student</span>!</h3>
-                    <button onclick="openPricingModal()" class="btn-review" style="font-size: 0.7rem; padding: 0.2rem 0.6rem; cursor: pointer;">⭐ Upgrade Plan</button>
-                </div>
-                <div>
-                    <button id="logout-btn" style="background: none; border: 1px solid rgba(239, 68, 68, 0.5); color: #ef4444; padding: 0.3rem 0.8rem; border-radius: 0.4rem; cursor: pointer; font-size: 0.75rem;">Logout</button>
-                </div>
-            </div>
-
-            <!-- Dashboard Hub -->
-            <div id="dashboard-hub" style="display: block;">
-                <div style="text-align: center; margin-bottom: 2rem;">
-                    <h1 style="font-size: 2.2rem; font-weight: 600; background: linear-gradient(to right, var(--heading-gradient-1), var(--heading-gradient-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px;">Student Productivity Hub</h1>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Select a tool below to get started with your academic tracking</p>
-                </div>
-
-                <div class="feature-cards-grid">
-                    <div class="glass-card feature-card" id="card-gpa">
-                        <div style="font-size: 2.5rem; margin-bottom: 1rem;">🎓</div>
-                        <h2>GPA & Class Tracker</h2>
-                        <p>Calculate your semester GPAs, track cumulative CGPA, analyze progress with charts, and generate professional PDF transcripts.</p>
-                        <button class="btn-launch">Open Tracker ➔</button>
-                    </div>
-
-                    <div class="glass-card feature-card" id="card-shortnotes">
-                        <div style="font-size: 2.5rem; margin-bottom: 1rem;">📝</div>
-                        <h2>AI PDF Short Note Generator</h2>
-                        <p>Upload your lecture or study PDF and instantly generate structured short notes with key points using Groq AI.</p>
-                        <button class="btn-launch">Open Generator ➔</button>
-                    </div>
-
-                    <div class="glass-card feature-card" id="card-plagiarism">
-                        <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔍</div>
-                        <h2>Plagiarism & AI Humanizer</h2>
-                        <p>Scan your essay drafts for originality and instantly humanize robotic or flagged text to sound 100% natural and unique.</p>
-                        <button class="btn-launch">Open Checker ➔</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- GPA Tracker View -->
-            <div id="view-gpa" class="sub-interface" style="display: none;">
-                <div style="margin-bottom: 1.5rem;">
-                    <button class="btn-back" id="back-to-hub-gpa">⬅ Back to Dashboard</button>
-                </div>
-
-                <div class="header">
-                    <h1>🎓 GPA & Class Tracker</h1>
-                    
-                    <div style="margin: 10px auto; max-width: 380px;">
-                        <select id="university-selector" style="padding: 0.6rem; border-radius: 0.5rem; font-size: 0.85rem; width: 100%; cursor: pointer;">
-                            <option value="horizon" selected>Horizon Campus Student (Auto Grading)</option>
-                            <option value="other">Other University Student (Select Grade & Custom Point)</option>
-                        </select>
-                    </div>
-
-                    <div style="margin: 10px auto; max-width: 380px; display: flex; gap: 8px;">
-                        <input type="text" id="degree-name" placeholder="Enter Degree Name" style="flex: 1;">
-                        <button id="profile-ok-btn" class="btn-download" style="margin-top: 0; padding: 0.5rem 1.2rem !important; cursor: pointer;">OK</button>
-                    </div>
-
-                    <div style="margin-top: 15px;">
-                        <button id="download-pdf" class="btn-download">🎓 Download Your GPA Certificate</button>
-                    </div>
-                </div>
-
-                <div class="dashboard">
-                    <div class="glass-card dash-box">
-                        <h2>Overall Cumulative CGPA</h2>
-                        <p id="cgpa-display" class="highlight-text">0.00</p>
-                    </div>
-                    <div class="glass-card dash-box">
-                        <h2>Overall Predicted Class</h2>
-                        <p id="class-display" class="class-text">Pending...</p>
-                    </div>
-                </div>
-
-                <div id="goal-section" class="glass-card form-section">
-                    <h3>Academic Goals & Next Class Tracker</h3>
-                    <div id="goal-content"></div>
-                </div>
-
-                <div class="glass-card form-section">
-                    <h3>📈 CGPA & Semester Progress Analytics</h3>
-                    <div style="position: relative; height: 260px; width: 100%;">
-                        <canvas id="gpaChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="glass-card form-section">
-                    <h3 id="form-title">Add New Subject</h3>
-                    <div class="form-grid">
-                        <input type="text" id="subject-name" placeholder="Subject Name (E.g. Data Structures)">
-                        
-                        <select id="subject-year">
-                            <option value="" disabled selected>Select Year</option>
-                            <option value="1">1st Year</option>
-                            <option value="2">2nd Year</option>
-                            <option value="3">3rd Year</option>
-                            <option value="4">4th Year</option>
-                        </select>
-
-                        <select id="subject-semester">
-                            <option value="" disabled selected>Select Semester</option>
-                            <option value="1">1st Semester</option>
-                            <option value="2">2nd Semester</option>
-                        </select>
-
-                        <select id="credit">
-                            <option value="" disabled selected>Credits</option>
-                            <option value="1">1 Credit</option>
-                            <option value="2">2 Credits</option>
-                            <option value="3">3 Credits</option>
-                            <option value="4">4 Credits</option>
-                            <option value="5">5 Credits</option>
-                            <option value="6">6 Credits</option>
-                        </select>
-
-                        <select id="grade">
-                            <option value="" disabled selected>Grade</option>
-                            <option value="4.00">A+ (4.00)</option>
-                            <option value="4.00">A (4.00)</option>
-                            <option value="3.70">A- (3.70)</option>
-                            <option value="3.30">B+ (3.30)</option>
-                            <option value="3.00">B (3.00)</option>
-                            <option value="2.70">B- (2.70)</option>
-                            <option value="2.30">C+ (2.30)</option>
-                            <option value="2.00">C (2.00)</option>
-                            <option value="1.70">C- (1.70)</option>
-                            <option value="1.30">D+ (1.30)</option>
-                            <option value="1.00">D (1.00)</option>
-                            <option value="0.00">E (0.00)</option>
-                            <option value="-1">NC-C</option>
-                            <option value="-1">NC-E</option>
-                            <option value="-1">NE</option>
-                            <option value="-1">F</option>
-                            <option value="-1">Absent</option>
-                            <option value="-1">Medical</option>
-                        </select>
-
-                        <div id="other-uni-box" style="display: none; grid-column: 1 / -1; gap: 10px;">
-                            <select id="other-grade-letter" style="flex: 1;">
-                                <option value="" disabled selected>Select Grade (A to F / Repeat)</option>
-                                <option value="A+">A+</option>
-                                <option value="A">A</option>
-                                <option value="A-">A-</option>
-                                <option value="B+">B+</option>
-                                <option value="B">B</option>
-                                <option value="B-">B-</option>
-                                <option value="C+">C+</option>
-                                <option value="C">C</option>
-                                <option value="C-">C-</option>
-                                <option value="D+">D+</option>
-                                <option value="D">D</option>
-                                <option value="E">E</option>
-                                <option value="F">F (Fail)</option>
-                                <option value="Absent">Absent</option>
-                                <option value="Medical">Medical</option>
-                                <option value="Repeat">Repeat (RA / Absent)</option>
-                            </select>
-                            <input type="number" step="0.01" id="custom-grade-point" placeholder="Enter Grade Point (e.g. 4.0, 3.7)" style="flex: 1;">
-                        </div>
-                    </div>
-                    <button id="add-btn" class="btn-add">Add to List</button>
-                </div>
-
-                <div id="academic-container"></div>
-
-                <div class="glass-card form-section reset-card">
-                    <h3>GPA Data Management & Reset Options</h3>
-                    <div class="reset-grid">
-                        <div>
-                            <h4>Erase Specific Semester</h4>
-                            <div class="erase-select-group">
-                                <select id="erase-year">
-                                    <option value="" disabled selected>Year</option>
-                                    <option value="1">Year 1</option>
-                                    <option value="2">Year 2</option>
-                                    <option value="3">Year 3</option>
-                                    <option value="4">Year 4</option>
-                                </select>
-                                <select id="erase-semester">
-                                    <option value="" disabled selected>Semester</option>
-                                    <option value="1">Sem 1</option>
-                                    <option value="2">Sem 2</option>
-                                </select>
-                            </div>
-                            <button id="erase-sem-btn" class="btn-erase-sem">Erase Semester Data</button>
-                        </div>
-                        <div class="full-reset-box">
-                            <h4>Full Data Reset</h4>
-                            <p>Permanently delete all stored subjects across all years.</p>
-                            <button id="reset-all-btn" class="btn-reset-all">Reset All Data</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- AI PDF Short Note Generator View -->
-            <div id="view-shortnotes" class="sub-interface" style="display: none;">
-                <div style="margin-bottom: 1.5rem;">
-                    <button class="btn-back" id="back-to-hub-shortnotes">⬅ Back to Dashboard</button>
-                </div>
-
-                <div class="header">
-                    <h1>📝 AI PDF Short Note Generator</h1>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Upload a lecture PDF and let Groq AI generate structured short notes instantly</p>
-                </div>
-
-                <div class="glass-card form-section">
-                    <h3>Upload Study Material & Generate Notes</h3>
-                    
-                    <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--input-bg); padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--input-border);">
-                        <label for="note-pdf-upload" style="font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">📄 Select Lecture PDF:</label>
-                        <input type="file" id="note-pdf-upload" accept=".pdf" style="font-size: 0.8rem; cursor: pointer;">
-                        <span id="note-pdf-file-name" style="font-size: 0.75rem; color: #38bdf8; font-weight: 500;"></span>
-                    </div>
-
-                    <div style="margin-bottom: 1rem;">
-                        <label style="font-size: 0.8rem; font-weight: 500; display: block; margin-bottom: 0.4rem;">Custom Note Instructions (Optional):</label>
-                        <input type="text" id="note-custom-prompt" placeholder="E.g., Focus more on definitions, formulas and key takeaways..." style="width: 100%; padding: 0.8rem; border-radius: 0.5rem; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border);">
-                    </div>
-
-                    <button id="generate-notes-btn" class="btn-add" style="width: 100%; margin-top: 0;">✨ Generate Short Notes</button>
-
-                    <div id="note-loading" style="display: none; text-align: center; margin-top: 1.5rem; color: var(--heading-gradient-1);">
-                        <p>⏳ Extracting text and generating short notes using Groq AI... Please wait.</p>
-                    </div>
-
-                    <div id="note-result-section" style="margin-top: 1.5rem; display: none; padding: 1.2rem; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 0.5rem;">
-                        <h4 style="color: var(--heading-gradient-1); margin-bottom: 0.5rem;">📄 Generated Short Notes</h4>
-                        
-                        <textarea id="generated-notes-output" rows="12" readonly style="width: 100%; padding: 0.8rem; border-radius: 0.5rem; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); font-size: 0.85rem; margin-bottom: 0.8rem; resize: vertical;"></textarea>
-                        
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                          <button id="download-notes-docx-btn" class="btn" style="background: #2563eb; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 500;">📄 Download as Word</button>
-                            <button id="download-notes-pdf-btn" class="btn-download" style="font-size: 0.75rem !important; padding: 0.4rem 1rem !important; background: linear-gradient(to right, #16a34a, #22c55e) !important;">📄 Download as PDF</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Plagiarism Checker View -->
-            <div id="view-plagiarism" class="sub-interface" style="display: none;">
-                <div style="margin-bottom: 1.5rem;">
-                    <button class="btn-back" id="back-to-hub-plagiarism">⬅ Back to Dashboard</button>
-                </div>
-
-                <div class="header">
-                    <h1>🔍 Plagiarism Checker & AI Humanizer</h1>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Scan text uniqueness and rewrite robotic content into natural human tone</p>
-                </div>
-
-                <div class="glass-card form-section">
-                    <h3>Paste Your Assignment Draft or Upload PDF</h3>
-                    <textarea id="plagiarism-text" rows="5" placeholder="Paste your essay, report or paragraph here..." style="width: 100%; padding: 1rem; border-radius: 0.5rem; resize: vertical; margin-bottom: 0.8rem;"></textarea>
-                    
-                    <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--input-bg); padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--input-border);">
-                        <label for="pdf-upload" style="font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">📄 Upload PDF Assignment:</label>
-                        <input type="file" id="pdf-upload" accept=".pdf" style="font-size: 0.8rem; cursor: pointer;">
-                        <span id="pdf-file-name" style="font-size: 0.75rem; color: #38bdf8; font-weight: 500;"></span>
-                    </div>
-
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button id="check-plagiarism-btn" class="btn-add" style="flex: 1; margin-top: 0;">Scan for Plagiarism & AI</button>
-                    </div>
-
-                    <div id="plagiarism-result" style="margin-top: 1.5rem; display: none; padding: 1.2rem; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 0.5rem;">
-                        <h4 style="color: var(--heading-gradient-1); margin-bottom: 0.5rem;">📊 Originality & AI Scan Report</h4>
-                        <p id="plagiarism-stats" style="font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem;"></p>
-                        
-                        <div id="humanize-box" style="display: none; border-top: 1px solid var(--card-border); padding-top: 1rem; margin-top: 1rem;">
-                            <h4 style="color: var(--heading-gradient-2); margin-bottom: 0.5rem;">✨ AI Humanized Version</h4>
-                            <p id="humanized-stats" style="font-size: 0.85rem; color: #22c55e; margin-bottom: 0.5rem; font-weight: 500;"></p>
-                            
-                            <textarea id="humanized-output-text" rows="6" readonly style="width: 100%; padding: 0.8rem; border-radius: 0.5rem; background: var(--input-bg); font-size: 0.85rem; margin-bottom: 0.8rem;"></textarea>
-                            
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <button id="copy-humanized-btn" class="btn-download" style="font-size: 0.75rem !important; padding: 0.4rem 1rem !important;">📋 Copy Text</button>
-                                <button id="download-humanized-docx-btn" class="btn" style="background: #2563eb; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 500;">📄 Download as Word</button>
-                                <button id="download-humanized-pdf-btn" class="btn-download" style="font-size: 0.75rem !important; padding: 0.4rem 1rem !important; background: linear-gradient(to right, #16a34a, #22c55e) !important;">📥 Download as PDF</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Footer Card with Real-time Community Reviews -->
-            <div class="glass-card footer-card" style="margin-top: 2rem;">
-                <div class="footer-profile">
-                    <img src="developer.jpeg" alt="Developer" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=Yasho'">
-                    <h2>Developed by</h2>
-                    <h3>Mr.G.K.M.P.Y Ganewaththa</h3>
-                    <p>Bsc(Hons) in Networking & Mobile Computing</p>
-                    <p>Faculty Of IT - Intake 16</p>
-                    <p>Horizon Campus</p>
-                </div>
-
-                <h4>💡 Help Us Improve & Share Your Feedback!</h4>
-                <p class="footer-desc">We'd love to hear your thoughts or feature suggestions to make this app even better.</p>
+            <div class="app-layout-container" style="display: flex; min-height: 100vh;">
                 
-                <div style="margin: 1.5rem 0; text-align: left;">
-                    <h5 style="color: var(--heading-gradient-1); font-size: 0.95rem; margin-bottom: 8px; text-align: center;">💬 Student Community Feedback</h5>
-                    <div id="public-reviews-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; padding-right: 4px;">
-                        <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">Loading student reviews...</div>
+                <!-- 🧭 Persistent Left Sidebar -->
+                <aside class="sidebar" style="width: 260px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border-right: 1px solid var(--card-border); padding: 25px 20px; display: flex; flex-direction: column; justify-content: space-between; position: sticky; top: 0; height: 100vh; z-index: 100;">
+                    <div>
+                        <h2 style="color: var(--heading-gradient-1); font-size: 1.15rem; margin-bottom: 30px; display: flex; align-items: center; gap: 8px;">🚀 Student Hub</h2>
+                        <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px;">
+                            <li><a href="#" onclick="showView('hub'); return false;" style="color: var(--text-color); text-decoration: none; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; transition: background 0.2s;">🏠 Dashboard</a></li>
+                            <li><a href="#" onclick="showView('gpa'); return false;" style="color: var(--text-color); text-decoration: none; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; transition: background 0.2s;">🎓 GPA Tracker</a></li>
+                            <li><a href="#" onclick="showView('shortnotes'); return false;" style="color: var(--text-color); text-decoration: none; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; transition: background 0.2s;">📝 Short Notes AI</a></li>
+                            <li><a href="#" onclick="showView('plagiarism'); return false;" style="color: var(--text-color); text-decoration: none; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; transition: background 0.2s;">🔍 Plagiarism & Humanizer</a></li>
+                        </ul>
                     </div>
-                </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <button onclick="openPricingModal()" class="btn-review" style="width: 100%; font-size: 0.75rem; padding: 0.5rem; cursor: pointer; justify-content: center;">⭐ Upgrade Plan</button>
+                        <button id="logout-btn" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; width: 100%; padding: 0.5rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 500;">🚪 Logout</button>
+                    </div>
+                </aside>
 
-                <div class="footer-btn-group">
-                    <button class="btn-review review-now-btn" style="cursor: pointer;">⭐ Review Now</button>
-                    <a href="https://wa.me/94762068122" target="_blank" class="btn-wa">💬 WhatsApp Contact</a>
-                    <a href="mailto:maleeshaganewatta@gmail.com" target="_blank" class="btn-email">✉️ Email Contact</a>
-                </div>
+                <!-- 💻 Right Dynamic Main Content Area -->
+                <main class="main-content" style="flex: 1; padding: 30px 40px; overflow-y: auto; max-width: 1200px; margin: 0 auto;">
+                    
+                    <!-- Top Greeting Bar -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--card-border);">
+                        <h3 id="welcome-greeting" style="font-size: 0.95rem; color: var(--heading-gradient-1); margin: 0;">👋 Welcome, <span id="user-name">Student</span>!</h3>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Horizon Campus Academic Portal</div>
+                    </div>
+
+                    <!-- Dashboard Hub -->
+                    <div id="dashboard-hub" style="display: block;">
+                        <div style="text-align: center; margin-bottom: 2rem;">
+                            <h1 style="font-size: 2.2rem; font-weight: 600; background: linear-gradient(to right, var(--heading-gradient-1), var(--heading-gradient-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px;">Student Productivity Hub</h1>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Select a tool below to get started with your academic tracking</p>
+                        </div>
+
+                        <div class="feature-cards-grid">
+                            <div class="glass-card feature-card" id="card-gpa">
+                                <div style="font-size: 2.5rem; margin-bottom: 1rem;">🎓</div>
+                                <h2>GPA & Class Tracker</h2>
+                                <p>Calculate your semester GPAs, track cumulative CGPA, analyze progress with charts, and generate professional PDF transcripts.</p>
+                                <button class="btn-launch">Open Tracker ➔</button>
+                            </div>
+
+                            <div class="glass-card feature-card" id="card-shortnotes">
+                                <div style="font-size: 2.5rem; margin-bottom: 1rem;">📝</div>
+                                <h2>AI PDF Short Note Generator</h2>
+                                <p>Upload your lecture or study PDF and instantly generate structured short notes with key points using Groq AI.</p>
+                                <button class="btn-launch">Open Generator ➔</button>
+                            </div>
+
+                            <div class="glass-card feature-card" id="card-plagiarism">
+                                <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔍</div>
+                                <h2>Plagiarism & AI Humanizer</h2>
+                                <p>Scan your essay drafts for originality and instantly humanize robotic or flagged text to sound 100% natural and unique.</p>
+                                <button class="btn-launch">Open Checker ➔</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GPA Tracker View -->
+                    <div id="view-gpa" class="sub-interface" style="display: none;">
+                        <div style="margin-bottom: 1.5rem;">
+                            <button class="btn-back" id="back-to-hub-gpa">⬅ Back to Dashboard</button>
+                        </div>
+
+                        <div class="header">
+                            <h1>🎓 GPA & Class Tracker</h1>
+                            
+                            <div style="margin: 10px auto; max-width: 380px;">
+                                <select id="university-selector" style="padding: 0.6rem; border-radius: 0.5rem; font-size: 0.85rem; width: 100%; cursor: pointer;">
+                                    <option value="horizon" selected>Horizon Campus Student (Auto Grading)</option>
+                                    <option value="other">Other University Student (Select Grade & Custom Point)</option>
+                                </select>
+                            </div>
+
+                            <div style="margin: 10px auto; max-width: 380px; display: flex; gap: 8px;">
+                                <input type="text" id="degree-name" placeholder="Enter Degree Name" style="flex: 1;">
+                                <button id="profile-ok-btn" class="btn-download" style="margin-top: 0; padding: 0.5rem 1.2rem !important; cursor: pointer;">OK</button>
+                            </div>
+
+                            <div style="margin-top: 15px;">
+                                <button id="download-pdf" class="btn-download">🎓 Download Your GPA Certificate</button>
+                            </div>
+                        </div>
+
+                        <div class="dashboard">
+                            <div class="glass-card dash-box">
+                                <h2>Overall Cumulative CGPA</h2>
+                                <p id="cgpa-display" class="highlight-text">0.00</p>
+                            </div>
+                            <div class="glass-card dash-box">
+                                <h2>Overall Predicted Class</h2>
+                                <p id="class-display" class="class-text">Pending...</p>
+                            </div>
+                        </div>
+
+                        <div id="goal-section" class="glass-card form-section">
+                            <h3>Academic Goals & Next Class Tracker</h3>
+                            <div id="goal-content"></div>
+                        </div>
+
+                        <div class="glass-card form-section">
+                            <h3>📈 CGPA & Semester Progress Analytics</h3>
+                            <div style="position: relative; height: 260px; width: 100%;">
+                                <canvas id="gpaChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="glass-card form-section">
+                            <h3 id="form-title">Add New Subject</h3>
+                            <div class="form-grid">
+                                <input type="text" id="subject-name" placeholder="Subject Name (E.g. Data Structures)">
+                                
+                                <select id="subject-year">
+                                    <option value="" disabled selected>Select Year</option>
+                                    <option value="1">1st Year</option>
+                                    <option value="2">2nd Year</option>
+                                    <option value="3">3rd Year</option>
+                                    <option value="4">4th Year</option>
+                                </select>
+
+                                <select id="subject-semester">
+                                    <option value="" disabled selected>Select Semester</option>
+                                    <option value="1">1st Semester</option>
+                                    <option value="2">2nd Semester</option>
+                                </select>
+
+                                <select id="credit">
+                                    <option value="" disabled selected>Credits</option>
+                                    <option value="1">1 Credit</option>
+                                    <option value="2">2 Credits</option>
+                                    <option value="3">3 Credits</option>
+                                    <option value="4">4 Credits</option>
+                                    <option value="5">5 Credits</option>
+                                    <option value="6">6 Credits</option>
+                                </select>
+
+                                <select id="grade">
+                                    <option value="" disabled selected>Grade</option>
+                                    <option value="4.00">A+ (4.00)</option>
+                                    <option value="4.00">A (4.00)</option>
+                                    <option value="3.70">A- (3.70)</option>
+                                    <option value="3.30">B+ (3.30)</option>
+                                    <option value="3.00">B (3.00)</option>
+                                    <option value="2.70">B- (2.70)</option>
+                                    <option value="2.30">C+ (2.30)</option>
+                                    <option value="2.00">C (2.00)</option>
+                                    <option value="1.70">C- (1.70)</option>
+                                    <option value="1.30">D+ (1.30)</option>
+                                    <option value="1.00">D (1.00)</option>
+                                    <option value="0.00">E (0.00)</option>
+                                    <option value="-1">NC-C</option>
+                                    <option value="-1">NC-E</option>
+                                    <option value="-1">NE</option>
+                                    <option value="-1">F</option>
+                                    <option value="-1">Absent</option>
+                                    <option value="-1">Medical</option>
+                                </select>
+
+                                <div id="other-uni-box" style="display: none; grid-column: 1 / -1; gap: 10px;">
+                                    <select id="other-grade-letter" style="flex: 1;">
+                                        <option value="" disabled selected>Select Grade (A to F / Repeat)</option>
+                                        <option value="A+">A+</option>
+                                        <option value="A">A</option>
+                                        <option value="A-">A-</option>
+                                        <option value="B+">B+</option>
+                                        <option value="B">B</option>
+                                        <option value="B-">B-</option>
+                                        <option value="C+">C+</option>
+                                        <option value="C">C</option>
+                                        <option value="C-">C-</option>
+                                        <option value="D+">D+</option>
+                                        <option value="D">D</option>
+                                        <option value="E">E</option>
+                                        <option value="F">F (Fail)</option>
+                                        <option value="Absent">Absent</option>
+                                        <option value="Medical">Medical</option>
+                                        <option value="Repeat">Repeat (RA / Absent)</option>
+                                    </select>
+                                    <input type="number" step="0.01" id="custom-grade-point" placeholder="Enter Grade Point (e.g. 4.0, 3.7)" style="flex: 1;">
+                                </div>
+                            </div>
+                            <button id="add-btn" class="btn-add">Add to List</button>
+                        </div>
+
+                        <div id="academic-container"></div>
+
+                        <div class="glass-card form-section reset-card">
+                            <h3>GPA Data Management & Reset Options</h3>
+                            <div class="reset-grid">
+                                <div>
+                                    <h4>Erase Specific Semester</h4>
+                                    <div class="erase-select-group">
+                                        <select id="erase-year">
+                                            <option value="" disabled selected>Year</option>
+                                            <option value="1">Year 1</option>
+                                            <option value="2">Year 2</option>
+                                            <option value="3">Year 3</option>
+                                            <option value="4">Year 4</option>
+                                        </select>
+                                        <select id="erase-semester">
+                                            <option value="" disabled selected>Semester</option>
+                                            <option value="1">Sem 1</option>
+                                            <option value="2">Sem 2</option>
+                                        </select>
+                                    </div>
+                                    <button id="erase-sem-btn" class="btn-erase-sem">Erase Semester Data</button>
+                                </div>
+                                <div class="full-reset-box">
+                                    <h4>Full Data Reset</h4>
+                                    <p>Permanently delete all stored subjects across all years.</p>
+                                    <button id="reset-all-btn" class="btn-reset-all">Reset All Data</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI PDF Short Note Generator View -->
+                    <div id="view-shortnotes" class="sub-interface" style="display: none;">
+                        <div style="margin-bottom: 1.5rem;">
+                            <button class="btn-back" id="back-to-hub-shortnotes">⬅ Back to Dashboard</button>
+                        </div>
+
+                        <div class="header">
+                            <h1>📝 AI PDF Short Note Generator</h1>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Upload a lecture PDF and let Groq AI generate structured short notes instantly</p>
+                        </div>
+
+                        <div class="glass-card form-section">
+                            <h3>Upload Study Material & Generate Notes</h3>
+                            
+                            <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--input-bg); padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--input-border);">
+                                <label for="note-pdf-upload" style="font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">📄 Select Lecture PDF:</label>
+                                <input type="file" id="note-pdf-upload" accept=".pdf" style="font-size: 0.8rem; cursor: pointer;">
+                                <span id="note-pdf-file-name" style="font-size: 0.75rem; color: #38bdf8; font-weight: 500;"></span>
+                            </div>
+
+                            <div style="margin-bottom: 1rem;">
+                                <label style="font-size: 0.8rem; font-weight: 500; display: block; margin-bottom: 0.4rem;">Custom Note Instructions (Optional):</label>
+                                <input type="text" id="note-custom-prompt" placeholder="E.g., Focus more on definitions, formulas and key takeaways..." style="width: 100%; padding: 0.8rem; border-radius: 0.5rem; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border);">
+                            </div>
+
+                            <button id="generate-notes-btn" class="btn-add" style="width: 100%; margin-top: 0;">✨ Generate Short Notes</button>
+
+                            <div id="note-loading" style="display: none; text-align: center; margin-top: 1.5rem; color: var(--heading-gradient-1);">
+                                <p>⏳ Extracting text and generating short notes using Groq AI... Please wait.</p>
+                            </div>
+
+                            <div id="note-result-section" style="margin-top: 1.5rem; display: none; padding: 1.2rem; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 0.5rem;">
+                                <h4 style="color: var(--heading-gradient-1); margin-bottom: 0.5rem;">📄 Generated Short Notes</h4>
+                                
+                                <textarea id="generated-notes-output" rows="12" readonly style="width: 100%; padding: 0.8rem; border-radius: 0.5rem; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); font-size: 0.85rem; margin-bottom: 0.8rem; resize: vertical;"></textarea>
+                                
+                                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                    <button id="download-notes-docx-btn" class="btn" style="background: #2563eb; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 500;">📄 Download as Word</button>
+                                    <button id="download-notes-pdf-btn" class="btn-download" style="font-size: 0.75rem !important; padding: 0.4rem 1rem !important; background: linear-gradient(to right, #16a34a, #22c55e) !important;">📄 Download as PDF</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Plagiarism Checker View -->
+                    <div id="view-plagiarism" class="sub-interface" style="display: none;">
+                        <div style="margin-bottom: 1.5rem;">
+                            <button class="btn-back" id="back-to-hub-plagiarism">⬅ Back to Dashboard</button>
+                        </div>
+
+                        <div class="header">
+                            <h1>🔍 Plagiarism Checker & AI Humanizer</h1>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Scan text uniqueness and rewrite robotic content into natural human tone</p>
+                        </div>
+
+                        <div class="glass-card form-section">
+                            <h3>Paste Your Assignment Draft or Upload PDF</h3>
+                            <textarea id="plagiarism-text" rows="5" placeholder="Paste your essay, report or paragraph here..." style="width: 100%; padding: 1rem; border-radius: 0.5rem; resize: vertical; margin-bottom: 0.8rem;"></textarea>
+                            
+                            <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--input-bg); padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--input-border);">
+                                <label for="pdf-upload" style="font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">📄 Upload PDF Assignment:</label>
+                                <input type="file" id="pdf-upload" accept=".pdf" style="font-size: 0.8rem; cursor: pointer;">
+                                <span id="pdf-file-name" style="font-size: 0.75rem; color: #38bdf8; font-weight: 500;"></span>
+                            </div>
+
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button id="check-plagiarism-btn" class="btn-add" style="flex: 1; margin-top: 0;">Scan for Plagiarism & AI</button>
+                            </div>
+
+                            <div id="plagiarism-result" style="margin-top: 1.5rem; display: none; padding: 1.2rem; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 0.5rem;">
+                                <h4 style="color: var(--heading-gradient-1); margin-bottom: 0.5rem;">📊 Originality & AI Scan Report</h4>
+                                <p id="plagiarism-stats" style="font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem;"></p>
+                                
+                                <div id="humanize-box" style="display: none; border-top: 1px solid var(--card-border); padding-top: 1rem; margin-top: 1rem;">
+                                    <h4 style="color: var(--heading-gradient-2); margin-bottom: 0.5rem;">✨ AI Humanized Version</h4>
+                                    <p id="humanized-stats" style="font-size: 0.85rem; color: #22c55e; margin-bottom: 0.5rem; font-weight: 500;"></p>
+                                    
+                                    <textarea id="humanized-output-text" rows="6" readonly style="width: 100%; padding: 0.8rem; border-radius: 0.5rem; background: var(--input-bg); font-size: 0.85rem; margin-bottom: 0.8rem;"></textarea>
+                                    
+                                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                        <button id="copy-humanized-btn" class="btn-download" style="font-size: 0.75rem !important; padding: 0.4rem 1rem !important;">📋 Copy Text</button>
+                                        <button id="download-humanized-docx-btn" class="btn" style="background: #2563eb; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 500;">📄 Download as Word</button>
+                                        <button id="download-humanized-pdf-btn" class="btn-download" style="font-size: 0.75rem !important; padding: 0.4rem 1rem !important; background: linear-gradient(to right, #16a34a, #22c55e) !important;">📥 Download as PDF</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer Card with Real-time Community Reviews -->
+                    <div class="glass-card footer-card" style="margin-top: 3rem;">
+                        <div class="footer-profile">
+                            <img src="developer.jpeg" alt="Developer" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=Yasho'">
+                            <h2>Developed by</h2>
+                            <h3>Mr.G.K.M.P.Y Ganewaththa</h3>
+                            <p>Bsc(Hons) in Networking & Mobile Computing</p>
+                            <p>Faculty Of IT - Intake 16</p>
+                            <p>Horizon Campus</p>
+                        </div>
+
+                        <h4>💡 Help Us Improve & Share Your Feedback!</h4>
+                        <p class="footer-desc">We'd love to hear your thoughts or feature suggestions to make this app even better.</p>
+                        
+                        <div style="margin: 1.5rem 0; text-align: left;">
+                            <h5 style="color: var(--heading-gradient-1); font-size: 0.95rem; margin-bottom: 8px; text-align: center;">💬 Student Community Feedback</h5>
+                            <div id="public-reviews-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; padding-right: 4px;">
+                                <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">Loading student reviews...</div>
+                            </div>
+                        </div>
+
+                        <div class="footer-btn-group">
+                            <button class="btn-review review-now-btn" style="cursor: pointer;">⭐ Review Now</button>
+                            <a href="https://wa.me/94762068122" target="_blank" class="btn-wa">💬 WhatsApp Contact</a>
+                            <a href="mailto:maleeshaganewatta@gmail.com" target="_blank" class="btn-email">✉️ Email Contact</a>
+                        </div>
+                    </div>
+
+                </main>
             </div>
-            
         </div>
+        
     </div>
 
     <script type="module" src="app.js?v=48"></script>
