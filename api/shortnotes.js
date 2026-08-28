@@ -29,14 +29,14 @@ module.exports = async (req, res) => {
                 messages: [
                     {
                         role: "system",
-                        content: "You are an expert academic assistant. Create well-structured, beautiful short notes with key definitions, core concepts, bullet points, and important takeaways based on the provided lecture text."
+                        content: "You are an expert academic assistant and professional note-taker. Create exceptionally well-structured, clear, and comprehensive academic short notes with key definitions, core concepts, bullet points, and important takeaways based on the provided lecture text."
                     },
                     {
                         role: "user",
                         content: `${prompt}\n\nStudy Material / Lecture Text:\n${text}`
                     }
                 ],
-                temperature: 0.5,
+                temperature: 0.3,
                 max_tokens: 4000
             })
         });
