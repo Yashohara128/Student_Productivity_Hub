@@ -1,5 +1,5 @@
 // ==========================================
-// STUDENT PRODUCTIVITY HUB - APP.JS (100% FULL & COMPLETE WITH WORD DOWNLOAD)
+// STUDENT PRODUCTIVITY HUB - APP.JS (100% FULL & COMPLETE WITH AI AGENT & WORD DOWNLOAD)
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -95,7 +95,7 @@ function updateDynamicGreeting(userName) {
     else { timeGreeting = "Good Night"; emoji = "🌙"; }
 
     const formattedDate = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    greetingEl.innerHTML = `${emoji} ${timeGreeting}, <span style="color: var(--text-color); font-weight: 600;">${userName}</span>! <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 2px;">📅 ${formattedDate}</span>`;
+    greetingEl.innerHTML = `${emoji} ${timeGreeting}, <span style="color: var(--text-color); font-weight: 600;">${userName}</span>!`;
 }
 
 // --- View Switcher ---
@@ -241,6 +241,79 @@ window.startPayHerePayment = function(planName, amount, wordLimit) {
     payhere.startPayment(payment);
 };
 
+// --- PERSISTENT AI STUDY AGENT CHAT LOGIC ---
+const aiChatMessages = document.getElementById('ai-chat-messages');
+const aiChatInput = document.getElementById('ai-chat-input');
+const aiSendBtn = document.getElementById('ai-send-btn');
+const aiClearBtn = document.getElementById('ai-clear-btn');
+
+async function sendQueryToAIAgent() {
+    const text = aiChatInput.value.trim();
+    if (!text) return;
+
+    aiChatMessages.innerHTML += `
+        <div style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); padding: 10px; border-radius: 8px; color: var(--text-color); align-self: flex-end; max-width: 90%;">
+            <b>You:</b> ${text}
+        </div>
+    `;
+    aiChatInput.value = '';
+    aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+
+    const loadingId = 'ai-loading-' + Date.now();
+    aiChatMessages.innerHTML += `
+        <div id="${loadingId}" style="background: var(--input-bg); padding: 8px 12px; border-radius: 8px; color: var(--text-muted); font-style: italic;">
+            🤖 AI Agent is thinking...
+        </div>
+    `;
+    aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+
+    try {
+        const response = await fetch('/api/chat', {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text })
+        });
+
+        const data = await response.json();
+        document.getElementById(loadingId).remove();
+
+        if (data.error) {
+            aiChatMessages.innerHTML += `<div style="color: #ef4444; padding: 8px;">❌ Error: ${data.error}</div>`;
+            return;
+        }
+
+        aiChatMessages.innerHTML += `
+            <div style="background: var(--input-bg); border: 1px solid var(--input-border); padding: 10px; border-radius: 8px; color: var(--text-color); line-height: 1.5;">
+                <b>🤖 AI Agent:</b><br>${data.reply.replace(/\n/g, '<br>')}
+            </div>
+        `;
+    } catch (err) {
+        if (document.getElementById(loadingId)) document.getElementById(loadingId).remove();
+        aiChatMessages.innerHTML += `<div style="color: #ef4444; padding: 8px;">❌ Failed to connect to AI Agent.</div>`;
+    } finally {
+        aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+    }
+}
+
+if (aiSendBtn) aiSendBtn.addEventListener('click', sendQueryToAIAgent);
+if (aiChatInput) {
+    aiChatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendQueryToAIAgent();
+        }
+    });
+}
+if (aiClearBtn) {
+    aiClearBtn.addEventListener('click', () => {
+        aiChatMessages.innerHTML = `
+            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 10px; border-radius: 8px; color: var(--text-color);">
+                🧹 Chat cleared. How can I help you with your studies?
+            </div>
+        `;
+    });
+}
+
 // --- AI PDF SHORT NOTE GENERATOR LOGIC ---
 const notePdfUpload = document.getElementById('note-pdf-upload');
 const notePdfFileName = document.getElementById('note-pdf-file-name');
@@ -248,8 +321,7 @@ const generateNotesBtn = document.getElementById('generate-notes-btn');
 const noteLoading = document.getElementById('note-loading');
 const noteResultSection = document.getElementById('note-result-section');
 const generatedNotesOutput = document.getElementById('generated-notes-output');
-const copyNotesBtn = document.getElementById('copy-notes-btn');
-const downloadNotesDocxBtn = document.getElementById('download-notes-docx-btn'); // 🟢 Word Download Button
+const downloadNotesDocxBtn = document.getElementById('download-notes-docx-btn');
 const downloadNotesPdfBtn = document.getElementById('download-notes-pdf-btn');
 
 let extractedNoteText = "";
@@ -326,14 +398,6 @@ if (generateNotesBtn) {
             generateNotesBtn.disabled = false;
             generateNotesBtn.innerText = "✨ Generate Short Notes";
         }
-    });
-}
-
-if (copyNotesBtn) {
-    copyNotesBtn.addEventListener('click', () => {
-        generatedNotesOutput.select();
-        navigator.clipboard.writeText(generatedNotesOutput.value);
-        alert("📋 Short notes copied to clipboard successfully!");
     });
 }
 
