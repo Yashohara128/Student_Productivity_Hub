@@ -325,7 +325,10 @@ if (chatSendBtn) {
 }
 if (chatInputText) {
     chatInputText.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); chatSendBtn.click(); }
+        // No auto-send on enter here, so user can do next line naturally
+        if (e.key === 'Enter' && !e.shiftKey) {
+            // let native browser behaviour happen (new line)
+        }
     });
 }
 
@@ -627,14 +630,14 @@ function openChatRoom(facultyName) {
 // ==========================================
 
 
-// --- 🟢 AI Agent Open / Close Toggle Logic (Strict Fixed Logic) ---
+// --- 🟢 AI Agent Open / Close Toggle Logic ---
 const aiToggleBtn = document.getElementById('ai-toggle-btn');
 const aiAgentSidebar = document.getElementById('ai-agent-sidebar');
 
 if (aiToggleBtn && aiAgentSidebar) {
     aiToggleBtn.addEventListener('click', () => {
         if (window.innerWidth <= 768) {
-            // Mobile: Use only 'mobile-open' class to toggle drawer
+            // Mobile toggle
             aiAgentSidebar.classList.toggle('mobile-open');
             if (aiAgentSidebar.classList.contains('mobile-open')) {
                 aiToggleBtn.innerHTML = "✕ Close Chat";
@@ -642,7 +645,7 @@ if (aiToggleBtn && aiAgentSidebar) {
                 aiToggleBtn.innerHTML = "🤖 Open AI Chat";
             }
         } else {
-            // Desktop: Use only 'collapsed' class to hide sidebar
+            // Desktop toggle
             aiAgentSidebar.classList.toggle('collapsed');
             if (aiAgentSidebar.classList.contains('collapsed')) {
                 aiToggleBtn.innerHTML = "🤖 Open AI Chat";
@@ -889,14 +892,16 @@ async function sendQueryToAIAgent() {
 }
 
 if (aiSendBtn) aiSendBtn.addEventListener('click', sendQueryToAIAgent);
+
+// 🟢 AI Chat Next Line logic
 if (aiChatInput) {
     aiChatInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendQueryToAIAgent();
+            // Do not auto send, let it go to next line
         }
     });
 }
+
 if (aiClearBtn) {
     aiClearBtn.addEventListener('click', () => {
         const activeStudentName = getStudentFirstName();
