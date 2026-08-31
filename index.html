@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Productivity Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=51">
+    <link rel="stylesheet" href="style.css?v=52">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -23,7 +23,7 @@
 
     <div style="position: fixed; top: 15px; right: 20px; z-index: 9999;">
         <select id="theme-selector" style="padding: 0.4rem 0.6rem; border-radius: 0.4rem; font-size: 0.75rem; cursor: pointer;">
-            <option value="system">System Defult</option>
+            <option value="system">System Default</option>
             <option value="dark">Dark Mode</option>
             <option value="light">Light Mode</option>
         </select>
@@ -202,11 +202,11 @@
                                 <button class="btn-launch">Open Checker ➔</button>
                             </div>
 
-                            <!-- 🟢 මෙන්න අලුතෙන් එකතු කළ Virtual Room Card එක -->
+                            <!-- 🟢 Virtual Room Card -->
                             <div class="glass-card feature-card" id="card-virtual-room">
                                 <div style="font-size: 2.5rem; margin-bottom: 1rem;">💬</div>
                                 <h2>Student Virtual Room</h2>
-                                <h4>[Horizon Studnets Only]</h4>
+                                <h4>[Horizon Students Only]</h4>
                                 <p>Join your faculty's exclusive real-time virtual chat room to discuss academics and share resources securely & safely.</p>
                                 <button class="btn-launch">Join Room ➔</button>
                             </div>
@@ -433,7 +433,7 @@
                         </div>
                     </div>
                                 
-             <!-- AI PDF Short Note Generator View -->
+                    <!-- AI PDF Short Note Generator View -->
                     <div id="view-shortnotes" class="sub-interface" style="display: none;">
                         <div style="margin-bottom: 1.5rem;">
                             <button class="btn-back" id="back-to-hub-shortnotes">⬅ Back to Dashboard</button>
@@ -533,12 +533,19 @@
                         </div>
                     </div>
 
-                    <!-- 🟢 Virtual Room (Chat Interface) View (මෙතැන display: none; පමණක් තිබිය යුතුය) -->
-                    <div id="view-virtual-room" class="sub-interface" style="display: none; height: 85vh; flex-direction: column;">
-                        <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                    <!-- 🟢 Virtual Room (Chat Interface) View -->
+                    <div id="view-virtual-room" class="sub-interface" style="display: none; height: 75vh; flex-direction: column; justify-content: space-between;">
+                        
+                        <!-- Header with Leave Button -->
+                        <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                             <button class="btn-back" id="back-to-hub-room">⬅ Back to Dashboard</button>
-                            <div style="font-size: 0.8rem; background: rgba(56, 189, 248, 0.15); padding: 5px 12px; border-radius: 20px; color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
-                                <b id="active-faculty-label">Loading Room...</b>
+                            
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="font-size: 0.8rem; background: rgba(56, 189, 248, 0.15); padding: 5px 12px; border-radius: 20px; color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
+                                    <b id="active-faculty-label">Loading Room...</b>
+                                </div>
+                                <!-- Room Logout / Leave Button -->
+                                <button id="leave-room-btn" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.3s;">🚪 Leave</button>
                             </div>
                         </div>
 
@@ -549,14 +556,15 @@
                             </div>
                         </div>
 
-                        <!-- Chat Input Area -->
-                        <div class="glass-card" style="display: flex; gap: 10px; padding: 12px; align-items: center;">
-                            <input type="text" id="chat-input-text" placeholder="Type a message... (Emails & Phone numbers are blocked)" style="flex: 1; margin: 0; padding: 12px;">
+                        <!-- 🟢 Chat Input Area (Fixed Size & Layout) -->
+                        <div class="glass-card" style="display: flex; gap: 10px; padding: 12px; align-items: center; flex-shrink: 0;">
+                            <input type="text" id="chat-input-text" placeholder="Type a message... (Emails & Phone numbers are blocked)" style="flex: 1; min-width: 50px; margin: 0; padding: 12px; font-size: 0.9rem; border-radius: 8px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); outline: none;">
+                            
                             <!-- Media Upload Button (Icon) -->
-                            <button id="chat-media-btn" style="background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-color); padding: 10px 15px; border-radius: 8px; cursor: pointer;">📷</button>
+                            <button id="chat-media-btn" style="flex-shrink: 0; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-color); padding: 10px 15px; border-radius: 8px; cursor: pointer;">📷</button>
                             <input type="file" id="chat-media-input" accept="image/*,application/pdf" style="display: none;">
                             
-                            <button id="chat-send-btn" class="btn-add" style="margin: 0; padding: 10px 20px;">Send</button>
+                            <button id="chat-send-btn" style="flex-shrink: 0; width: auto !important; min-width: 100px; background: #3b82f6; color: white; border: none; padding: 11px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">Send ➤</button>
                         </div>
                     </div>
 
@@ -594,6 +602,6 @@
         
     </div>
 
-    <script type="module" src="app.js?v=51"></script>
+    <script type="module" src="app.js?v=52"></script>
 </body>
 </html>
