@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Student Productivity Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=67">
+    <link rel="stylesheet" href="style.css?v=68">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script type="text/javascript" src="https://www.payhere.lk/lib/payhere.js"></script>
     <style>
-        /* 🟢 Mobile CSS Fixes (Strict Overlay Drawer & Floating Button) */
-        
+        /* 🟢 App Layout Base */
         .app-layout-container {
             display: flex;
             height: 100vh;
@@ -27,7 +26,34 @@
             overflow-y: auto;
             height: 100vh;
             width: 100%;
-            position: relative; /* Fix for mobile layout push */
+            transition: padding 0.3s ease;
+        }
+
+        /* 🟢 AI Agent Sidebar Base (Desktop) */
+        .ai-agent-sidebar {
+            width: 320px;
+            min-width: 320px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            border-right: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100vh;
+            z-index: 100;
+            transition: all 0.3s ease-in-out;
+            overflow: hidden;
+        }
+
+        /* 🟢 Desktop Collapsed State (Fixes the Blank Space Issue) */
+        @media (min-width: 769px) {
+            .ai-agent-sidebar.collapsed {
+                width: 0 !important;
+                min-width: 0 !important;
+                border-right: none !important;
+                opacity: 0;
+                padding: 0 !important;
+            }
         }
 
         /* The toggle button stays absolutely fixed to the screen */
@@ -35,45 +61,41 @@
             position: fixed !important;
             bottom: 20px !important;
             left: 20px !important;
-            z-index: 999999 !important; /* Highest z-index */
+            z-index: 999999 !important;
         }
 
+        /* 🟢 Mobile Responsive & Drawer Styles (Fixes the Freeze Issue) */
         @media (max-width: 768px) {
             .main-content {
                 padding: 15px 10px !important; 
             }
 
-            /* Make Sidebar an absolute overlay, never flex-shrink the main content */
             .ai-agent-sidebar {
                 position: fixed !important;
                 top: 0 !important;
-                left: -100% !important; /* Strictly hidden */
+                left: -100% !important; /* Hidden off-screen */
                 width: 85% !important;
                 max-width: 320px !important;
-                height: 100vh !important;
-                transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
                 z-index: 99999 !important;
-                background: var(--card-bg) !important;
                 box-shadow: 5px 0 25px rgba(0,0,0,0.8) !important;
-                margin-left: 0 !important;
+                opacity: 1 !important; /* Ensure it is visible when open */
+                border-right: none !important;
             }
             
             .ai-agent-sidebar.mobile-open {
                 left: 0 !important; /* Slide in smoothly */
             }
 
-            /* Chat Input Enhancements for Mobile */
             #chat-input-text {
                 padding: 12px 14px !important;
                 font-size: 0.95rem !important;
-                min-width: 80px !important; /* Prevent it from disappearing completely */
+                min-width: 80px !important;
             }
             
             #chat-messages-container > div {
                 max-width: 90% !important; 
             }
 
-            /* Give breathing room above the absolute AI button so footer isn't blocked */
             .footer-card {
                 margin-bottom: 80px !important; 
             }
@@ -197,8 +219,8 @@
         <div id="app-section" style="display: none;">
             <div class="app-layout-container">
                 
-                <!-- 🤖 Persistent Left AI Study Agent Sidebar (Default Closed) -->
-                <aside id="ai-agent-sidebar" class="ai-agent-sidebar collapsed" style="min-width: 320px; border-right: 1px solid var(--card-border); display: flex; flex-direction: column; justify-content: space-between;">
+                <!-- 🤖 Persistent Left AI Study Agent Sidebar -->
+                <aside id="ai-agent-sidebar" class="ai-agent-sidebar collapsed">
                     <div style="padding: 15px 20px; border-bottom: 1px solid var(--card-border); display: flex; align-items: center; justify-content: space-between;">
                         <h3 style="color: var(--heading-gradient-1); font-size: 1rem; margin: 0; display: flex; align-items: center; gap: 8px;">AI Study Agent</h3>
                         <span style="font-size: 0.65rem; background: #22c55e; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 600;">ONLINE</span>
@@ -607,10 +629,10 @@
                     </div>
 
                     <!-- 🟢 Virtual Room (Chat Interface) View -->
-                    <div id="view-virtual-room" class="sub-interface" style="display: none; height: 86vh; flex-direction: column; justify-content: space-between;">
+                    <div id="view-virtual-room" class="sub-interface" style="display: none; height: 85vh; flex-direction: column; justify-content: space-between;">
                         
                         <!-- Header with Leave Button, Clear Chat & Disappearing Timer -->
-                        <div style="margin-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <div style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
                             <button class="btn-back" id="back-to-hub-room" style="padding: 6px 12px; font-size: 0.8rem;">⬅ Back</button>
                             
                             <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
@@ -623,13 +645,13 @@
                                 </select>
 
                                 <!-- 🧹 Clear Chat Button -->
-                                <button id="clear-my-chat-btn" style="background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); color: #a855f7; padding: 5px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: 0.3s;" title="Clear chat view for you only">Clear Chat Your Currently Log Device</button>
+                                <button id="clear-my-chat-btn" style="background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); color: #a855f7; padding: 5px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: 0.3s;" title="Clear chat view for you only">🧹 Clear Chat</button>
 
                                 <div style="font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); padding: 5px 10px; border-radius: 12px; color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
                                     <b id="active-faculty-label">Room</b>
                                 </div>
                                 
-                                <button id="leave-room-btn" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 5px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Leave Virtual Room</button>
+                                <button id="leave-room-btn" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 5px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">🚪 Leave</button>
                             </div>
                         </div>
 
@@ -725,7 +747,7 @@
                         <p class="footer-desc">We'd love to hear your thoughts or feature suggestions to make this app even better.</p>
                         
                         <div style="margin: 1.5rem 0; text-align: left;">
-                            <h5 style="color: var(--heading-gradient-1); font-size: 0.95rem; margin-bottom: 8px; text-align: center;">Student Community Feedback</h5>
+                            <h5 style="color: var(--heading-gradient-1); font-size: 0.95rem; margin-bottom: 8px; text-align: center;">💬 Student Community Feedback</h5>
                             <div id="public-reviews-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; padding-right: 4px;">
                                 <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">Loading student reviews...</div>
                             </div>
@@ -744,6 +766,6 @@
         
     </div>
 
-    <script type="module" src="app.js?v=67"></script>
+    <script type="module" src="app.js?v=68"></script>
 </body>
 </html>
