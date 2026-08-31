@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Productivity Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=52">
+    <link rel="stylesheet" href="style.css?v=53">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -153,6 +153,7 @@
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
                             <button id="ai-clear-btn" style="background: none; border: none; color: var(--text-muted); font-size: 0.7rem; cursor: pointer;">Clear Chat</button>
+                            <!-- NOTE: Old Logout button still here inside sidebar -->
                             <button id="logout-btn" style="background: none; border: none; color: #ef4444; font-size: 0.75rem; cursor: pointer;">🚪 Logout</button>
                         </div>
                     </div>
@@ -161,9 +162,14 @@
                 <!-- 💻 Right Dynamic Main Content Area -->
                 <main class="main-content" style="flex: 1; padding: 30px 40px; overflow-y: auto; height: 100vh;">
                     
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--card-border);">
+                    <!-- 🟢 UPDATED: Main Header with Upgrade and Global Logout Button -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--card-border); flex-wrap: wrap; gap: 10px;">
                         <h3 id="welcome-greeting" style="font-size: 0.95rem; color: var(--heading-gradient-1); margin: 0;">👋 Welcome, <span id="user-name">Student</span>!</h3>
-                        <button onclick="openPricingModal()" class="btn-review" style="font-size: 0.7rem; padding: 0.3rem 0.6rem; cursor: pointer;">⭐ Upgrade Plan</button>
+                        
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button onclick="openPricingModal()" class="btn-review" style="font-size: 0.75rem; padding: 0.4rem 0.8rem; cursor: pointer; border-radius: 6px;">⭐ Upgrade Plan</button>
+                            <button id="main-logout-btn" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: 0.3s;">🚪 Logout</button>
+                        </div>
                     </div>
 
                     <!-- Dashboard Hub -->
@@ -556,15 +562,14 @@
                             </div>
                         </div>
 
-                        <!-- 🟢 Chat Input Area (Fixed Size & Layout) -->
-                        <div class="glass-card" style="display: flex; gap: 10px; padding: 12px; align-items: center; flex-shrink: 0;">
-                            <input type="text" id="chat-input-text" placeholder="Type a message... (Emails & Phone numbers are blocked)" style="flex: 1; min-width: 50px; margin: 0; padding: 12px; font-size: 0.9rem; border-radius: 8px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); outline: none;">
+                        <!-- 🟢 Chat Input Area (Mobile Friendly & WhatsApp Style) -->
+                        <div class="glass-card" style="display: flex; gap: 6px; padding: 8px 10px; align-items: center; flex-shrink: 0; border-radius: 30px;">
+                            <input type="text" id="chat-input-text" placeholder="Message..." style="flex: 1; min-width: 50px; margin: 0; padding: 10px 16px; font-size: 0.95rem; border-radius: 20px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); outline: none;">
                             
-                            <!-- Media Upload Button (Icon) -->
-                            <button id="chat-media-btn" style="flex-shrink: 0; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-color); padding: 10px 15px; border-radius: 8px; cursor: pointer;">📷</button>
+                            <button id="chat-media-btn" style="flex-shrink: 0; background: transparent; border: none; color: var(--text-muted); padding: 8px; cursor: pointer; font-size: 1.4rem; display: flex; align-items: center; justify-content: center;">📷</button>
                             <input type="file" id="chat-media-input" accept="image/*,application/pdf" style="display: none;">
                             
-                            <button id="chat-send-btn" style="flex-shrink: 0; width: auto !important; min-width: 100px; background: #3b82f6; color: white; border: none; padding: 11px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">Send ➤</button>
+                            <button id="chat-send-btn" style="flex-shrink: 0; width: 42px; height: 42px; background: linear-gradient(135deg, #38bdf8, #2563eb); color: white; border: none; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; padding-left: 3px; cursor: pointer; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">➤</button>
                         </div>
                     </div>
 
@@ -602,6 +607,6 @@
         
     </div>
 
-    <script type="module" src="app.js?v=52"></script>
+    <script type="module" src="app.js?v=53"></script>
 </body>
 </html>
