@@ -323,14 +323,6 @@ if (chatSendBtn) {
         }
     });
 }
-if (chatInputText) {
-    chatInputText.addEventListener('keydown', (e) => {
-        // No auto-send on enter here, so user can do next line naturally
-        if (e.key === 'Enter' && !e.shiftKey) {
-            // let native browser behaviour happen (new line)
-        }
-    });
-}
 
 // 🟢 5. MEDIA UPLOAD LOGIC (Auto-Image Compression & Document Handling)
 if(chatImageBtn && chatImageInput) {
@@ -630,7 +622,7 @@ function openChatRoom(facultyName) {
 // ==========================================
 
 
-// --- 🟢 AI Agent Open / Close Toggle Logic ---
+// --- 🟢 AI Agent Open / Close Toggle Logic (Strict Fixed Logic) ---
 const aiToggleBtn = document.getElementById('ai-toggle-btn');
 const aiAgentSidebar = document.getElementById('ai-agent-sidebar');
 
@@ -892,15 +884,6 @@ async function sendQueryToAIAgent() {
 }
 
 if (aiSendBtn) aiSendBtn.addEventListener('click', sendQueryToAIAgent);
-
-// 🟢 AI Chat Next Line logic
-if (aiChatInput) {
-    aiChatInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            // Do not auto send, let it go to next line
-        }
-    });
-}
 
 if (aiClearBtn) {
     aiClearBtn.addEventListener('click', () => {
