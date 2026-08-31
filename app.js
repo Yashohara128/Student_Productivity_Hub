@@ -24,6 +24,7 @@ const appSection = document.getElementById('app-section');
 const userNameDisplay = document.getElementById('user-name');
 const loginBtn = document.getElementById('login-btn');
 const logoutBtn = document.getElementById('logout-btn');
+const mainLogoutBtn = document.getElementById('main-logout-btn'); // 🟢 Global Logout Button
 const addBtn = document.getElementById('add-btn');
 const degreeInput = document.getElementById('degree-name');
 
@@ -148,7 +149,7 @@ const chatMessagesContainer = document.getElementById('chat-messages-container')
 const chatInputText = document.getElementById('chat-input-text');
 const chatSendBtn = document.getElementById('chat-send-btn');
 const chatMediaBtn = document.getElementById('chat-media-btn');
-const leaveRoomBtn = document.getElementById('leave-room-btn'); // 🟢 Leave Button
+const leaveRoomBtn = document.getElementById('leave-room-btn'); 
 
 let currentStudentFaculty = null;
 
@@ -929,11 +930,18 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => { 
-        signOut(auth).then(() => { allSubjects = []; showView('hub'); updateUI(); }); 
-    });
-}
+// 🟢 GLOBAL LOGOUT FUNCTION
+const performLogout = () => { 
+    signOut(auth).then(() => { 
+        allSubjects = []; 
+        currentStudentFaculty = null; // Clear virtual room session
+        showView('hub'); 
+        updateUI(); 
+    }); 
+};
+
+if (logoutBtn) { logoutBtn.addEventListener('click', performLogout); }
+if (mainLogoutBtn) { mainLogoutBtn.addEventListener('click', performLogout); }
 
 async function loadSubjectsFromDB() {
     try {
