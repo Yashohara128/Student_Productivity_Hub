@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Productivity Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=54">
+    <link rel="stylesheet" href="style.css?v=55">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -541,16 +541,27 @@
                     <!-- 🟢 Virtual Room (Chat Interface) View -->
                     <div id="view-virtual-room" class="sub-interface" style="display: none; height: 75vh; flex-direction: column; justify-content: space-between;">
                         
-                        <!-- Header with Leave Button -->
+                        <!-- Header with Leave Button, Clear Chat & Disappearing Timer -->
                         <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                             <button class="btn-back" id="back-to-hub-room">⬅ Back to Dashboard</button>
                             
-                            <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <!-- ⏳ Disappearing Timer Selector -->
+                                <select id="disappearing-timer-select" style="font-size: 0.75rem; padding: 5px 10px; border-radius: 15px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); cursor: pointer; outline: none;">
+                                    <option value="off">⏳ Timer: Off</option>
+                                    <option value="7">⏳ 7 Days</option>
+                                    <option value="14">⏳ 14 Days</option>
+                                    <option value="30">⏳ 30 Days</option>
+                                </select>
+
+                                <!-- 🧹 Clear My Chat Button -->
+                                <button id="clear-my-chat-btn" style="background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); color: #a855f7; padding: 5px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: 0.3s;" title="Clear chat view for you only">🧹 Clear</button>
+
                                 <div style="font-size: 0.8rem; background: rgba(56, 189, 248, 0.15); padding: 5px 12px; border-radius: 20px; color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
                                     <b id="active-faculty-label">Loading Room...</b>
                                 </div>
-                                <!-- Room Logout / Leave Button -->
-                                <button id="leave-room-btn" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.3s;">🚪 Leave</button>
+                                
+                                <button id="leave-room-btn" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">🚪 Leave</button>
                             </div>
                         </div>
 
@@ -620,6 +631,6 @@
         
     </div>
 
-    <script type="module" src="app.js?v=54"></script>
+    <script type="module" src="app.js?v=55"></script>
 </body>
 </html>
