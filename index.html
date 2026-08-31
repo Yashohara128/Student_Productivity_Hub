@@ -5,11 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Productivity Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=61">
+    <link rel="stylesheet" href="style.css?v=63">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script type="text/javascript" src="https://www.payhere.lk/lib/payhere.js"></script>
+    <style>
+        /* 🟢 Mobile Sidebar Drawer Fix to Prevent Freezing/Layout Break */
+        @media (max-width: 768px) {
+            .ai-agent-sidebar {
+                position: fixed !important;
+                left: 0;
+                top: 0;
+                width: 85% !important;
+                max-width: 320px !important;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+                box-shadow: 5px 0 25px rgba(0,0,0,0.6);
+            }
+            .ai-agent-sidebar.mobile-open {
+                transform: translateX(0) !important;
+            }
+        }
+    </style>
 </head>
 <body>
     
@@ -538,15 +556,15 @@
                     </div>
 
                     <!-- 🟢 Virtual Room (Chat Interface) View -->
-                    <div id="view-virtual-room" class="sub-interface" style="display: none; height: 78vh; flex-direction: column; justify-content: space-between;">
+                    <div id="view-virtual-room" class="sub-interface" style="display: none; height: 84vh; flex-direction: column; justify-content: space-between;">
                         
                         <!-- Header with Leave Button, Clear Chat & Disappearing Timer -->
-                        <div style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
-                            <button class="btn-back" id="back-to-hub-room" style="padding: 4px 10px; font-size: 0.75rem;">⬅ Back</button>
+                        <div style="margin-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+                            <button class="btn-back" id="back-to-hub-room" style="padding: 6px 12px; font-size: 0.8rem;">⬅ Back</button>
                             
-                            <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                                 <!-- ⏳ Disappearing Timer Selector -->
-                                <select id="disappearing-timer-select" style="font-size: 0.7rem; padding: 3px 6px; border-radius: 10px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); cursor: pointer; outline: none;">
+                                <select id="disappearing-timer-select" style="font-size: 0.75rem; padding: 5px 8px; border-radius: 12px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); cursor: pointer; outline: none;">
                                     <option value="off">⏳ Timer: Off</option>
                                     <option value="7">⏳ 7 Days</option>
                                     <option value="14">⏳ 14 Days</option>
@@ -554,86 +572,86 @@
                                 </select>
 
                                 <!-- 🧹 Clear Chat Button -->
-                                <button id="clear-my-chat-btn" style="background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); color: #a855f7; padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: 0.3s;" title="Clear chat view for you only">Clear Chat Your Own Device</button>
+                                <button id="clear-my-chat-btn" style="background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); color: #a855f7; padding: 5px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: 0.3s;" title="Clear chat view for you only">🧹 Clear Chat</button>
 
-                                <div style="font-size: 0.7rem; background: rgba(56, 189, 248, 0.15); padding: 3px 8px; border-radius: 10px; color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
+                                <div style="font-size: 0.75rem; background: rgba(56, 189, 248, 0.15); padding: 5px 10px; border-radius: 12px; color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
                                     <b id="active-faculty-label">Room</b>
                                 </div>
                                 
-                                <button id="leave-room-btn" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; cursor: pointer;">Leave Virtual Room</button>
+                                <button id="leave-room-btn" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 5px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">🚪 Leave</button>
                             </div>
                         </div>
 
                         <!-- Chat Messages Area -->
-                        <div id="chat-messages-container" class="glass-card" style="flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px;">
+                        <div id="chat-messages-container" class="glass-card" style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;">
                             
-                            <!-- 🟢 Comprehensive Multi-Language Guidelines Banner -->
-                            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 10px; border-radius: 10px; font-size: 0.78rem; color: var(--text-color); line-height: 1.4; margin-bottom: 4px;">
-                                <div style="font-weight: bold; color: #38bdf8; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
+                            <!-- 🟢 Comprehensive 3-Language Guidelines Banner -->
+                            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 12px 14px; border-radius: 12px; font-size: 0.82rem; color: var(--text-color); line-height: 1.5; margin-bottom: 6px;">
+                                <div style="font-weight: bold; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-size: 0.9rem;">
                                     <span>💡</span> Virtual Room Guidelines / මාර්ගෝපදේශ / வழிகாட்டுதல்கள்
                                 </div>
 
                                 <!-- English -->
-                                <div><b>English:</b> 
+                                <div><b>English:</b><br>
                                 1. Please be mindful of your language and respectful while chatting, as seniors and fellow campus members are present in this virtual room.<br>
                                 2. Chat clear option and chat timer options remove messages from your device only, whereas the message delete option removes the message completely for everyone.<br>
                                 3. Avoid sensitive content such as inappropriate material, phone numbers, email addresses, and spam messages to prevent your account from being blocked.<br>
                                 4. We believe this virtual room helps you share educational information safely and cooperatively across the faculty. - <i>Web Admin Team</i></div>
-                                <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 6px 0;">
+                                <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 8px 0;">
 
                                 <!-- Sinhala -->
-                                <div><b>සිංහල:</b> 
+                                <div><b>සිංහල:</b><br>
                                 1. මෙම virtual room එක ඇතුලේ ඔයලගේ campus එකේ අයියලා අක්කලා ඉන්න නිසා chat කිරිමේදි වචන භාවිතය ගැන සැලකිලිමත් වන්න.<br>
                                 2. chat clear option එක හරහා සහ chat timer option තුලින් අදාල කාල සිමාවේ දී ඔබගේ චැට් එක ඔබගේ උපකරණයෙන් පමණක් ඉවත් වන අතර message delete option එක මගින් message එක සම්පුර්ණණයෙන්ම ඉවත් වීම සිදු වේ.<br>
                                 3. අසභ්‍ය අන්තර්ගතයන්, දුරකතන අංක, ඊමේල් ලිපින, spam messages වැනි සංවේදි පණිවිඩ යැවීම නිසා ඔබගේ ගිණුම අවහිර වී යා හැකි බව මතක තබා ගන්න.<br>
-                                4. මෙම virtual room පහසුකම මගින් ඔබගේ campus එක තුල සමස්ተ faculty එක ඇතුලත සහයෝගිතාවයෙන් ආරක්ෂිත ලෙස අධ්‍යාපනික තොරතුරු බෙදා ගැනීමට පහසුකම සැලසෙනු ඇතැයි අප විශ්වාස කරමු. - <i>Web Admin Team</i></div>
-                                <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 6px 0;">
+                                4. මෙම virtual room පහසුකම මගින් ඔබගේ campus එක තුල සමස්ත faculty එක ඇතුලත සහයෝගිතාවයෙන් ආරක්ෂිත ලෙස අධ්‍යාපනික තොරතුරු බෙදා ගැනීමට පහසුකම සැලසෙනු ඇතැයි අප විශ්වාස කරමු. - <i>Web Admin Team</i></div>
+                                <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 8px 0;">
 
                                 <!-- Tamil -->
-                                <div><b>தமிழ்:</b> 
+                                <div><b>தமிழ்:</b><br>
                                 1. இந்த மெய்நிகர் அறையில் உங்கள் வளாகத்தின் மூத்த மாணவர்களும் அக்காக்களும் அண்ணன்களும் இருப்பதால், அரட்டையடிக்கும்போது வார்த்தைப் பயன்பாட்டில் கவனமாக இருக்கவும்.<br>
                                 2. அரட்டை தெளிவு விருப்பம் (Chat clear option) மற்றும் அரட்டை டைமர் விருப்பம் (Chat timer option) மூலம் குறிப்பிட்ட நேரத்தில் உங்கள் அரட்டை உங்கள் சாதனத்திலிருந்து மட்டுமே நீக்கப்படும், அதே நேரத்தில் செய்தி நீக்குதல் விருப்பம் (Message delete option) செய்தியை முழுமையாக அகற்றும்.<br>
                                 3. ஆபாசமான உள்ளடக்கங்கள், தொலைபேசி எண்கள், மின்னஞ்சல் முகவரிகள், ஸ்பேம் செய்திகள் போன்ற உணர்திறன் வாய்ந்த செய்திகளை அனுப்புவது உங்கள் கணக்கு முடக்கப்படுவதற்குக் காரணமாகலாம் என்பதை நினைவில் கொள்ளுங்கள்.<br>
                                 4. இந்த மெய்நிகர் அறை வசதியானது உங்கள் வளாகத்திற்குள் முழு பீடத்திலும் ஒத்துழைப்புடன் பாதுகாப்பாக கல்வித் தகவல்களைப் பகிர்ந்து கொள்ள உதவும் என்று நாங்கள் நம்புகிறோம். - <i>Web Admin Team</i></div>
                             </div>
 
-                            <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: auto; margin-bottom: auto;">
+                            <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: auto; margin-bottom: auto;">
                                 No messages yet. Say hi to your friends! 👋
                             </div>
                         </div>
 
-                        <!-- 🟢 Enhanced Clean Mobile-Friendly Chat Input Area with Voice Preview & Cancel -->
-                        <div class="glass-card" style="display: flex; flex-direction: column; padding: 8px 12px; flex-shrink: 0; border-radius: 20px; position: relative;">
+                        <!-- 🟢 Enlarged & Clean Mobile-Friendly Chat Input Area -->
+                        <div class="glass-card" style="display: flex; flex-direction: column; padding: 12px 16px; flex-shrink: 0; border-radius: 24px; position: relative; gap: 8px;">
                             
                             <!-- Recording Indicator -->
-                            <div id="recording-indicator" style="display: none; position: absolute; top: -32px; left: 10px; font-size: 0.7rem; color: #ef4444; font-weight: bold; background: var(--card-bg); padding: 3px 10px; border-radius: 10px; border: 1px solid rgba(239,68,68,0.3); z-index: 10;">
+                            <div id="recording-indicator" style="display: none; position: absolute; top: -36px; left: 12px; font-size: 0.75rem; color: #ef4444; font-weight: bold; background: var(--card-bg); padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(239,68,68,0.3); z-index: 10;">
                                 🔴 Recording... (Click Mic to stop)
                             </div>
 
                             <!-- Voice Preview Bar (Listen before send / Cancel) -->
-                            <div id="voice-preview-bar" style="display: none; align-items: center; gap: 8px; width: 100%; padding: 4px 0;">
-                                <span style="font-size: 0.75rem; color: #38bdf8; font-weight: 500;">🎙️ Preview:</span>
-                                <audio id="preview-audio-element" controls style="height: 32px; flex: 1;"></audio>
-                                <button id="cancel-voice-btn" style="background: rgba(239,68,68,0.2); color: #ef4444; border: none; border-radius: 50%; width: 34px; height: 34px; cursor: pointer; font-size: 0.9rem;" title="Cancel & Delete">✕</button>
-                                <button id="send-voice-btn" style="background: #22c55e; color: white; border: none; border-radius: 50%; width: 34px; height: 34px; cursor: pointer; font-size: 0.9rem;" title="Send Voice">➤</button>
+                            <div id="voice-preview-bar" style="display: none; align-items: center; gap: 10px; width: 100%; padding: 4px 0;">
+                                <span style="font-size: 0.8rem; color: #38bdf8; font-weight: 500;">🎙️ Preview:</span>
+                                <audio id="preview-audio-element" controls style="height: 38px; flex: 1;"></audio>
+                                <button id="cancel-voice-btn" style="background: rgba(239,68,68,0.2); color: #ef4444; border: none; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; font-size: 1rem;" title="Cancel & Delete">✕</button>
+                                <button id="send-voice-btn" style="background: #22c55e; color: white; border: none; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; font-size: 1rem;" title="Send Voice">➤</button>
                             </div>
 
-                            <!-- Normal Input Controls -->
-                            <div id="normal-input-controls" style="display: flex; gap: 8px; align-items: center; width: 100%;">
-                                <input type="text" id="chat-input-text" placeholder="Type a message..." style="flex: 1; min-width: 80px; margin: 0; padding: 10px 14px; font-size: 0.95rem; border-radius: 20px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); outline: none;">
+                            <!-- Normal Input Controls (Enlarged and Comfortable for Mobile) -->
+                            <div id="normal-input-controls" style="display: flex; gap: 10px; align-items: center; width: 100%;">
+                                <input type="text" id="chat-input-text" placeholder="Type a message..." style="flex: 1; min-width: 100px; margin: 0; padding: 12px 18px; font-size: 1rem; border-radius: 25px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); outline: none;">
                                 
                                 <!-- 1. 📷 Image Upload Button -->
-                                <button id="chat-image-btn" style="flex-shrink: 0; background: transparent; border: none; color: var(--text-muted); padding: 6px; cursor: pointer; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; transition: 0.3s;" title="Send Photo">📷</button>
+                                <button id="chat-image-btn" style="flex-shrink: 0; background: transparent; border: none; color: var(--text-muted); padding: 8px; cursor: pointer; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; transition: 0.3s;" title="Send Photo">📷</button>
                                 <input type="file" id="chat-image-input" accept="image/*" style="display: none;">
 
                                 <!-- 2. 📄 Document Upload Button -->
-                                <button id="chat-doc-btn" style="flex-shrink: 0; background: transparent; border: none; color: var(--text-muted); padding: 6px; cursor: pointer; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; transition: 0.3s;" title="Send Document">📄</button>
+                                <button id="chat-doc-btn" style="flex-shrink: 0; background: transparent; border: none; color: var(--text-muted); padding: 8px; cursor: pointer; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; transition: 0.3s;" title="Send Document">📄</button>
                                 <input type="file" id="chat-doc-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.7z" style="display: none;">
                                 
                                 <!-- 3. 🎤 Mic Button -->
-                                <button id="chat-mic-btn" style="flex-shrink: 0; background: transparent; border: none; color: #38bdf8; padding: 6px; cursor: pointer; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; transition: 0.3s;" title="Record Voice">🎤</button>
+                                <button id="chat-mic-btn" style="flex-shrink: 0; background: transparent; border: none; color: #38bdf8; padding: 8px; cursor: pointer; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; transition: 0.3s;" title="Record Voice">🎤</button>
 
-                                <button id="chat-send-btn" style="flex-shrink: 0; width: 40px; height: 40px; background: linear-gradient(135deg, #38bdf8, #2563eb); color: white; border: none; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1rem; cursor: pointer; box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3);">➤</button>
+                                <button id="chat-send-btn" style="flex-shrink: 0; width: 46px; height: 46px; background: linear-gradient(135deg, #38bdf8, #2563eb); color: white; border: none; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.15rem; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);">➤</button>
                             </div>
                         </div>
                     </div>
@@ -672,6 +690,6 @@
         
     </div>
 
-    <script type="module" src="app.js?v=61"></script>
+    <script type="module" src="app.js?v=62"></script>
 </body>
 </html>
