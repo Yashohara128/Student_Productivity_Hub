@@ -1,7 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
 import { initIEEEModule } from './ieee.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+// 🟢 මෙහි query සහ where අලුතෙන් ඇතුළත් කර ඇත
+import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, doc, updateDoc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBjzE30NZXDZsT-DuC9cBrksOjg0UsQM34",
@@ -33,16 +34,21 @@ const viewGpa = document.getElementById('view-gpa');
 const viewShortNotes = document.getElementById('view-shortnotes');
 const viewPlagiarism = document.getElementById('view-plagiarism');
 const viewIeee = document.getElementById('view-ieee');
+const viewVirtualRoom = document.getElementById('view-virtual-room'); // 🟢 Virtual Room View
 
 // Card Triggers
 const cardGpa = document.getElementById('card-gpa');
 const cardShortNotes = document.getElementById('card-shortnotes');
 const cardPlagiarism = document.getElementById('card-plagiarism');
+const cardIeee = document.getElementById('card-ieee');
+const cardVirtualRoom = document.getElementById('card-virtual-room'); // 🟢 Virtual Room Card
 
 // Back Buttons
 const backToHubGpa = document.getElementById('back-to-hub-gpa');
 const backToHubShortNotes = document.getElementById('back-to-hub-shortnotes');
 const backToHubPlagiarism = document.getElementById('back-to-hub-plagiarism');
+const backToHubIeee = document.getElementById('back-to-hub-ieee');
+const backToHubRoom = document.getElementById('back-to-hub-room'); // 🟢 Virtual Room Back Btn
 
 let allSubjects = []; 
 let currentUser = null; 
@@ -56,7 +62,7 @@ const CLASS_THRESHOLDS = {
     PASS: 2.00
 };
 
-// 🟢 ලොග් වී සිටින යුසර්ගේ නම (First Name) ලබාගැනීමට පොදු ෆන්ෂන් එක
+// 🟢 ලොග් වී සිටින යුසර්ගේ නම ලබාගැනීමට පොදු ෆන්ෂන් එක
 function getStudentFirstName() {
     if (currentUser && currentUser.displayName) {
         return currentUser.displayName.split(" ")[0];
@@ -79,13 +85,8 @@ function getActiveSubjects() {
 if (loginBtn) {
     loginBtn.addEventListener('click', () => {
         signInWithPopup(auth, provider)
-            .then((result) => {
-                console.log("Login Success:", result.user.displayName);
-            })
-            .catch((error) => {
-                console.error("Login Error Code:", error.code);
-                alert("❌ Login Failed: " + error.message);
-            });
+            .then((result) => { console.log("Login Success:", result.user.displayName); })
+            .catch((error) => { alert("❌ Login Failed: " + error.message); });
     });
 }
 
@@ -93,16 +94,13 @@ if (loginBtn) {
 function updateDynamicGreeting(userName) {
     const greetingEl = document.getElementById('welcome-greeting');
     if (!greetingEl) return;
-
     const now = new Date();
     const hours = now.getHours();
     let timeGreeting = "", emoji = "";
-
     if (hours >= 5 && hours < 12) { timeGreeting = "Good Morning"; emoji = "☀️"; }
     else if (hours >= 12 && hours < 17) { timeGreeting = "Good Afternoon"; emoji = "🌤️"; }
     else if (hours >= 17 && hours < 21) { timeGreeting = "Good Evening"; emoji = "🌆"; }
     else { timeGreeting = "Good Night"; emoji = "🌙"; }
-
     const formattedDate = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     greetingEl.innerHTML = `${emoji} ${timeGreeting}, <span style="color: var(--text-color); font-weight: 600;">${userName}</span>! <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 2px;">📅 ${formattedDate}</span>`;
 }
@@ -114,6 +112,7 @@ function showView(viewName) {
     if (viewShortNotes) viewShortNotes.style.display = 'none';
     if (viewPlagiarism) viewPlagiarism.style.display = 'none';
     if (viewIeee) viewIeee.style.display = 'none';
+    if (viewVirtualRoom) viewVirtualRoom.style.display = 'none';
 
     if (viewName === 'hub') {
         if (dashboardHub) dashboardHub.style.display = 'block';
@@ -125,6 +124,8 @@ function showView(viewName) {
         if (viewPlagiarism) viewPlagiarism.style.display = 'block';
     } else if (viewName === 'ieee') {
         if (viewIeee) viewIeee.style.display = 'block';
+    } else if (viewName === 'virtualroom') {
+        if (viewVirtualRoom) viewVirtualRoom.style.display = 'flex'; // Chat window is flex
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -132,10 +133,159 @@ function showView(viewName) {
 if (cardGpa) cardGpa.addEventListener('click', () => showView('gpa'));
 if (cardShortNotes) cardShortNotes.addEventListener('click', () => showView('shortnotes'));
 if (cardPlagiarism) cardPlagiarism.addEventListener('click', () => showView('plagiarism'));
+if (cardIeee) cardIeee.addEventListener('click', () => showView('ieee'));
 
 if (backToHubGpa) backToHubGpa.addEventListener('click', () => showView('hub'));
 if (backToHubShortNotes) backToHubShortNotes.addEventListener('click', () => showView('hub'));
 if (backToHubPlagiarism) backToHubPlagiarism.addEventListener('click', () => showView('hub'));
+if (backToHubIeee) backToHubIeee.addEventListener('click', () => showView('hub'));
+if (backToHubRoom) backToHubRoom.addEventListener('click', () => showView('hub'));
+
+
+// ==========================================
+// 🎓 VIRTUAL ROOM & FACULTY VERIFICATION
+// ==========================================
+const studentIdModal = document.getElementById('student-id-modal');
+const verifyIdBtn = document.getElementById('verify-id-btn');
+const closeIdModal = document.getElementById('close-id-modal');
+const activeFacultyLabel = document.getElementById('active-faculty-label');
+const chatMessagesContainer = document.getElementById('chat-messages-container');
+const chatInputText = document.getElementById('chat-input-text');
+const chatSendBtn = document.getElementById('chat-send-btn');
+const chatMediaBtn = document.getElementById('chat-media-btn');
+
+let currentStudentFaculty = null;
+
+// 1. Open Room Logic
+if (cardVirtualRoom) {
+    cardVirtualRoom.addEventListener('click', async () => {
+        if (!currentUser) { alert("⚠️ Please login first!"); return; }
+
+        const userDocRef = doc(db, "users", currentUser.uid);
+        const userSnap = await getDoc(userDocRef);
+
+        if (userSnap.exists() && userSnap.data().faculty) {
+            currentStudentFaculty = userSnap.data().faculty;
+            openChatRoom(currentStudentFaculty);
+        } else {
+            studentIdModal.style.display = 'flex'; // Show verification modal
+        }
+    });
+}
+
+if (closeIdModal) closeIdModal.addEventListener('click', () => { studentIdModal.style.display = 'none'; });
+
+// 2. ID Prefix Verification Logic
+if (verifyIdBtn) {
+    verifyIdBtn.addEventListener('click', async () => {
+        const studentId = document.getElementById('student-id-input').value.trim().toUpperCase();
+        if (!studentId) { alert("⚠️ Please enter your Student ID."); return; }
+
+        let assignedFaculty = "";
+        
+        // Student ID Mapping based on Prefix
+        if (studentId.startsWith("IT")){ assignedFaculty = "Faculty of IT"; } 
+        else if (studentId.startsWith("EDU")){assignedFaculty = "Faculty of Education"; } 
+        else if (studentId.startsWith("MGT")){ assignedFaculty = "Faculty of Management"; } 
+        else if (studentId.startsWith("SCI")){ assignedFaculty = "Faculty of Science"; } 
+        else {
+            alert("❌ Invalid Student ID prefix! We couldn't recognize your faculty.");
+            return;
+        }
+
+        verifyIdBtn.innerText = "Verifying...";
+        try {
+            await setDoc(doc(db, "users", currentUser.uid), { 
+                studentId: studentId, 
+                faculty: assignedFaculty 
+            }, { merge: true });
+            
+            alert(`Verified! Welcome to the ${assignedFaculty} Virtual Room.`);
+            studentIdModal.style.display = 'none';
+            currentStudentFaculty = assignedFaculty;
+            openChatRoom(assignedFaculty);
+        } catch (e) {
+            alert("Error saving profile: " + e.message);
+        } finally {
+            verifyIdBtn.innerText = "Verify & Join Room ➔";
+        }
+    });
+}
+
+// 3. Sensitive Data Filter (Regex)
+function filterSensitiveData(text) {
+    let safeText = text.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, " 🚫 <i>[Email Blocked]</i> ");
+    safeText = safeText.replace(/(?:\+94|0)[0-9]{9}/g, " 🚫 <i>[Phone Blocked]</i> ");
+    return safeText;
+}
+
+// 4. Send Message to Firestore
+if (chatSendBtn) {
+    chatSendBtn.addEventListener('click', async () => {
+        const text = chatInputText.value.trim();
+        if (!text || !currentStudentFaculty) return;
+
+        const cleanedText = filterSensitiveData(text); // Apply filter
+
+        try {
+            await addDoc(collection(db, "virtual_rooms"), {
+                faculty: currentStudentFaculty,
+                senderName: getStudentFirstName(),
+                senderId: currentUser.uid,
+                text: cleanedText,
+                timestamp: new Date().toISOString()
+            });
+            chatInputText.value = '';
+        } catch (e) {
+            console.error("Error sending message:", e);
+        }
+    });
+}
+if (chatInputText) {
+    chatInputText.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); chatSendBtn.click(); }
+    });
+}
+
+if(chatMediaBtn) {
+    chatMediaBtn.addEventListener('click', () => {
+        alert("📷 Media upload feature will be connected to Firebase Storage soon!");
+    });
+}
+
+// 5. Load Real-time Messages
+function openChatRoom(facultyName) {
+    showView('virtualroom');
+    if(activeFacultyLabel) activeFacultyLabel.innerText = "🎓 " + facultyName + " Room";
+    
+    const q = query(collection(db, "virtual_rooms"), where("faculty", "==", facultyName));
+
+    onSnapshot(q, (snapshot) => {
+        let msgs = [];
+        snapshot.forEach(doc => msgs.push(doc.data()));
+        msgs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+        if (msgs.length === 0) {
+            chatMessagesContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin: auto;">No messages yet. Say hi! 👋</div>`;
+            return;
+        }
+
+        let html = '';
+        msgs.forEach(msg => {
+            const isMe = msg.senderId === currentUser.uid;
+            html += `
+                <div style="align-self: ${isMe ? 'flex-end' : 'flex-start'}; max-width: 80%; background: ${isMe ? 'rgba(56, 189, 248, 0.15)' : 'var(--input-bg)'}; border: 1px solid ${isMe ? 'rgba(56, 189, 248, 0.3)' : 'var(--input-border)'}; padding: 10px 14px; border-radius: 12px; border-top-right-radius: ${isMe ? '2px' : '12px'}; border-top-left-radius: ${!isMe ? '2px' : '12px'};">
+                    ${!isMe ? `<div style="font-size: 0.7rem; color: #a855f7; font-weight: bold; margin-bottom: 3px;">${msg.senderName}</div>` : ''}
+                    <div style="color: var(--text-color); font-size: 0.9rem; line-height: 1.4;">${msg.text}</div>
+                </div>
+            `;
+        });
+        chatMessagesContainer.innerHTML = html;
+        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+    });
+}
+// ==========================================
+
 
 // --- AI Agent Open / Close Toggle Logic (PC & Mobile) ---
 const aiToggleBtn = document.getElementById('ai-toggle-btn');
@@ -712,7 +862,6 @@ onAuthStateChanged(auth, async (user) => {
         const studentName = getStudentFirstName();
         updateDynamicGreeting(studentName);
         
-        // 🟢 IEEE Citation Module Initialize කිරීම
         initIEEEModule();
 
         if (aiChatMessages) {
