@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Productivity Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=53">
+    <link rel="stylesheet" href="style.css?v=54">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -153,7 +153,6 @@
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
                             <button id="ai-clear-btn" style="background: none; border: none; color: var(--text-muted); font-size: 0.7rem; cursor: pointer;">Clear Chat</button>
-                            <!-- NOTE: Old Logout button still here inside sidebar -->
                             <button id="logout-btn" style="background: none; border: none; color: #ef4444; font-size: 0.75rem; cursor: pointer;">🚪 Logout</button>
                         </div>
                     </div>
@@ -162,7 +161,7 @@
                 <!-- 💻 Right Dynamic Main Content Area -->
                 <main class="main-content" style="flex: 1; padding: 30px 40px; overflow-y: auto; height: 100vh;">
                     
-                    <!-- 🟢 UPDATED: Main Header with Upgrade and Global Logout Button -->
+                    <!-- Main Header with Upgrade and Global Logout Button -->
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--card-border); flex-wrap: wrap; gap: 10px;">
                         <h3 id="welcome-greeting" style="font-size: 0.95rem; color: var(--heading-gradient-1); margin: 0;">👋 Welcome, <span id="user-name">Student</span>!</h3>
                         
@@ -562,13 +561,27 @@
                             </div>
                         </div>
 
-                        <!-- 🟢 Chat Input Area (Mobile Friendly & WhatsApp Style) -->
-                        <div class="glass-card" style="display: flex; gap: 6px; padding: 8px 10px; align-items: center; flex-shrink: 0; border-radius: 30px;">
+                        <!-- 🟢 Chat Input Area (Mobile Friendly with 3 Separate Upload Options) -->
+                        <div class="glass-card" style="display: flex; gap: 6px; padding: 8px 10px; align-items: center; flex-shrink: 0; border-radius: 30px; position: relative;">
+                            
+                            <!-- Recording Indicator -->
+                            <div id="recording-indicator" style="display: none; position: absolute; top: -28px; left: 15px; font-size: 0.75rem; color: #ef4444; font-weight: bold; background: var(--input-bg); padding: 2px 10px; border-radius: 10px; border: 1px solid rgba(239,68,68,0.3);">
+                                🔴 Recording Audio... (Click Mic again to send)
+                            </div>
+
                             <input type="text" id="chat-input-text" placeholder="Message..." style="flex: 1; min-width: 50px; margin: 0; padding: 10px 16px; font-size: 0.95rem; border-radius: 20px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); outline: none;">
                             
-                            <button id="chat-media-btn" style="flex-shrink: 0; background: transparent; border: none; color: var(--text-muted); padding: 8px; cursor: pointer; font-size: 1.4rem; display: flex; align-items: center; justify-content: center;">📷</button>
-                            <input type="file" id="chat-media-input" accept="image/*,application/pdf" style="display: none;">
+                            <!-- 1. 📷 Image Upload Button -->
+                            <button id="chat-image-btn" style="flex-shrink: 0; background: transparent; border: none; color: var(--text-muted); padding: 8px 4px; cursor: pointer; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; transition: 0.3s;" title="Send Photo">📷</button>
+                            <input type="file" id="chat-image-input" accept="image/*" style="display: none;">
+
+                            <!-- 2. 📄 Document / ZIP / RAR Upload Button -->
+                            <button id="chat-doc-btn" style="flex-shrink: 0; background: transparent; border: none; color: var(--text-muted); padding: 8px 4px; cursor: pointer; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; transition: 0.3s;" title="Send Document or ZIP">📄</button>
+                            <input type="file" id="chat-doc-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.7z" style="display: none;">
                             
+                            <!-- 3. 🎤 Mic Button for Voice Notes -->
+                            <button id="chat-mic-btn" style="flex-shrink: 0; background: transparent; border: none; color: #38bdf8; padding: 8px 4px; cursor: pointer; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; transition: 0.3s;" title="Record Voice">🎤</button>
+
                             <button id="chat-send-btn" style="flex-shrink: 0; width: 42px; height: 42px; background: linear-gradient(135deg, #38bdf8, #2563eb); color: white; border: none; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; padding-left: 3px; cursor: pointer; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);">➤</button>
                         </div>
                     </div>
@@ -607,6 +620,6 @@
         
     </div>
 
-    <script type="module" src="app.js?v=53"></script>
+    <script type="module" src="app.js?v=54"></script>
 </body>
 </html>
