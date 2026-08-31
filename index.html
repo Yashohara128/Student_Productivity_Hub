@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Student Productivity Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=68">
+    <link rel="stylesheet" href="style.css?v=70">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -16,7 +16,7 @@
     <div class="bg-glow circle-1"></div>
     <div class="bg-glow circle-2"></div>
 
-    <!-- 🟢 PC & Mobile Universal AI Agent Toggle Button -->
+    <!-- 🟢 Fixed UI Button -->
     <button id="ai-toggle-btn">
         🤖 Open AI Chat
     </button>
@@ -128,7 +128,7 @@
         <div id="app-section" style="display: none;">
             <div class="app-layout-container">
                 
-                <!-- 🤖 Persistent Left AI Study Agent Sidebar (Default Closed) -->
+                <!-- 🤖 Persistent Left AI Study Agent Sidebar -->
                 <aside id="ai-agent-sidebar" class="ai-agent-sidebar collapsed">
                     <div style="padding: 15px 20px; border-bottom: 1px solid var(--card-border); display: flex; align-items: center; justify-content: space-between;">
                         <h3 style="color: var(--heading-gradient-1); font-size: 1rem; margin: 0; display: flex; align-items: center; gap: 8px;">AI Study Agent</h3>
@@ -148,7 +148,8 @@
                         <div style="display: flex; gap: 8px; align-items: center;">
                             <input type="file" id="ai-file-input" accept=".pdf,.txt,.doc,.docx" style="display: none;">
                             <button id="ai-attach-btn" title="Attach Document / PDF" style="background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-color); padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">📎</button>
-                            <textarea id="ai-chat-input" rows="2" placeholder="Ask anything..." style="flex: 1; padding: 8px; border-radius: 6px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); font-size: 0.8rem; resize: none;"></textarea>
+                            <!-- Changed to textarea to support new lines natively -->
+                            <textarea id="ai-chat-input" rows="1" placeholder="Ask anything..." style="flex: 1; padding: 8px; border-radius: 6px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); font-size: 0.8rem; resize: none; overflow-y: auto;"></textarea>
                             <button id="ai-send-btn" style="background: #3b82f6; color: white; border: none; padding: 0 12px; height: 36px; border-radius: 6px; cursor: pointer; font-weight: 600;">➤</button>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
@@ -620,7 +621,8 @@
 
                             <!-- Normal Input Controls (Stacked / Flex-wrapped cleanly for Mobile & Desktop) -->
                             <div id="normal-input-controls" style="display: flex; gap: 8px; align-items: center; width: 100%;">
-                                <input type="text" id="chat-input-text" placeholder="Type a message..." style="flex: 1; min-width: 0; margin: 0; padding: 12px 16px; font-size: 1rem; border-radius: 22px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); outline: none;">
+                                <!-- Changed from input to textarea with rows="1" to enable multiline support via Enter -->
+                                <textarea id="chat-input-text" placeholder="Type a message..." style="flex: 1; min-width: 120px; margin: 0; padding: 14px 20px; font-size: 1.05rem; border-radius: 28px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); outline: none; resize: none; overflow-y: hidden;" rows="1"></textarea>
                                 
                                 <div style="display: flex; gap: 4px; align-items: center; flex-shrink: 0;">
                                     <!-- 1. 📷 Image Upload Button -->
@@ -675,6 +677,6 @@
         
     </div>
 
-    <script type="module" src="app.js?v=68"></script>
+    <script type="module" src="app.js?v=69"></script>
 </body>
 </html>
