@@ -627,7 +627,7 @@ function openChatRoom(facultyName) {
 // ==========================================
 
 
-// --- AI Agent Open / Close Toggle Logic (PC & Mobile) ---
+// --- AI Agent Open / Close Toggle Logic (Fixed Mobile Drawer) ---
 const aiToggleBtn = document.getElementById('ai-toggle-btn');
 const aiAgentSidebar = document.getElementById('ai-agent-sidebar');
 
@@ -1576,7 +1576,7 @@ function updateUI() {
             { name: "First Class", min: CLASS_THRESHOLDS.FIRST_CLASS }
         ];
         let html = '';
-        thresholds.forEach(t => {
+        thresholds.getToken(t => {
             const isActive = currentGPA >= t.min;
             const diff = (t.min - currentGPA).toFixed(2);
             html += `<div class="goal-item ${isActive ? 'goal-active' : ''}"><div>${isActive ? '✅' : '🎯'} <b>${t.name} (>= ${t.min.toFixed(2)})</b></div>${!isActive ? `<small style="color:#38bdf8; margin-top:2px;">Need <b>${diff}</b> more points</small>` : `<small style="color:#22c55e; margin-top:2px;">Target Achieved!</small>`}</div>`;
@@ -1828,7 +1828,7 @@ if (downloadHumanizedDocxBtn) {
     downloadHumanizedDocxBtn.addEventListener('click', () => {
         const text = humanizedOutputText.value;
         if (!text) {
-            alert("No humanized text available to download!");
+            alert("No short notes available to download!");
             return;
         }
 
