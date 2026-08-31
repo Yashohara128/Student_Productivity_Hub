@@ -36,7 +36,6 @@ body.light-mode {
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
-    /* 🟢 Remove padding and scrolling to completely lock the background */
     margin: 0;
     padding: 0; 
     overflow: hidden;
@@ -124,7 +123,6 @@ body {
 }
 .btn-gotit { padding: 0.5rem 1.5rem; cursor: pointer; border-radius: 0.5rem; font-weight: 500; width: 100%; }
 
-/* Fixed Login Wrapper to support locked body */
 #login-section { text-align: center; margin: 10vh auto; padding: 2.5rem 1.5rem; max-width: 450px; }
 .login-card h1 {
     font-size: 1.8rem; font-weight: 600; background: linear-gradient(to right, var(--heading-gradient-1), var(--heading-gradient-2));
@@ -192,14 +190,13 @@ th { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font
 .btn-erase-sem { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.6rem 1rem; border-radius: 0.5rem; cursor: pointer; width: 100%; font-weight: 500; font-size: 0.85rem; }
 .btn-reset-all { background: #ef4444; color: white; border: none; padding: 0.6rem 1rem; border-radius: 0.5rem; cursor: pointer; font-weight: 500; width: 100%; font-size: 0.85rem; }
 
-
 /* =========================================
-   🟢 100% PERFECT LAYOUT LOCK FIX (No more scrolling entire page)
+   🟢 PERFECT LAYOUT LOCK & TOP FLOATING BUTTON
    ========================================= */
 
 #ai-toggle-btn {
     position: fixed !important;
-    bottom: 20px !important;
+    top: 15px !important;    /* 🟢 MOVED TO TOP LEFT */
     left: 20px !important;
     z-index: 999999 !important;
     background: linear-gradient(135deg, #38bdf8, #2563eb);
@@ -270,10 +267,10 @@ body.light-mode .ai-agent-sidebar {
     }
 }
 
-/* 🟢 Mobile Sidebar overlay and strict Drawer styling */
+/* Mobile Layout Fixes */
 @media (max-width: 768px) {
     .main-content {
-        padding: 60px 15px 90px !important; 
+        padding: 65px 15px 90px !important; /* Clears top and bottom perfectly */
     }
 
     .ai-agent-sidebar {
@@ -284,7 +281,7 @@ body.light-mode .ai-agent-sidebar {
         max-width: 320px !important;
         height: 100dvh !important;
         z-index: 99999 !important;
-        background: rgba(15, 23, 42, 0.9) !important; /* Beautiful glass overlay */
+        background: rgba(15, 23, 42, 0.9) !important; 
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         box-shadow: 5px 0 25px rgba(0,0,0,0.8) !important;
