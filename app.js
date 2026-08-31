@@ -2,6 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebas
 import { initIEEEModule } from './ieee.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, doc, updateDoc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+// 🟢 Firebase Storage Import එකතු කර ඇත
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBjzE30NZXDZsT-DuC9cBrksOjg0UsQM34",
@@ -16,6 +18,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app); // 🟢 Initialize Firebase Storage
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
 
@@ -148,8 +151,15 @@ const activeFacultyLabel = document.getElementById('active-faculty-label');
 const chatMessagesContainer = document.getElementById('chat-messages-container');
 const chatInputText = document.getElementById('chat-input-text');
 const chatSendBtn = document.getElementById('chat-send-btn');
-const chatMediaBtn = document.getElementById('chat-media-btn');
 const leaveRoomBtn = document.getElementById('leave-room-btn'); 
+
+// 🟢 Separate Upload and Voice Elements
+const chatImageBtn = document.getElementById('chat-image-btn');
+const chatImageInput = document.getElementById('chat-image-input');
+const chatDocBtn = document.getElementById('chat-doc-btn');
+const chatDocInput = document.getElementById('chat-doc-input');
+const chatMicBtn = document.getElementById('chat-mic-btn');
+const recordingIndicator = document.getElementById('recording-indicator');
 
 let currentStudentFaculty = null;
 
@@ -271,6 +281,7 @@ if (chatSendBtn) {
         if (!text || !currentStudentFaculty) return;
 
         const cleanedText = filterSensitiveData(text);
+        chatInputText.value = '';
 
         try {
             await addDoc(collection(db, "virtual_rooms"), {
@@ -278,9 +289,9 @@ if (chatSendBtn) {
                 senderName: getStudentFirstName(),
                 senderId: currentUser.uid,
                 text: cleanedText,
+                type: 'text',
                 timestamp: new Date().toISOString()
             });
-            chatInputText.value = '';
         } catch (e) {
             console.error("Error sending message:", e);
         }
@@ -292,10 +303,98 @@ if (chatInputText) {
     });
 }
 
-if(chatMediaBtn) {
-    chatMediaBtn.addEventListener('click', () => {
-        alert("Media upload feature will be available soon!");
+// 🟢 5. MEDIA UPLOAD LOGIC (Photo & Document Handling)
+if(chatImageBtn && chatImageInput) {
+    chatImageBtn.addEventListener('click', () => chatImageInput.click());
+    chatImageInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file || !currentStudentFaculty) return;
+        uploadMediaToFirebase(file, file.name, 'image');
     });
+}
+
+if(chatDocBtn && chatDocInput) {
+    chatDocBtn.addEventListener('click', () => chatDocInput.click());
+    chatDocInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file || !currentStudentFaculty) return;
+        uploadMediaToFirebase(file, file.name, 'document');
+    });
+}
+
+// 🟢 6. VOICE MESSAGE LOGIC (WhatsApp Style)
+let mediaRecorder;
+let audioChunks = [];
+let isRecording = false;
+
+if(chatMicBtn) {
+    chatMicBtn.addEventListener('click', async () => {
+        if (!isRecording) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.start();
+                isRecording = true;
+                
+                if (recordingIndicator) recordingIndicator.style.display = 'block';
+                chatMicBtn.innerText = '⏹️';
+                chatMicBtn.style.color = '#ef4444';
+
+                mediaRecorder.ondataavailable = e => { audioChunks.push(e.data); };
+
+                mediaRecorder.onstop = async () => {
+                    if (recordingIndicator) recordingIndicator.style.display = 'none';
+                    chatMicBtn.innerText = '🎤';
+                    chatMicBtn.style.color = '#38bdf8';
+                    
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    audioChunks = [];
+                    uploadMediaToFirebase(audioBlob, `audio_${Date.now()}.webm`, 'audio');
+                };
+            } catch (err) {
+                alert("Microphone access denied! Please allow microphone permissions.");
+            }
+        } else {
+            mediaRecorder.stop();
+            isRecording = false;
+        }
+    });
+}
+
+// 🟢 Helper Function to Upload Media to Firebase Storage
+function uploadMediaToFirebase(fileOrBlob, fileName, type) {
+    const storageRef = ref(storage, `virtual_room_media/${Date.now()}_${fileName}`);
+    const uploadTask = uploadBytesResumable(storageRef, fileOrBlob);
+
+    const originalBtnHTML = chatSendBtn.innerHTML;
+    chatSendBtn.innerHTML = "⏳";
+    chatSendBtn.disabled = true;
+
+    uploadTask.on('state_changed', 
+        (snapshot) => {}, 
+        (error) => {
+            alert("Upload failed: " + error.message);
+            chatSendBtn.innerHTML = originalBtnHTML;
+            chatSendBtn.disabled = false;
+        }, 
+        async () => {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            
+            await addDoc(collection(db, "virtual_rooms"), {
+                faculty: currentStudentFaculty,
+                senderName: getStudentFirstName(),
+                senderId: currentUser.uid,
+                text: type === 'audio' ? '🎤 Voice Message' : (type === 'image' ? '📷 Photo' : '📄 Document'),
+                type: type,
+                fileName: fileName,
+                fileUrl: downloadURL,
+                timestamp: new Date().toISOString()
+            });
+
+            chatSendBtn.innerHTML = originalBtnHTML;
+            chatSendBtn.disabled = false;
+        }
+    );
 }
 
 // 5. Load Real-time Messages
@@ -318,10 +417,22 @@ function openChatRoom(facultyName) {
         let html = '';
         msgs.forEach(msg => {
             const isMe = msg.senderId === currentUser.uid;
+
+            let contentHtml = "";
+            if (msg.type === 'image') {
+                contentHtml = `<img src="${msg.fileUrl}" style="max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer;" onclick="window.open('${msg.fileUrl}', '_blank')">`;
+            } else if (msg.type === 'document') {
+                contentHtml = `<a href="${msg.fileUrl}" target="_blank" style="color: #38bdf8; text-decoration: underline; font-weight: 500; font-size: 0.85rem;">📄 ${msg.fileName || 'Download / View File'}</a>`;
+            } else if (msg.type === 'audio') {
+                contentHtml = `<audio controls style="height: 35px; max-width: 220px; margin-top: 5px; border-radius: 20px;"><source src="${msg.fileUrl}" type="audio/webm">Your browser does not support audio.</audio>`;
+            } else {
+                contentHtml = `${msg.text}`;
+            }
+
             html += `
-                <div style="align-self: ${isMe ? 'flex-end' : 'flex-start'}; max-width: 80%; background: ${isMe ? 'rgba(56, 189, 248, 0.15)' : 'var(--input-bg)'}; border: 1px solid ${isMe ? 'rgba(56, 189, 248, 0.3)' : 'var(--input-border)'}; padding: 10px 14px; border-radius: 12px; border-top-right-radius: ${isMe ? '2px' : '12px'}; border-top-left-radius: ${!isMe ? '2px' : '12px'};">
+                <div style="align-self: ${isMe ? 'flex-end' : 'flex-start'}; max-width: 80%; background: ${isMe ? 'rgba(56, 189, 248, 0.15)' : 'var(--input-bg)'}; border: 1px solid ${isMe ? 'rgba(56, 189, 248, 0.3)' : 'var(--input-border)'}; padding: 10px 14px; border-radius: 12px; border-top-right-radius: ${isMe ? '2px' : '12px'}; border-top-left-radius: ${!isMe ? '2px' : '12px'}; display: flex; flex-direction: column;">
                     ${!isMe ? `<div style="font-size: 0.7rem; color: #a855f7; font-weight: bold; margin-bottom: 3px;">${msg.senderName}</div>` : ''}
-                    <div style="color: var(--text-color); font-size: 0.9rem; line-height: 1.4;">${msg.text}</div>
+                    <div style="color: var(--text-color); font-size: 0.9rem; line-height: 1.4;">${contentHtml}</div>
                 </div>
             `;
         });
