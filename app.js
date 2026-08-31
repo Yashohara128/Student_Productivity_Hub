@@ -160,7 +160,15 @@ const chatMicBtn = document.getElementById('chat-mic-btn');
 const recordingIndicator = document.getElementById('recording-indicator');
 const clearMyChatBtn = document.getElementById('clear-my-chat-btn');
 
+// Voice Preview Elements
+const voicePreviewBar = document.getElementById('voice-preview-bar');
+const previewAudioElement = document.getElementById('preview-audio-element');
+const cancelVoiceBtn = document.getElementById('cancel-voice-btn');
+const sendVoiceBtn = document.getElementById('send-voice-btn');
+const normalInputControls = document.getElementById('normal-input-controls');
+
 let currentStudentFaculty = null;
+let recordedAudioBlob = null;
 
 // 1. Open Room Logic
 if (cardVirtualRoom) {
@@ -263,7 +271,7 @@ if (leaveRoomBtn) {
     });
 }
 
-// 🧹 Clear My Chat Logic (Fixed with setDoc & merge)
+// 🧹 Clear Chat Logic (With Instant Auto-Refresh UI)
 if (clearMyChatBtn) {
     clearMyChatBtn.addEventListener('click', async () => {
         if (!currentUser) return;
@@ -274,7 +282,10 @@ if (clearMyChatBtn) {
                     chatClearedAt: new Date().toISOString()
                 }, { merge: true });
                 
-                alert("🧹 Chat cleared for your view!");
+                alert("🧹 Chat cleared successfully!");
+                if (currentStudentFaculty) {
+                    openChatRoom(currentStudentFaculty); // Instant auto-refresh view
+                }
             } catch (e) {
                 alert("Failed to clear chat: " + e.message);
             }
@@ -365,7 +376,7 @@ if(chatDocBtn && chatDocInput) {
     });
 }
 
-// 🟢 6. VOICE MESSAGE LOGIC (WhatsApp Style)
+// 🟢 6. VOICE MESSAGE LOGIC WITH PREVIEW & CANCEL OPTION
 let mediaRecorder;
 let audioChunks = [];
 let isRecording = false;
@@ -390,9 +401,15 @@ if(chatMicBtn) {
                     chatMicBtn.innerText = '🎤';
                     chatMicBtn.style.color = '#38bdf8';
                     
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    recordedAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                     audioChunks = [];
-                    uploadMediaToFirebase(audioBlob, `audio_${Date.now()}.webm`, 'audio');
+
+                    // Show Preview Bar, hide normal input controls
+                    if (previewAudioElement && voicePreviewBar && normalInputControls) {
+                        previewAudioElement.src = URL.createObjectURL(recordedAudioBlob);
+                        voicePreviewBar.style.display = 'flex';
+                        normalInputControls.style.display = 'none';
+                    }
                 };
             } catch (err) {
                 alert("Microphone access denied! Please allow microphone permissions.");
@@ -401,6 +418,28 @@ if(chatMicBtn) {
             mediaRecorder.stop();
             isRecording = false;
         }
+    });
+}
+
+// Cancel Voice Note
+if (cancelVoiceBtn) {
+    cancelVoiceBtn.addEventListener('click', () => {
+        recordedAudioBlob = null;
+        if (voicePreviewBar) voicePreviewBar.style.display = 'none';
+        if (normalInputControls) normalInputControls.style.display = 'flex';
+    });
+}
+
+// Send Voice Note after preview
+if (sendVoiceBtn) {
+    sendVoiceBtn.addEventListener('click', () => {
+        if (!recordedAudioBlob) return;
+        const blobToSend = recordedAudioBlob;
+        recordedAudioBlob = null;
+        if (voicePreviewBar) voicePreviewBar.style.display = 'none';
+        if (normalInputControls) normalInputControls.style.display = 'flex';
+
+        uploadMediaToFirebase(blobToSend, `audio_${Date.now()}.webm`, 'audio');
     });
 }
 
@@ -521,7 +560,7 @@ function openChatRoom(facultyName) {
                 <!-- English -->
                 <div><b>English:</b> 
                 1. Please be mindful of your language and respectful while chatting, as seniors and fellow campus members are present in this virtual room.<br>
-                2. Chat clear & timer options remove messages from your device only, whereas the message delete option removes the message completely for everyone.<br>
+                2. Chat clear option and chat timer options remove messages from your device only, whereas the message delete option removes the message completely for everyone.<br>
                 3. Avoid sensitive content such as inappropriate material, phone numbers, email addresses, and spam messages to prevent your account from being blocked.<br>
                 4. We believe this virtual room helps you share educational information safely and cooperatively across the faculty. - <i>Web Admin Team</i></div>
                 <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 6px 0;">
