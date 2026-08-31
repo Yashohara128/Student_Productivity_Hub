@@ -324,6 +324,15 @@ if (chatSendBtn) {
     });
 }
 
+// 🟢 Do not auto-send on enter, allowing Next Line
+if (chatInputText) {
+    chatInputText.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            // Allows normal browser native newline functionality for <textarea>
+        }
+    });
+}
+
 // 🟢 5. MEDIA UPLOAD LOGIC (Auto-Image Compression & Document Handling)
 if(chatImageBtn && chatImageInput) {
     chatImageBtn.addEventListener('click', () => chatImageInput.click());
@@ -884,6 +893,15 @@ async function sendQueryToAIAgent() {
 }
 
 if (aiSendBtn) aiSendBtn.addEventListener('click', sendQueryToAIAgent);
+
+// 🟢 AI Chat Next Line logic
+if (aiChatInput) {
+    aiChatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            // Do not auto send, let it go to next line
+        }
+    });
+}
 
 if (aiClearBtn) {
     aiClearBtn.addEventListener('click', () => {
