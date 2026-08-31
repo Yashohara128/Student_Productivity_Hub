@@ -153,13 +153,14 @@ const chatInputText = document.getElementById('chat-input-text');
 const chatSendBtn = document.getElementById('chat-send-btn');
 const leaveRoomBtn = document.getElementById('leave-room-btn'); 
 
-// 🟢 Separate Upload and Voice Elements
+// 🟢 Separate Upload, Voice & Clear Elements
 const chatImageBtn = document.getElementById('chat-image-btn');
 const chatImageInput = document.getElementById('chat-image-input');
 const chatDocBtn = document.getElementById('chat-doc-btn');
 const chatDocInput = document.getElementById('chat-doc-input');
 const chatMicBtn = document.getElementById('chat-mic-btn');
 const recordingIndicator = document.getElementById('recording-indicator');
+const clearMyChatBtn = document.getElementById('clear-my-chat-btn');
 
 let currentStudentFaculty = null;
 
@@ -192,7 +193,6 @@ if (verifyIdBtn) {
         verifyIdBtn.disabled = true;
 
         try {
-            // 🚨 SECURITY CHECK: Check if this ID is already used by another account
             const q = query(collection(db, "users"), where("studentId", "==", studentId));
             const querySnapshot = await getDocs(q);
 
@@ -210,7 +210,6 @@ if (verifyIdBtn) {
                 return;
             }
 
-            // 🎓 STUDENT ID PREFIX LOGIC
             let assignedFaculty = "";
             if (studentId.startsWith("IT")) { assignedFaculty = "Faculty of IT"; } 
             else if (studentId.startsWith("EDU")) { assignedFaculty = "Faculty of Education"; } 
@@ -223,7 +222,6 @@ if (verifyIdBtn) {
                 return;
             }
 
-            // 💾 SAVE PROFILE
             await setDoc(doc(db, "users", currentUser.uid), { 
                 studentId: studentId, 
                 faculty: assignedFaculty 
@@ -267,6 +265,35 @@ if (leaveRoomBtn) {
     });
 }
 
+// ⏳ Disappearing Timer Calculator
+function getMessageExpiryTime() {
+    const timerSelect = document.getElementById('disappearing-timer-select');
+    if (!timerSelect || timerSelect.value === 'off') return null;
+    
+    const days = parseInt(timerSelect.value);
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + days);
+    return expiryDate.toISOString();
+}
+
+// 🧹 Clear My Chat Logic
+if (clearMyChatBtn) {
+    clearMyChatBtn.addEventListener('click', async () => {
+        if (!currentUser) return;
+        const confirmClear = confirm("Are you sure you want to clear the chat view for yourself? (Other users will still see the messages).");
+        if (confirmClear) {
+            try {
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    chatClearedAt: new Date().toISOString()
+                });
+                alert("🧹 Chat cleared for your view!");
+            } catch (e) {
+                alert("Failed to clear chat: " + e.message);
+            }
+        }
+    });
+}
+
 // 3. Sensitive Data Filter (Regex)
 function filterSensitiveData(text) {
     let safeText = text.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, " 🚫 <i>[Emails are not allowed to this chat]</i> ");
@@ -284,12 +311,14 @@ if (chatSendBtn) {
         chatInputText.value = '';
 
         try {
+            const expiryTime = getMessageExpiryTime();
             await addDoc(collection(db, "virtual_rooms"), {
                 faculty: currentStudentFaculty,
                 senderName: getStudentFirstName(),
                 senderId: currentUser.uid,
                 text: cleanedText,
                 type: 'text',
+                expiresAt: expiryTime,
                 timestamp: new Date().toISOString()
             });
         } catch (e) {
@@ -303,13 +332,41 @@ if (chatInputText) {
     });
 }
 
-// 🟢 5. MEDIA UPLOAD LOGIC (Photo & Document Handling)
+// 🟢 5. MEDIA UPLOAD LOGIC (Photo Compression & Document Handling)
 if(chatImageBtn && chatImageInput) {
     chatImageBtn.addEventListener('click', () => chatImageInput.click());
     chatImageInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file || !currentStudentFaculty) return;
-        uploadMediaToFirebase(file, file.name, 'image');
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const MAX_WIDTH = 800;
+                if (width > MAX_WIDTH) {
+                    height = Math.round((height * MAX_WIDTH) / width);
+                    width = MAX_WIDTH;
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    const compressedFile = new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+                    uploadMediaToFirebase(compressedFile, file.name, 'image');
+                }, 'image/jpeg', 0.7);
+            };
+        };
     });
 }
 
@@ -379,6 +436,7 @@ function uploadMediaToFirebase(fileOrBlob, fileName, type) {
         }, 
         async () => {
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            const expiryTime = getMessageExpiryTime();
             
             await addDoc(collection(db, "virtual_rooms"), {
                 faculty: currentStudentFaculty,
@@ -388,6 +446,7 @@ function uploadMediaToFirebase(fileOrBlob, fileName, type) {
                 type: type,
                 fileName: fileName,
                 fileUrl: downloadURL,
+                expiresAt: expiryTime,
                 timestamp: new Date().toISOString()
             });
 
@@ -397,16 +456,52 @@ function uploadMediaToFirebase(fileOrBlob, fileName, type) {
     );
 }
 
-// 5. Load Real-time Messages
+// 🗑️ Delete Message Function
+window.deleteVirtualMessage = async function(msgId) {
+    const confirmDelete = confirm("Are you sure you want to delete this message?");
+    if (!confirmDelete) return;
+
+    try {
+        await deleteDoc(doc(db, "virtual_rooms", msgId));
+    } catch (e) {
+        alert("Failed to delete message: " + e.message);
+    }
+};
+
+// 5. Load Real-time Messages (Updated with Global 30-Day limit, Disappearing & Clear View)
 function openChatRoom(facultyName) {
     showView('virtualroom');
     if(activeFacultyLabel) activeFacultyLabel.innerText = "🎓 " + facultyName + " Room";
     
     const q = query(collection(db, "virtual_rooms"), where("faculty", "==", facultyName));
 
-    onSnapshot(q, (snapshot) => {
+    onSnapshot(q, async (snapshot) => {
         let msgs = [];
-        snapshot.forEach(doc => msgs.push(doc.data()));
+        const now = new Date();
+        
+        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+        const userData = userDoc.exists() ? userDoc.data() : {};
+        const studentClearedTime = userData.chatClearedAt ? new Date(userData.chatClearedAt) : null;
+
+        snapshot.forEach(docSnap => {
+            let msgData = docSnap.data();
+            msgData.msgId = docSnap.id;
+            const msgTime = new Date(msgData.timestamp);
+
+            // 1️⃣ Global 30-Day Limit (Database Protection)
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            if (msgTime < thirtyDaysAgo) return;
+
+            // 2️⃣ Disappearing Timer Expiry Check
+            if (msgData.expiresAt && new Date(msgData.expiresAt) < now) return;
+
+            // 3️⃣ Student Local Clear Chat Check
+            if (studentClearedTime && msgTime <= studentClearedTime) return;
+
+            msgs.push(msgData);
+        });
+
         msgs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
         if (msgs.length === 0) {
@@ -430,8 +525,13 @@ function openChatRoom(facultyName) {
             }
 
             html += `
-                <div style="align-self: ${isMe ? 'flex-end' : 'flex-start'}; max-width: 80%; background: ${isMe ? 'rgba(56, 189, 248, 0.15)' : 'var(--input-bg)'}; border: 1px solid ${isMe ? 'rgba(56, 189, 248, 0.3)' : 'var(--input-border)'}; padding: 10px 14px; border-radius: 12px; border-top-right-radius: ${isMe ? '2px' : '12px'}; border-top-left-radius: ${!isMe ? '2px' : '12px'}; display: flex; flex-direction: column;">
-                    ${!isMe ? `<div style="font-size: 0.7rem; color: #a855f7; font-weight: bold; margin-bottom: 3px;">${msg.senderName}</div>` : ''}
+                <div style="align-self: ${isMe ? 'flex-end' : 'flex-start'}; max-width: 80%; background: ${isMe ? 'rgba(56, 189, 248, 0.15)' : 'var(--input-bg)'}; border: 1px solid ${isMe ? 'rgba(56, 189, 248, 0.3)' : 'var(--input-border)'}; padding: 10px 14px; border-radius: 12px; border-top-right-radius: ${isMe ? '2px' : '12px'}; border-top-left-radius: ${!isMe ? '2px' : '12px'}; display: flex; flex-direction: column; position: relative;">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 3px;">
+                        ${!isMe ? `<span style="font-size: 0.7rem; color: #a855f7; font-weight: bold;">${msg.senderName}</span>` : '<span></span>'}
+                        ${isMe ? `<button onclick="deleteVirtualMessage('${msg.msgId}')" style="background: none; border: none; color: #ef4444; font-size: 0.75rem; cursor: pointer; padding: 0;" title="Delete Message">🗑️</button>` : ''}
+                    </div>
+
                     <div style="color: var(--text-color); font-size: 0.9rem; line-height: 1.4;">${contentHtml}</div>
                 </div>
             `;
