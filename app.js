@@ -263,27 +263,17 @@ if (leaveRoomBtn) {
     });
 }
 
-// ⏳ Disappearing Timer Calculator
-function getMessageExpiryTime() {
-    const timerSelect = document.getElementById('disappearing-timer-select');
-    if (!timerSelect || timerSelect.value === 'off') return null;
-    
-    const days = parseInt(timerSelect.value);
-    const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + days);
-    return expiryDate.toISOString();
-}
-
-// 🧹 Clear My Chat Logic
+// 🧹 Clear My Chat Logic (Fixed with setDoc & merge)
 if (clearMyChatBtn) {
     clearMyChatBtn.addEventListener('click', async () => {
         if (!currentUser) return;
         const confirmClear = confirm("Are you sure you want to clear the chat view for yourself? (Other users will still see the messages).");
         if (confirmClear) {
             try {
-                await updateDoc(doc(db, "users", currentUser.uid), {
+                await setDoc(doc(db, "users", currentUser.uid), {
                     chatClearedAt: new Date().toISOString()
-                });
+                }, { merge: true });
+                
                 alert("🧹 Chat cleared for your view!");
             } catch (e) {
                 alert("Failed to clear chat: " + e.message);
@@ -309,14 +299,12 @@ if (chatSendBtn) {
         chatInputText.value = '';
 
         try {
-            const expiryTime = getMessageExpiryTime();
             await addDoc(collection(db, "virtual_rooms"), {
                 faculty: currentStudentFaculty,
                 senderName: getStudentFirstName(),
                 senderId: currentUser.uid,
                 text: cleanedText,
                 type: 'text',
-                expiresAt: expiryTime,
                 timestamp: new Date().toISOString()
             });
         } catch (e) {
@@ -330,7 +318,7 @@ if (chatInputText) {
     });
 }
 
-// 🟢 5. MEDIA UPLOAD LOGIC (Photo Compression & Document Handling)
+// 🟢 5. MEDIA UPLOAD LOGIC (Auto-Image Compression & Document Handling)
 if(chatImageBtn && chatImageInput) {
     chatImageBtn.addEventListener('click', () => chatImageInput.click());
     chatImageInput.addEventListener('change', (e) => {
@@ -434,7 +422,6 @@ function uploadMediaToFirebase(fileOrBlob, fileName, type) {
         }, 
         async () => {
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            const expiryTime = getMessageExpiryTime();
             
             await addDoc(collection(db, "virtual_rooms"), {
                 faculty: currentStudentFaculty,
@@ -444,7 +431,6 @@ function uploadMediaToFirebase(fileOrBlob, fileName, type) {
                 type: type,
                 fileName: fileName,
                 fileUrl: downloadURL,
-                expiresAt: expiryTime,
                 timestamp: new Date().toISOString()
             });
 
@@ -466,7 +452,7 @@ window.deleteVirtualMessage = async function(msgId) {
     }
 };
 
-// 5. Load Real-time Messages (Updated with Global 30-Day limit, Disappearing & Clear View)
+// 5. Load Real-time Messages (Global 1-Month DB limit & Student-side Disappearing/Clear filters)
 function openChatRoom(facultyName) {
     showView('virtualroom');
     if(activeFacultyLabel) activeFacultyLabel.innerText = "🎓 " + facultyName + " Room";
@@ -475,26 +461,35 @@ function openChatRoom(facultyName) {
 
     onSnapshot(q, async (snapshot) => {
         let msgs = [];
-        const now = new Date();
         
         const userDoc = await getDoc(doc(db, "users", currentUser.uid));
         const userData = userDoc.exists() ? userDoc.data() : {};
         const studentClearedTime = userData.chatClearedAt ? new Date(userData.chatClearedAt) : null;
+
+        const timerSelect = document.getElementById('disappearing-timer-select');
+        let studentPersonalDays = 30;
+        if (timerSelect && timerSelect.value !== 'off') {
+            studentPersonalDays = parseInt(timerSelect.value);
+        }
+
+        const personalCutoffDate = new Date();
+        personalCutoffDate.setDate(personalCutoffDate.getDate() - studentPersonalDays);
+
+        const absoluteMaxDate = new Date();
+        absoluteMaxDate.setDate(absoluteMaxDate.getDate() - 30); // Global 30-Day Limit
 
         snapshot.forEach(docSnap => {
             let msgData = docSnap.data();
             msgData.msgId = docSnap.id;
             const msgTime = new Date(msgData.timestamp);
 
-            // 1️⃣ Global 30-Day Limit (Database Protection)
-            const thirtyDaysAgo = new Date();
-            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-            if (msgTime < thirtyDaysAgo) return;
+            // 1️⃣ Global 30-Day Rule
+            if (msgTime < absoluteMaxDate) return;
 
-            // 2️⃣ Disappearing Timer Expiry Check
-            if (msgData.expiresAt && new Date(msgData.expiresAt) < now) return;
+            // 2️⃣ Student-Side Disappearing Timer Rule
+            if (msgTime < personalCutoffDate) return;
 
-            // 3️⃣ Student Local Clear Chat Check
+            // 3️⃣ Student Local Clear Chat Rule
             if (studentClearedTime && msgTime <= studentClearedTime) return;
 
             msgs.push(msgData);
@@ -502,26 +497,7 @@ function openChatRoom(facultyName) {
 
         msgs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-        if (msgs.length === 0) {
-            chatMessagesContainer.innerHTML = `
-                <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 12px 15px; border-radius: 12px; font-size: 0.85rem; color: var(--text-color); line-height: 1.5; margin-bottom: 5px;">
-                    <div style="font-weight: bold; color: #38bdf8; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
-                        <span>💡</span> Faculty Virtual Room Guidelines / මාර්ගෝපදේශ / வழிகாட்டுதல்கள்
-                    </div>
-                    <div><b>English:</b> Welcome! Please keep discussions academic. When sharing media, kindly use compressed or smaller files to ensure a smooth experience for everyone.</div>
-                    <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 6px 0;">
-                    <div><b>සිංහල:</b> සාදරයෙන් පිළිගනිමු! කරුණාකර අධ්‍යාපනික කටයුතු සඳහා පමණක් පණිවිඩ හුවමාරු කර ගන්න. මීඩියා යැවීමේදී සයිස් එකෙන් කුඩා ඒවා යැවීමට කාරුණික වන්න.</div>
-                    <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 6px 0;">
-                    <div><b>தமிழ்:</b> நல்வரவு! கல்வி சார்ந்த விவாதங்களை மட்டும் பகிரவும். கோப்புகளை அனுப்பும்போது சிறிய அளவிலான கோப்புகளைப் பயன்படுத்தவும்.</div>
-                </div>
-                <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: auto; margin-bottom: auto;">
-                    No messages yet. Say hi to your friends! 👋
-                </div>
-            `;
-            return;
-        }
-
-        let html = `
+        const bannerHtml = `
             <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 12px 15px; border-radius: 12px; font-size: 0.85rem; color: var(--text-color); line-height: 1.5; margin-bottom: 5px;">
                 <div style="font-weight: bold; color: #38bdf8; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
                     <span>💡</span> Faculty Virtual Room Guidelines / මාර්ගෝපදේශ / வழிகாட்டுதல்கள்
@@ -533,6 +509,18 @@ function openChatRoom(facultyName) {
                 <div><b>தமிழ்:</b> நல்வரவு! கல்வி சார்ந்த விவாதங்களை மட்டும் பகிரவும். கோப்புகளை அனுப்பும்போது சிறிய அளவிலான கோப்புகளைப் பயன்படுத்தவும்.</div>
             </div>
         `;
+
+        if (msgs.length === 0) {
+            chatMessagesContainer.innerHTML = `
+                ${bannerHtml}
+                <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: auto; margin-bottom: auto;">
+                    No messages yet. Say hi to your friends! 👋
+                </div>
+            `;
+            return;
+        }
+
+        let html = bannerHtml;
 
         msgs.forEach(msg => {
             const isMe = msg.senderId === currentUser.uid;
@@ -1169,7 +1157,7 @@ onAuthStateChanged(auth, async (user) => {
 const performLogout = () => { 
     signOut(auth).then(() => { 
         allSubjects = []; 
-        currentStudentFaculty = null; // Clear virtual room session
+        currentStudentFaculty = null;
         showView('hub'); 
         updateUI(); 
     }); 
