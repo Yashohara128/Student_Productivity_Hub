@@ -2,7 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebas
 import { initIEEEModule } from './ieee.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, doc, updateDoc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
-// 🟢 Firebase Storage Import එකතු කර ඇත
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -18,7 +17,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app); // 🟢 Initialize Firebase Storage
+const storage = getStorage(app);
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
 
@@ -27,7 +26,7 @@ const appSection = document.getElementById('app-section');
 const userNameDisplay = document.getElementById('user-name');
 const loginBtn = document.getElementById('login-btn');
 const logoutBtn = document.getElementById('logout-btn');
-const mainLogoutBtn = document.getElementById('main-logout-btn'); // 🟢 Global Logout Button
+const mainLogoutBtn = document.getElementById('main-logout-btn');
 const addBtn = document.getElementById('add-btn');
 const degreeInput = document.getElementById('degree-name');
 
@@ -153,7 +152,6 @@ const chatInputText = document.getElementById('chat-input-text');
 const chatSendBtn = document.getElementById('chat-send-btn');
 const leaveRoomBtn = document.getElementById('leave-room-btn'); 
 
-// 🟢 Separate Upload, Voice & Clear Elements
 const chatImageBtn = document.getElementById('chat-image-btn');
 const chatImageInput = document.getElementById('chat-image-input');
 const chatDocBtn = document.getElementById('chat-doc-btn');
@@ -505,11 +503,37 @@ function openChatRoom(facultyName) {
         msgs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
         if (msgs.length === 0) {
-            chatMessagesContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin: auto;">No messages yet. Say hi your friend! 👋</div>`;
+            chatMessagesContainer.innerHTML = `
+                <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 12px 15px; border-radius: 12px; font-size: 0.85rem; color: var(--text-color); line-height: 1.5; margin-bottom: 5px;">
+                    <div style="font-weight: bold; color: #38bdf8; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
+                        <span>💡</span> Faculty Virtual Room Guidelines / මාර්ගෝපදේශ / வழிகாட்டுதல்கள்
+                    </div>
+                    <div><b>English:</b> Welcome! Please keep discussions academic. When sharing media, kindly use compressed or smaller files to ensure a smooth experience for everyone.</div>
+                    <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 6px 0;">
+                    <div><b>සිංහල:</b> සාදරයෙන් පිළිගනිමු! කරුණාකර අධ්‍යාපනික කටයුතු සඳහා පමණක් පණිවිඩ හුවමාරු කර ගන්න. මීඩියා යැවීමේදී සයිස් එකෙන් කුඩා ඒවා යැවීමට කාරුණික වන්න.</div>
+                    <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 6px 0;">
+                    <div><b>தமிழ்:</b> நல்வரவு! கல்வி சார்ந்த விவாதங்களை மட்டும் பகிரவும். கோப்புகளை அனுப்பும்போது சிறிய அளவிலான கோப்புகளைப் பயன்படுத்தவும்.</div>
+                </div>
+                <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: auto; margin-bottom: auto;">
+                    No messages yet. Say hi to your friends! 👋
+                </div>
+            `;
             return;
         }
 
-        let html = '';
+        let html = `
+            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 12px 15px; border-radius: 12px; font-size: 0.85rem; color: var(--text-color); line-height: 1.5; margin-bottom: 5px;">
+                <div style="font-weight: bold; color: #38bdf8; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
+                    <span>💡</span> Faculty Virtual Room Guidelines / මාර්ගෝපදේශ / வழிகாட்டுதல்கள்
+                </div>
+                <div><b>English:</b> Welcome! Please keep discussions academic. When sharing media, kindly use compressed or smaller files to ensure a smooth experience for everyone.</div>
+                <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 6px 0;">
+                <div><b>සිංහල:</b> සාදරයෙන් පිළිගනිමු! කරුණාකර අධ්‍යාපනික කටයුතු සඳහා පමණක් පණිවිඩ හුවමාරු කර ගන්න. මීඩියා යැවීමේදී සයිස් එකෙන් කුඩා ඒවා යැවීමට කාරුණික වන්න.</div>
+                <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 6px 0;">
+                <div><b>தமிழ்:</b> நல்வரவு! கல்வி சார்ந்த விவாதங்களை மட்டும் பகிரவும். கோப்புகளை அனுப்பும்போது சிறிய அளவிலான கோப்புகளைப் பயன்படுத்தவும்.</div>
+            </div>
+        `;
+
         msgs.forEach(msg => {
             const isMe = msg.senderId === currentUser.uid;
 
