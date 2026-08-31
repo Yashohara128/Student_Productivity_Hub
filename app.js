@@ -634,7 +634,7 @@ const aiAgentSidebar = document.getElementById('ai-agent-sidebar');
 if (aiToggleBtn && aiAgentSidebar) {
     aiToggleBtn.addEventListener('click', () => {
         if (window.innerWidth <= 768) {
-            // Mobile: Use only 'mobile-open'
+            // Mobile: Use only 'mobile-open' class to toggle drawer
             aiAgentSidebar.classList.toggle('mobile-open');
             if (aiAgentSidebar.classList.contains('mobile-open')) {
                 aiToggleBtn.innerHTML = "✕ Close Chat";
@@ -642,7 +642,7 @@ if (aiToggleBtn && aiAgentSidebar) {
                 aiToggleBtn.innerHTML = "🤖 Open AI Chat";
             }
         } else {
-            // Desktop: Use only 'collapsed'
+            // Desktop: Use only 'collapsed' class to hide sidebar
             aiAgentSidebar.classList.toggle('collapsed');
             if (aiAgentSidebar.classList.contains('collapsed')) {
                 aiToggleBtn.innerHTML = "🤖 Open AI Chat";
