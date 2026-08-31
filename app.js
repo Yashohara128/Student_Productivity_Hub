@@ -570,7 +570,7 @@ function openChatRoom(facultyName) {
                 1. මෙම virtual room එක ඇතුලේ ඔයලගේ campus එකේ අයියලා අක්කලා ඉන්න නිසා chat කිරිමේදි වචන භාවිතය ගැන සැලකිලිමත් වන්න.<br>
                 2. chat clear option එක හරහා සහ chat timer option තුලින් අදාල කාල සිමාවේ දී ඔබගේ චැට් එක ඔබගේ උපකරණයෙන් පමණක් ඉවත් වන අතර message delete option එක මගින් message එක සම්පුර්ණණයෙන්ම ඉවත් වීම සිදු වේ.<br>
                 3. අසභ්‍ය අන්තර්ගතයන්, දුරකතන අංක, ඊමේල් ලිපින, spam messages වැනි සංවේදි පණිවිඩ යැවීම නිසා ඔබගේ ගිණුම අවහිර වී යා හැකි බව මතක තබා ගන්න.<br>
-                4. මෙම virtual room පහසුකම මගින් ඔබගේ campus එක තුල සමස්ተ faculty එක ඇතුලත සහයෝගිතාවයෙන් ආරක්ෂිත ලෙස අධ්‍යාපනික තොරතුරු බෙදා ගැනීමට පහසුකම සැලසෙනු ඇතැයි අප විශ්වාස කරමු. - <i>Web Admin Team</i></div>
+                4. මෙම virtual room පහසුකම මගින් ඔබගේ campus එක තුල සමස්ත faculty එක ඇතුලත සහයෝගිතාවයෙන් ආරක්ෂිත ලෙස අධ්‍යාපනික තොරතුරු බෙදා ගැනීමට පහසුකම සැලසෙනු ඇතැයි අප විශ්වාස කරමු. - <i>Web Admin Team</i></div>
                 <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 8px 0;">
 
                 <!-- Tamil -->
@@ -627,13 +627,14 @@ function openChatRoom(facultyName) {
 // ==========================================
 
 
-// --- AI Agent Open / Close Toggle Logic (Fixed Mobile Drawer) ---
+// --- 🟢 AI Agent Open / Close Toggle Logic (Strict Fixed Logic) ---
 const aiToggleBtn = document.getElementById('ai-toggle-btn');
 const aiAgentSidebar = document.getElementById('ai-agent-sidebar');
 
 if (aiToggleBtn && aiAgentSidebar) {
     aiToggleBtn.addEventListener('click', () => {
         if (window.innerWidth <= 768) {
+            // Mobile: Use only 'mobile-open'
             aiAgentSidebar.classList.toggle('mobile-open');
             if (aiAgentSidebar.classList.contains('mobile-open')) {
                 aiToggleBtn.innerHTML = "✕ Close Chat";
@@ -641,6 +642,7 @@ if (aiToggleBtn && aiAgentSidebar) {
                 aiToggleBtn.innerHTML = "🤖 Open AI Chat";
             }
         } else {
+            // Desktop: Use only 'collapsed'
             aiAgentSidebar.classList.toggle('collapsed');
             if (aiAgentSidebar.classList.contains('collapsed')) {
                 aiToggleBtn.innerHTML = "🤖 Open AI Chat";
@@ -1576,7 +1578,7 @@ function updateUI() {
             { name: "First Class", min: CLASS_THRESHOLDS.FIRST_CLASS }
         ];
         let html = '';
-        thresholds.getToken(t => {
+        thresholds.forEach(t => {
             const isActive = currentGPA >= t.min;
             const diff = (t.min - currentGPA).toFixed(2);
             html += `<div class="goal-item ${isActive ? 'goal-active' : ''}"><div>${isActive ? '✅' : '🎯'} <b>${t.name} (>= ${t.min.toFixed(2)})</b></div>${!isActive ? `<small style="color:#38bdf8; margin-top:2px;">Need <b>${diff}</b> more points</small>` : `<small style="color:#22c55e; margin-top:2px;">Target Achieved!</small>`}</div>`;
@@ -1828,7 +1830,7 @@ if (downloadHumanizedDocxBtn) {
     downloadHumanizedDocxBtn.addEventListener('click', () => {
         const text = humanizedOutputText.value;
         if (!text) {
-            alert("No short notes available to download!");
+            alert("No humanized text available to download!");
             return;
         }
 
