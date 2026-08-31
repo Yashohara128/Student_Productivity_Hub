@@ -290,10 +290,34 @@ th { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font
 .btn-erase-sem { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.6rem 1rem; border-radius: 0.5rem; cursor: pointer; width: 100%; font-weight: 500; font-size: 0.85rem; }
 .btn-reset-all { background: #ef4444; color: white; border: none; padding: 0.6rem 1rem; border-radius: 0.5rem; cursor: pointer; font-weight: 500; width: 100%; font-size: 0.85rem; }
 
-
 /* =========================================
-   🟢 NEW FIX: Layout & Sidebar Styles
+   🟢 FIX: AI Agent Sidebar & Floating Button Styles
    ========================================= */
+
+#ai-toggle-btn {
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    z-index: 999999 !important;
+    background: linear-gradient(135deg, #38bdf8, #2563eb);
+    color: #0f172a;
+    border: none;
+    border-radius: 50px;
+    padding: 10px 18px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#ai-toggle-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(56, 189, 248, 0.6);
+}
 
 .app-layout-container {
     display: flex;
@@ -312,7 +336,6 @@ th { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font
     transition: padding 0.3s ease;
 }
 
-/* Base AI Sidebar Styles */
 .ai-agent-sidebar {
     width: 320px;
     min-width: 320px;
@@ -328,7 +351,6 @@ th { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font
     overflow: hidden;
 }
 
-/* 🟢 Desktop Collapsed State (Fixes Blank Space Issue) */
 @media (min-width: 769px) {
     .ai-agent-sidebar.collapsed {
         width: 0 !important;
@@ -340,7 +362,6 @@ th { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font
     }
 }
 
-/* 🟢 Mobile Drawer State (Fixes Freeze & Squeeze Issues) */
 @media (max-width: 768px) {
     .main-content {
         padding: 15px 10px !important; 
@@ -349,17 +370,17 @@ th { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font
     .ai-agent-sidebar {
         position: fixed !important;
         top: 0 !important;
-        left: -100% !important; /* Start off-screen */
+        left: -100% !important; 
         width: 85% !important;
         max-width: 320px !important;
         z-index: 99999 !important;
         box-shadow: 5px 0 25px rgba(0,0,0,0.8) !important;
-        opacity: 1 !important; /* Ensure visibility */
+        opacity: 1 !important; 
         border-right: none !important;
     }
     
     .ai-agent-sidebar.mobile-open {
-        left: 0 !important; /* Slide in on toggle */
+        left: 0 !important; 
     }
 
     #chat-input-text {
@@ -375,30 +396,4 @@ th { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font
     .footer-card {
         margin-bottom: 80px !important; 
     }
-}
-
-/* Floating AI Button */
-#ai-toggle-btn {
-    position: fixed !important;
-    bottom: 20px !important;
-    left: 20px !important;
-    z-index: 999999 !important;
-}
-
-/* Generic Desktop Media Query Tweaks */
-@media(min-width: 768px) {
-    body { padding: 3rem 1rem; }
-    .container { padding: 0; }
-    .glass-card { padding: 2rem; margin-bottom: 2rem; }
-    .login-card h1 { font-size: 2.5rem; }
-    .feature-cards-grid { grid-template-columns: repeat(3, 1fr); }
-    .dashboard { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    .form-grid { grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 1rem; }
-    .reset-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
-    .full-reset-box { border-top: none; border-left: 1px solid var(--card-border); padding-top: 0; padding-left: 2rem; }
-    .year-header, .semester-header { flex-direction: row; justify-content: space-between; align-items: center; }
-    .erase-select-group { grid-template-columns: 1.1fr 1fr; }
-    th, td { padding: 1rem 0.8rem; font-size: 0.9rem; }
-    .btn-remove, .btn-edit { padding: 0.3rem 0.6rem; font-size: 0.9rem; }
-    .feature-cards-grid { grid-template-columns: repeat(4, 1fr); } 
 }
