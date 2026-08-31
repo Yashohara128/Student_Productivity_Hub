@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
 import { initIEEEModule } from './ieee.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-// 🟢 මෙහි query සහ where අලුතෙන් ඇතුළත් කර ඇත
 import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, doc, updateDoc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -34,21 +33,21 @@ const viewGpa = document.getElementById('view-gpa');
 const viewShortNotes = document.getElementById('view-shortnotes');
 const viewPlagiarism = document.getElementById('view-plagiarism');
 const viewIeee = document.getElementById('view-ieee');
-const viewVirtualRoom = document.getElementById('view-virtual-room'); // 🟢 Virtual Room View
+const viewVirtualRoom = document.getElementById('view-virtual-room');
 
 // Card Triggers
 const cardGpa = document.getElementById('card-gpa');
 const cardShortNotes = document.getElementById('card-shortnotes');
 const cardPlagiarism = document.getElementById('card-plagiarism');
 const cardIeee = document.getElementById('card-ieee');
-const cardVirtualRoom = document.getElementById('card-virtual-room'); // 🟢 Virtual Room Card
+const cardVirtualRoom = document.getElementById('card-virtual-room');
 
 // Back Buttons
 const backToHubGpa = document.getElementById('back-to-hub-gpa');
 const backToHubShortNotes = document.getElementById('back-to-hub-shortnotes');
 const backToHubPlagiarism = document.getElementById('back-to-hub-plagiarism');
 const backToHubIeee = document.getElementById('back-to-hub-ieee');
-const backToHubRoom = document.getElementById('back-to-hub-room'); // 🟢 Virtual Room Back Btn
+const backToHubRoom = document.getElementById('back-to-hub-room');
 
 let allSubjects = []; 
 let currentUser = null; 
@@ -62,7 +61,6 @@ const CLASS_THRESHOLDS = {
     PASS: 2.00
 };
 
-// 🟢 ලොග් වී සිටින යුසර්ගේ නම ලබාගැනීමට පොදු ෆන්ෂන් එක
 function getStudentFirstName() {
     if (currentUser && currentUser.displayName) {
         return currentUser.displayName.split(" ")[0];
@@ -81,7 +79,6 @@ function getActiveSubjects() {
     return allSubjects.filter(sub => (sub.mode || 'horizon') === activeMode);
 }
 
-// --- Google Login via Popup ---
 if (loginBtn) {
     loginBtn.addEventListener('click', () => {
         signInWithPopup(auth, provider)
@@ -90,7 +87,6 @@ if (loginBtn) {
     });
 }
 
-// --- Dynamic Greeting ---
 function updateDynamicGreeting(userName) {
     const greetingEl = document.getElementById('welcome-greeting');
     if (!greetingEl) return;
@@ -105,7 +101,6 @@ function updateDynamicGreeting(userName) {
     greetingEl.innerHTML = `${emoji} ${timeGreeting}, <span style="color: var(--text-color); font-weight: 600;">${userName}</span>! <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 2px;">📅 ${formattedDate}</span>`;
 }
 
-// --- View Switcher ---
 function showView(viewName) {
     if (dashboardHub) dashboardHub.style.display = 'none';
     if (viewGpa) viewGpa.style.display = 'none';
@@ -125,7 +120,7 @@ function showView(viewName) {
     } else if (viewName === 'ieee') {
         if (viewIeee) viewIeee.style.display = 'block';
     } else if (viewName === 'virtualroom') {
-        if (viewVirtualRoom) viewVirtualRoom.style.display = 'flex'; // Chat window is flex
+        if (viewVirtualRoom) viewVirtualRoom.style.display = 'flex'; 
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -153,6 +148,7 @@ const chatMessagesContainer = document.getElementById('chat-messages-container')
 const chatInputText = document.getElementById('chat-input-text');
 const chatSendBtn = document.getElementById('chat-send-btn');
 const chatMediaBtn = document.getElementById('chat-media-btn');
+const leaveRoomBtn = document.getElementById('leave-room-btn'); // 🟢 Leave Button
 
 let currentStudentFaculty = null;
 
@@ -164,50 +160,98 @@ if (cardVirtualRoom) {
         const userDocRef = doc(db, "users", currentUser.uid);
         const userSnap = await getDoc(userDocRef);
 
-        if (userSnap.exists() && userSnap.data().faculty) {
+        if (userSnap.exists() && userSnap.data().faculty && userSnap.data().studentId) {
             currentStudentFaculty = userSnap.data().faculty;
             openChatRoom(currentStudentFaculty);
         } else {
-            studentIdModal.style.display = 'flex'; // Show verification modal
+            studentIdModal.style.display = 'flex'; 
         }
     });
 }
 
 if (closeIdModal) closeIdModal.addEventListener('click', () => { studentIdModal.style.display = 'none'; });
 
-// 2. ID Prefix Verification Logic
+// 2. ID Prefix Verification & 🛡️ SECURITY LOGIC
 if (verifyIdBtn) {
     verifyIdBtn.addEventListener('click', async () => {
         const studentId = document.getElementById('student-id-input').value.trim().toUpperCase();
         if (!studentId) { alert("⚠️ Please enter your Student ID."); return; }
 
-        let assignedFaculty = "";
-        
-        // Student ID Mapping based on Prefix
-        if (studentId.startsWith("IT")){ assignedFaculty = "Faculty of IT"; } 
-        else if (studentId.startsWith("EDU")){assignedFaculty = "Faculty of Education"; } 
-        else if (studentId.startsWith("MGT")){ assignedFaculty = "Faculty of Management"; } 
-        else if (studentId.startsWith("SCI")){ assignedFaculty = "Faculty of Science"; } 
-        else {
-            alert("❌ Invalid Student ID prefix! We couldn't recognize your faculty.");
-            return;
-        }
+        verifyIdBtn.innerText = "Verifying Security...";
+        verifyIdBtn.disabled = true;
 
-        verifyIdBtn.innerText = "Verifying...";
         try {
+            // 🚨 SECURITY CHECK: Check if this ID is already used by another account
+            const q = query(collection(db, "users"), where("studentId", "==", studentId));
+            const querySnapshot = await getDocs(q);
+
+            let isIdAlreadyTaken = false;
+            querySnapshot.forEach((doc) => {
+                if (doc.id !== currentUser.uid) {
+                    isIdAlreadyTaken = true;
+                }
+            });
+
+            if (isIdAlreadyTaken) {
+                alert("🚨 SECURITY ALERT: This Student ID is already registered to another account! Contact the Admin if this is an error.");
+                verifyIdBtn.innerText = "Verify & Join Room ➔";
+                verifyIdBtn.disabled = false;
+                return;
+            }
+
+            // 🎓 STUDENT ID PREFIX LOGIC
+            let assignedFaculty = "";
+            if (studentId.startsWith("IT")) { assignedFaculty = "Faculty of IT"; } 
+            else if (studentId.startsWith("EDU")) { assignedFaculty = "Faculty of Education"; } 
+            else if (studentId.startsWith("MGT")) { assignedFaculty = "Faculty of Management"; } 
+            else if (studentId.startsWith("SCI")) { assignedFaculty = "Faculty of Science"; } 
+            else {
+                alert("❌ Invalid Student ID prefix! We couldn't recognize your faculty.");
+                verifyIdBtn.innerText = "Verify & Join Room ➔";
+                verifyIdBtn.disabled = false;
+                return;
+            }
+
+            // 💾 SAVE PROFILE
             await setDoc(doc(db, "users", currentUser.uid), { 
                 studentId: studentId, 
                 faculty: assignedFaculty 
             }, { merge: true });
             
-            alert(`Verified! Welcome to the ${assignedFaculty} Virtual Room.`);
+            alert(`✅ Verified! Welcome to the ${assignedFaculty} Virtual Room.`);
             studentIdModal.style.display = 'none';
             currentStudentFaculty = assignedFaculty;
             openChatRoom(assignedFaculty);
+
         } catch (e) {
-            alert("Error saving profile: " + e.message);
+            alert("❌ Verification Error: " + e.message);
         } finally {
             verifyIdBtn.innerText = "Verify & Join Room ➔";
+            verifyIdBtn.disabled = false;
+        }
+    });
+}
+
+// 🚪 Leave Room Logic
+if (leaveRoomBtn) {
+    leaveRoomBtn.addEventListener('click', async () => {
+        if (!currentUser) return;
+        const confirmLeave = confirm("Are you sure you want to log out from this Virtual Room? You will need to verify your Student ID again to join.");
+        if (confirmLeave) {
+            leaveRoomBtn.innerText = "Leaving...";
+            try {
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    studentId: "",
+                    faculty: ""
+                });
+                currentStudentFaculty = null;
+                alert("🚪 You have successfully logged out of the Virtual Room.");
+                showView('hub');
+            } catch (error) {
+                alert("❌ Failed to leave room: " + error.message);
+            } finally {
+                leaveRoomBtn.innerText = "🚪 Leave";
+            }
         }
     });
 }
@@ -225,7 +269,7 @@ if (chatSendBtn) {
         const text = chatInputText.value.trim();
         if (!text || !currentStudentFaculty) return;
 
-        const cleanedText = filterSensitiveData(text); // Apply filter
+        const cleanedText = filterSensitiveData(text);
 
         try {
             await addDoc(collection(db, "virtual_rooms"), {
