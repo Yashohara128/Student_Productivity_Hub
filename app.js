@@ -1030,7 +1030,7 @@ if (downloadNotesDocxBtn) {
                 <title>Lecture Short Notes - Student Productivity Hub</title>
                 <style>
                     body { font-family: 'Times New Roman', serif; margin: 25mm; }
-                    .header-box { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 15mm; margin-bottom: 25mm; }
+                    .header-box { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 25mm; }
                     .header-box h1 { color: #0f172a; font-size: 18pt; margin: 0; }
                     .header-box p { color: #64748b; font-size: 10pt; margin: 5px 0 0 0; }
                 </style>
@@ -1065,7 +1065,7 @@ if (downloadNotesPdfBtn) {
 
         let formatted = text
             .replace(/^#\s+(.*)$/gm, '<h1>$1</h1>')
-            .replace(/^##\s+(.*)$/gm, '<h2>$2</h2>')
+            .replace(/^##\s+(.*)$/gm, '<h2>$1</h2>')
             .replace(/^###\s+(.*)$/gm, '<h3>$1</h3>')
             .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
             .replace(/\*(.*?)\*/g, '<i>$1</i>');
