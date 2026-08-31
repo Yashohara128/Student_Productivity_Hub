@@ -290,38 +290,102 @@ th { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font
 .btn-erase-sem { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.6rem 1rem; border-radius: 0.5rem; cursor: pointer; width: 100%; font-weight: 500; font-size: 0.85rem; }
 .btn-reset-all { background: #ef4444; color: white; border: none; padding: 0.6rem 1rem; border-radius: 0.5rem; cursor: pointer; font-weight: 500; width: 100%; font-size: 0.85rem; }
 
-/* 🟢 PC & Mobile Sidebar Toggle Animation & Styles */
-#ai-agent-sidebar {
+
+/* =========================================
+   🟢 NEW FIX: Layout & Sidebar Styles
+   ========================================= */
+
+.app-layout-container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    width: 100%;
+    position: relative;
+}
+
+.main-content {
+    flex: 1;
+    padding: 30px 40px;
+    overflow-y: auto;
+    height: 100vh;
+    width: 100%;
+    transition: padding 0.3s ease;
+}
+
+/* Base AI Sidebar Styles */
+.ai-agent-sidebar {
+    width: 320px;
+    min-width: 320px;
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-right: 1px solid var(--card-border);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100vh;
+    z-index: 100;
     transition: all 0.3s ease-in-out;
+    overflow: hidden;
 }
 
-#ai-agent-sidebar.collapsed {
-    margin-left: -320px !important;
-    opacity: 0;
-    pointer-events: none;
+/* 🟢 Desktop Collapsed State (Fixes Blank Space Issue) */
+@media (min-width: 769px) {
+    .ai-agent-sidebar.collapsed {
+        width: 0 !important;
+        min-width: 0 !important;
+        border-right: none !important;
+        opacity: 0;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
 }
 
+/* 🟢 Mobile Drawer State (Fixes Freeze & Squeeze Issues) */
 @media (max-width: 768px) {
-    #ai-agent-sidebar {
-        position: fixed !important;
-        left: -100% !important;
-        top: 0;
-        width: 85% !important;
-        height: 100vh;
-        z-index: 9998;
-        background: var(--bg-color, #0f172a);
-        box-shadow: 5px 0 25px rgba(0,0,0,0.5);
-        margin-left: 0 !important;
-        opacity: 1 !important;
-        pointer-events: auto !important;
-        transition: left 0.3s ease-in-out;
+    .main-content {
+        padding: 15px 10px !important; 
     }
 
-    #ai-agent-sidebar.mobile-open {
-        left: 0 !important;
+    .ai-agent-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: -100% !important; /* Start off-screen */
+        width: 85% !important;
+        max-width: 320px !important;
+        z-index: 99999 !important;
+        box-shadow: 5px 0 25px rgba(0,0,0,0.8) !important;
+        opacity: 1 !important; /* Ensure visibility */
+        border-right: none !important;
+    }
+    
+    .ai-agent-sidebar.mobile-open {
+        left: 0 !important; /* Slide in on toggle */
+    }
+
+    #chat-input-text {
+        padding: 12px 14px !important;
+        font-size: 0.95rem !important;
+        min-width: 80px !important;
+    }
+    
+    #chat-messages-container > div {
+        max-width: 90% !important; 
+    }
+
+    .footer-card {
+        margin-bottom: 80px !important; 
     }
 }
 
+/* Floating AI Button */
+#ai-toggle-btn {
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    z-index: 999999 !important;
+}
+
+/* Generic Desktop Media Query Tweaks */
 @media(min-width: 768px) {
     body { padding: 3rem 1rem; }
     .container { padding: 0; }
