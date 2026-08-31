@@ -452,6 +452,21 @@ window.deleteVirtualMessage = async function(msgId) {
     }
 };
 
+// ✏️ Edit Message Function
+window.editVirtualMessage = async function(msgId, currentText) {
+    const newText = prompt("Edit your message:", decodeURIComponent(currentText));
+    if (newText === null || newText.trim() === "") return;
+
+    const cleanedText = filterSensitiveData(newText.trim());
+    try {
+        await updateDoc(doc(db, "virtual_rooms", msgId), {
+            text: cleanedText
+        });
+    } catch (e) {
+        alert("Failed to edit message: " + e.message);
+    }
+};
+
 // 5. Load Real-time Messages (Global 1-Month DB limit & Student-side Disappearing/Clear filters)
 function openChatRoom(facultyName) {
     showView('virtualroom');
@@ -498,22 +513,40 @@ function openChatRoom(facultyName) {
         msgs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
         const bannerHtml = `
-            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 12px 15px; border-radius: 12px; font-size: 0.85rem; color: var(--text-color); line-height: 1.5; margin-bottom: 5px;">
+            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 10px; border-radius: 10px; font-size: 0.78rem; color: var(--text-color); line-height: 1.4; margin-bottom: 4px;">
                 <div style="font-weight: bold; color: #38bdf8; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
-                    <span>💡</span> Faculty Virtual Room Guidelines / මාර්ගෝපදේශ / வழிகாட்டுதல்கள்
+                    <span>💡</span> Virtual Room Guidelines / මාර්ගෝපදේශ / வழிகாட்டுதல்கள்
                 </div>
-                <div><b>English:</b> Welcome! Please keep discussions academic. When sharing media, kindly use compressed or smaller files to ensure a smooth experience for everyone.</div>
+
+                <!-- English -->
+                <div><b>English:</b> 
+                1. Please be mindful of your language and respectful while chatting, as seniors and fellow campus members are present in this virtual room.<br>
+                2. Chat clear & timer options remove messages from your device only, whereas the message delete option removes the message completely for everyone.<br>
+                3. Avoid sensitive content such as inappropriate material, phone numbers, email addresses, and spam messages to prevent your account from being blocked.<br>
+                4. We believe this virtual room helps you share educational information safely and cooperatively across the faculty. - <i>Web Admin Team</i></div>
                 <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 6px 0;">
-                <div><b>සිංහල:</b> සාදරයෙන් පිළිගනිමු! කරුණාකර අධ්‍යාපනික කටයුතු සඳහා පමණක් පණිවිඩ හුවමාරු කර ගන්න. මීඩියා යැවීමේදී සයිස් එකෙන් කුඩා ඒවා යැවීමට කාරුණික වන්න.</div>
+
+                <!-- Sinhala -->
+                <div><b>සිංහල:</b> 
+                1. මෙම virtual room එක ඇතුලේ ඔයලගේ campus එකේ අයියලා අක්කලා ඉන්න නිසා chat කිරිමේදි වචන භාවිතය ගැන සැලකිලිමත් වන්න.<br>
+                2. chat clear option එක හරහා සහ chat timer option තුලින් අදාල කාල සිමාවේ දී ඔබගේ චැට් එක ඔබගේ උපකරණයෙන් පමණක් ඉවත් වන අතර message delete option එක මගින් message එක සම්පුර්ණණයෙන්ම ඉවත් වීම සිදු වේ.<br>
+                3. අසභ්‍ය අන්තර්ගතයන්, දුරකතන අංක, ඊමේල් ලිපින, spam messages වැනි සංවේදි පණිවිඩ යැවීම නිසා ඔබගේ ගිණුම අවහිර වී යා හැකි බව මතක තබා ගන්න.<br>
+                4. මෙම virtual room පහසුකම මගින් ඔබගේ campus එක තුල සමස්ተ faculty එක ඇතුලත සහයෝගිතාවයෙන් ආරක්ෂිත ලෙස අධ්‍යාපනික තොරතුරු බෙදා ගැනීමට පහසුකම සැලසෙනු ඇතැයි අප විශ්වාස කරමු. - <i>Web Admin Team</i></div>
                 <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 6px 0;">
-                <div><b>தமிழ்:</b> நல்வரவு! கல்வி சார்ந்த விவாதங்களை மட்டும் பகிரவும். கோப்புகளை அனுப்பும்போது சிறிய அளவிலான கோப்புகளைப் பயன்படுத்தவும்.</div>
+
+                <!-- Tamil -->
+                <div><b>தமிழ்:</b> 
+                1. இந்த மெய்நிகர் அறையில் உங்கள் வளாகத்தின் மூத்த மாணவர்களும் அக்காக்களும் அண்ணன்களும் இருப்பதால், அரட்டையடிக்கும்போது வார்த்தைப் பயன்பாட்டில் கவனமாக இருக்கவும்.<br>
+                2. அரட்டை தெளிவு விருப்பம் (Chat clear option) மற்றும் அரட்டை டைமர் விருப்பம் (Chat timer option) மூலம் குறிப்பிட்ட நேரத்தில் உங்கள் அரட்டை உங்கள் சாதனத்திலிருந்து மட்டுமே நீக்கப்படும், அதே நேரத்தில் செய்தி நீக்குதல் விருப்பம் (Message delete option) செய்தியை முழுமையாக அகற்றும்.<br>
+                3. ஆபாசமான உள்ளடக்கங்கள், தொலைபேசி எண்கள், மின்னஞ்சல் முகவரிகள், ஸ்பேம் செய்திகள் போன்ற உணர்திறன் வாய்ந்த செய்திகளை அனுப்புவது உங்கள் கணக்கு முடக்கப்படுவதற்குக் காரணமாகலாம் என்பதை நினைவில் கொள்ளுங்கள்.<br>
+                4. இந்த மெய்நிகர் அறை வசதியானது உங்கள் வளாகத்திற்குள் முழு பீடத்திலும் ஒத்துழைப்புடன் பாதுகாப்பாக கல்வித் தகவல்களைப் பகிர்ந்து கொள்ள உதவும் என்று நாங்கள் நம்புகிறோம். - <i>Web Admin Team</i></div>
             </div>
         `;
 
         if (msgs.length === 0) {
             chatMessagesContainer.innerHTML = `
                 ${bannerHtml}
-                <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: auto; margin-bottom: auto;">
+                <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: auto; margin-bottom: auto;">
                     No messages yet. Say hi to your friends! 👋
                 </div>
             `;
@@ -541,7 +574,7 @@ function openChatRoom(facultyName) {
                     
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 3px;">
                         ${!isMe ? `<span style="font-size: 0.7rem; color: #a855f7; font-weight: bold;">${msg.senderName}</span>` : '<span></span>'}
-                        ${isMe ? `<button onclick="deleteVirtualMessage('${msg.msgId}')" style="background: none; border: none; color: #ef4444; font-size: 0.75rem; cursor: pointer; padding: 0;" title="Delete Message">🗑️</button>` : ''}
+                        ${isMe ? `<div style="display: flex; gap: 6px;"><button onclick="editVirtualMessage('${msg.msgId}', '${encodeURIComponent(msg.text || '')}')" style="background: none; border: none; color: #38bdf8; font-size: 0.75rem; cursor: pointer; padding: 0;" title="Edit Message">✏️</button><button onclick="deleteVirtualMessage('${msg.msgId}')" style="background: none; border: none; color: #ef4444; font-size: 0.75rem; cursor: pointer; padding: 0;" title="Delete Message">🗑️</button></div>` : ''}
                     </div>
 
                     <div style="color: var(--text-color); font-size: 0.9rem; line-height: 1.4;">${contentHtml}</div>
