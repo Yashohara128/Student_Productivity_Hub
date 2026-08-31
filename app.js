@@ -552,29 +552,29 @@ function openChatRoom(facultyName) {
         msgs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
         const bannerHtml = `
-            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 10px; border-radius: 10px; font-size: 0.78rem; color: var(--text-color); line-height: 1.4; margin-bottom: 4px;">
-                <div style="font-weight: bold; color: #38bdf8; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
+            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 12px 14px; border-radius: 12px; font-size: 0.82rem; color: var(--text-color); line-height: 1.5; margin-bottom: 6px;">
+                <div style="font-weight: bold; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-size: 0.9rem;">
                     <span>💡</span> Virtual Room Guidelines / මාර්ගෝපදේශ / வழிகாட்டுதல்கள்
                 </div>
 
                 <!-- English -->
-                <div><b>English:</b> 
+                <div><b>English:</b><br>
                 1. Please be mindful of your language and respectful while chatting, as seniors and fellow campus members are present in this virtual room.<br>
                 2. Chat clear option and chat timer options remove messages from your device only, whereas the message delete option removes the message completely for everyone.<br>
                 3. Avoid sensitive content such as inappropriate material, phone numbers, email addresses, and spam messages to prevent your account from being blocked.<br>
                 4. We believe this virtual room helps you share educational information safely and cooperatively across the faculty. - <i>Web Admin Team</i></div>
-                <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 6px 0;">
+                <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 8px 0;">
 
                 <!-- Sinhala -->
-                <div><b>සිංහල:</b> 
+                <div><b>සිංහල:</b><br>
                 1. මෙම virtual room එක ඇතුලේ ඔයලගේ campus එකේ අයියලා අක්කලා ඉන්න නිසා chat කිරිමේදි වචන භාවිතය ගැන සැලකිලිමත් වන්න.<br>
                 2. chat clear option එක හරහා සහ chat timer option තුලින් අදාල කාල සිමාවේ දී ඔබගේ චැට් එක ඔබගේ උපකරණයෙන් පමණක් ඉවත් වන අතර message delete option එක මගින් message එක සම්පුර්ණණයෙන්ම ඉවත් වීම සිදු වේ.<br>
                 3. අසභ්‍ය අන්තර්ගතයන්, දුරකතන අංක, ඊමේල් ලිපින, spam messages වැනි සංවේදි පණිවිඩ යැවීම නිසා ඔබගේ ගිණුම අවහිර වී යා හැකි බව මතක තබා ගන්න.<br>
                 4. මෙම virtual room පහසුකම මගින් ඔබගේ campus එක තුල සමස්ተ faculty එක ඇතුලත සහයෝගිතාවයෙන් ආරක්ෂිත ලෙස අධ්‍යාපනික තොරතුරු බෙදා ගැනීමට පහසුකම සැලසෙනු ඇතැයි අප විශ්වාස කරමු. - <i>Web Admin Team</i></div>
-                <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 6px 0;">
+                <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 8px 0;">
 
                 <!-- Tamil -->
-                <div><b>தமிழ்:</b> 
+                <div><b>தமிழ்:</b><br>
                 1. இந்த மெய்நிகர் அறையில் உங்கள் வளாகத்தின் மூத்த மாணவர்களும் அக்காக்களும் அண்ணன்களும் இருப்பதால், அரட்டையடிக்கும்போது வார்த்தைப் பயன்பாட்டில் கவனமாக இருக்கவும்.<br>
                 2. அரட்டை தெளிவு விருப்பம் (Chat clear option) மற்றும் அரட்டை டைமர் விருப்பம் (Chat timer option) மூலம் குறிப்பிட்ட நேரத்தில் உங்கள் அரட்டை உங்கள் சாதனத்திலிருந்து மட்டுமே நீக்கப்படும், அதே நேரத்தில் செய்தி நீக்குதல் விருப்பம் (Message delete option) செய்தியை முழுமையாக அகற்றும்.<br>
                 3. ஆபாசமான உள்ளடக்கங்கள், தொலைபேசி எண்கள், மின்னஞ்சல் முகவரிகள், ஸ்பேம் செய்திகள் போன்ற உணர்திறன் வாய்ந்த செய்திகளை அனுப்புவது உங்கள் கணக்கு முடக்கப்படுவதற்குக் காரணமாகலாம் என்பதை நினைவில் கொள்ளுங்கள்.<br>
@@ -585,7 +585,7 @@ function openChatRoom(facultyName) {
         if (msgs.length === 0) {
             chatMessagesContainer.innerHTML = `
                 ${bannerHtml}
-                <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: auto; margin-bottom: auto;">
+                <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: auto; margin-bottom: auto;">
                     No messages yet. Say hi to your friends! 👋
                 </div>
             `;
@@ -638,7 +638,7 @@ if (aiToggleBtn && aiAgentSidebar) {
             if (aiAgentSidebar.classList.contains('mobile-open')) {
                 aiToggleBtn.innerHTML = "✕ Close Chat";
             } else {
-                aiToggleBtn.innerHTML = "🤖 AI Chat";
+                aiToggleBtn.innerHTML = "🤖 Open AI Chat";
             }
         } else {
             aiAgentSidebar.classList.toggle('collapsed');
@@ -1030,7 +1030,7 @@ if (downloadNotesDocxBtn) {
                 <title>Lecture Short Notes - Student Productivity Hub</title>
                 <style>
                     body { font-family: 'Times New Roman', serif; margin: 25mm; }
-                    .header-box { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 25mm; }
+                    .header-box { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 15mm; margin-bottom: 25mm; }
                     .header-box h1 { color: #0f172a; font-size: 18pt; margin: 0; }
                     .header-box p { color: #64748b; font-size: 10pt; margin: 5px 0 0 0; }
                 </style>
@@ -1065,7 +1065,7 @@ if (downloadNotesPdfBtn) {
 
         let formatted = text
             .replace(/^#\s+(.*)$/gm, '<h1>$1</h1>')
-            .replace(/^##\s+(.*)$/gm, '<h2>$1</h2>')
+            .replace(/^##\s+(.*)$/gm, '<h2>$2</h2>')
             .replace(/^###\s+(.*)$/gm, '<h3>$1</h3>')
             .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
             .replace(/\*(.*?)\*/g, '<i>$1</i>');
