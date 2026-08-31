@@ -156,7 +156,7 @@ let currentStudentFaculty = null;
 // 1. Open Room Logic
 if (cardVirtualRoom) {
     cardVirtualRoom.addEventListener('click', async () => {
-        if (!currentUser) { alert("⚠️ Please login first!"); return; }
+        if (!currentUser) { alert("Please login first!"); return; }
 
         const userDocRef = doc(db, "users", currentUser.uid);
         const userSnap = await getDoc(userDocRef);
@@ -176,7 +176,7 @@ if (closeIdModal) closeIdModal.addEventListener('click', () => { studentIdModal.
 if (verifyIdBtn) {
     verifyIdBtn.addEventListener('click', async () => {
         const studentId = document.getElementById('student-id-input').value.trim().toUpperCase();
-        if (!studentId) { alert("⚠️ Please enter your Student ID."); return; }
+        if (!studentId) { alert("Please enter your Student ID."); return; }
 
         verifyIdBtn.innerText = "Verifying Security...";
         verifyIdBtn.disabled = true;
@@ -194,7 +194,7 @@ if (verifyIdBtn) {
             });
 
             if (isIdAlreadyTaken) {
-                alert("🚨 SECURITY ALERT: This Student ID is already registered to another account! Contact the Admin if this is an error.");
+                alert("SECURITY ALERT: This Student ID is already registered to another account! Contact the Admin if this is an error.");
                 verifyIdBtn.innerText = "Verify & Join Room ➔";
                 verifyIdBtn.disabled = false;
                 return;
@@ -207,7 +207,7 @@ if (verifyIdBtn) {
             else if (studentId.startsWith("MGT")) { assignedFaculty = "Faculty of Management"; } 
             else if (studentId.startsWith("SCI")) { assignedFaculty = "Faculty of Science"; } 
             else {
-                alert("❌ Invalid Student ID prefix! We couldn't recognize your faculty.");
+                alert("Invalid Student ID prefix! We couldn't recognize your faculty.");
                 verifyIdBtn.innerText = "Verify & Join Room ➔";
                 verifyIdBtn.disabled = false;
                 return;
@@ -219,13 +219,13 @@ if (verifyIdBtn) {
                 faculty: assignedFaculty 
             }, { merge: true });
             
-            alert(`✅ Verified! Welcome to the ${assignedFaculty} Virtual Room.`);
+            alert(`Verified! Welcome to the ${assignedFaculty} Virtual Room.`);
             studentIdModal.style.display = 'none';
             currentStudentFaculty = assignedFaculty;
             openChatRoom(assignedFaculty);
 
         } catch (e) {
-            alert("❌ Verification Error: " + e.message);
+            alert("Verification Error: " + e.message);
         } finally {
             verifyIdBtn.innerText = "Verify & Join Room ➔";
             verifyIdBtn.disabled = false;
@@ -246,12 +246,12 @@ if (leaveRoomBtn) {
                     faculty: ""
                 });
                 currentStudentFaculty = null;
-                alert("🚪 You have successfully logged out of the Virtual Room.");
+                alert("You have successfully logged out of the Virtual Room.");
                 showView('hub');
             } catch (error) {
-                alert("❌ Failed to leave room: " + error.message);
+                alert("Failed to leave room: " + error.message);
             } finally {
-                leaveRoomBtn.innerText = "🚪 Leave";
+                leaveRoomBtn.innerText = "Leave";
             }
         }
     });
@@ -259,8 +259,8 @@ if (leaveRoomBtn) {
 
 // 3. Sensitive Data Filter (Regex)
 function filterSensitiveData(text) {
-    let safeText = text.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, " 🚫 <i>[Email Blocked]</i> ");
-    safeText = safeText.replace(/(?:\+94|0)[0-9]{9}/g, " 🚫 <i>[Phone Blocked]</i> ");
+    let safeText = text.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, " 🚫 <i>[Emails are not allowed to this chat]</i> ");
+    safeText = safeText.replace(/(?:\+94|0)[0-9]{9}/g, " 🚫 <i>[Contact numbers are not allowed to this chat]</i> ");
     return safeText;
 }
 
@@ -294,7 +294,7 @@ if (chatInputText) {
 
 if(chatMediaBtn) {
     chatMediaBtn.addEventListener('click', () => {
-        alert("📷 Media upload feature will be connected to Firebase Storage soon!");
+        alert("Media upload feature will be available soon!");
     });
 }
 
@@ -311,7 +311,7 @@ function openChatRoom(facultyName) {
         msgs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
         if (msgs.length === 0) {
-            chatMessagesContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin: auto;">No messages yet. Say hi! 👋</div>`;
+            chatMessagesContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin: auto;">No messages yet. Say hi your friend! 👋</div>`;
             return;
         }
 
@@ -376,10 +376,10 @@ if (closeGotItBtn) closeGotItBtn.addEventListener('click', () => { if (reviewMod
 
 if (modalSubmitReviewBtn) {
     modalSubmitReviewBtn.addEventListener('click', async () => {
-        if (!currentUser) { alert("⚠️ Please login first!"); return; }
+        if (!currentUser) { alert("Please login first!"); return; }
         const comment = modalReviewComment.value.trim();
         const rating = parseInt(modalReviewRating.value);
-        if (!comment) { alert("⚠️ Please write a comment!"); return; }
+        if (!comment) { alert("Please write a comment!"); return; }
 
         modalSubmitReviewBtn.innerText = "Submitting...";
         modalSubmitReviewBtn.disabled = true;
@@ -389,11 +389,11 @@ if (modalSubmitReviewBtn) {
                 userEmail: currentUser.email,
                 rating, comment, createdAt: new Date().toISOString()
             });
-            alert("✅ Thank you for your feedback!");
+            alert("Thank you for your feedback!");
             modalReviewComment.value = '';
             modalReviewRating.selectedIndex = 0;
         } catch (e) { 
-            alert("❌ Failed to submit review: " + e.message); 
+            alert("Failed to submit review: " + e.message); 
         } finally { 
             modalSubmitReviewBtn.innerText = "Submit Review"; 
             modalSubmitReviewBtn.disabled = false; 
@@ -467,8 +467,8 @@ window.startPayHerePayment = function(planName, amount, wordLimit) {
         closePricingModal();
         location.reload();
     };
-    payhere.onDismissed = () => alert("⚠️ Payment cancelled.");
-    payhere.onError = (err) => alert("❌ Payment Error: " + err);
+    payhere.onDismissed = () => alert("Payment cancelled.");
+    payhere.onError = (err) => alert("Payment Error: " + err);
     payhere.startPayment(payment);
 };
 
@@ -506,10 +506,10 @@ if (aiAttachBtn && aiFileInput) {
                         fullText += textContent.items.map(item => item.str).join(' ') + "\n";
                     }
                     attachedAiFileText = fullText.trim();
-                    alert("✅ PDF attached & read successfully!");
+                    alert("PDF attached & read successfully!");
                 } catch (err) {
                     console.error("PDF Read Error:", err);
-                    alert("❌ Failed to read attached PDF.");
+                    alert("Failed to read attached PDF.");
                 }
             };
         } else {
@@ -517,7 +517,7 @@ if (aiAttachBtn && aiFileInput) {
             reader.readAsText(file);
             reader.onload = function(e) {
                 attachedAiFileText = e.target.result;
-                alert("✅ Document attached successfully!");
+                alert("Document attached successfully!");
             };
         }
     });
@@ -532,7 +532,7 @@ async function sendQueryToAIAgent() {
 
     aiChatMessages.innerHTML += `
         <div style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); padding: 10px; border-radius: 8px; color: var(--text-color); align-self: flex-end; max-width: 90%;">
-            <b>You:</b> ${displayMsg} ${attachedAiFileText ? '<br><small style="color: #38bdf8;">[📄 Document Attached]</small>' : ''}
+            <b>You:</b> ${displayMsg} ${attachedAiFileText ? '<br><small style="color: #38bdf8;">[Document Attached]</small>' : ''}
         </div>
     `;
     aiChatInput.value = '';
@@ -541,7 +541,7 @@ async function sendQueryToAIAgent() {
     const loadingId = 'ai-loading-' + Date.now();
     aiChatMessages.innerHTML += `
         <div id="${loadingId}" style="background: var(--input-bg); padding: 8px 12px; border-radius: 8px; color: var(--text-muted); font-style: italic;">
-            🤖 AI Agent is thinking...
+            AI Agent is thinking...
         </div>
     `;
     aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
@@ -645,10 +645,10 @@ if (notePdfUpload) {
                     fullText += textContent.items.map(item => item.str).join(' ') + "\n";
                 }
                 extractedNoteText = fullText.trim();
-                alert("✅ Lecture PDF text extracted successfully! Ready to generate short notes.");
+                alert("Lecture PDF text extracted successfully! Ready to generate short notes.");
             } catch (err) {
                 console.error("PDF Read Error:", err);
-                alert("❌ Failed to read PDF file.");
+                alert("Failed to read PDF file.");
             }
         };
     });
@@ -657,7 +657,7 @@ if (notePdfUpload) {
 if (generateNotesBtn) {
     generateNotesBtn.addEventListener('click', async () => {
         if (!extractedNoteText) {
-            alert("⚠️ Please upload a lecture PDF first!");
+            alert("Please upload a lecture PDF first!");
             return;
         }
 
@@ -667,7 +667,7 @@ if (generateNotesBtn) {
         if (noteLoading) noteLoading.style.display = 'block';
         if (noteResultSection) noteResultSection.style.display = 'none';
         generateNotesBtn.disabled = true;
-        generateNotesBtn.innerText = "Generating via Gemini AI...";
+        generateNotesBtn.innerText = "Generating Progress...";
 
         try {
             const response = await fetch('/api/shortnotes', {
@@ -681,7 +681,7 @@ if (generateNotesBtn) {
 
             const data = await response.json();
             if (data.error) {
-                alert("❌ Error: " + data.error);
+                alert("Error: " + data.error);
                 return;
             }
 
@@ -691,7 +691,7 @@ if (generateNotesBtn) {
             }
         } catch (error) {
             console.error("Short Notes API Error:", error);
-            alert("❌ Failed to connect to server for generating short notes.");
+            alert("Failed to connect to server for generating short notes.");
         } finally {
             if (noteLoading) noteLoading.style.display = 'none';
             generateNotesBtn.disabled = false;
@@ -705,7 +705,7 @@ if (downloadNotesDocxBtn) {
     downloadNotesDocxBtn.addEventListener('click', () => {
         const text = generatedNotesOutput.value;
         if (!text) {
-            alert("⚠️ No short notes available to download!");
+            alert("No short notes available to download!");
             return;
         }
 
@@ -764,7 +764,7 @@ if (downloadNotesPdfBtn) {
     downloadNotesPdfBtn.addEventListener('click', () => {
         const text = generatedNotesOutput.value;
         if (!text) {
-            alert("⚠️ No short notes available to download!");
+            alert("No short notes available to download!");
             return;
         }
 
@@ -872,12 +872,12 @@ if (profileOkBtn) {
         if (!universitySelector || !degreeInput) return;
         const mode = universitySelector.value;
         const deg = degreeInput.value.trim();
-        if (!deg) { alert("⚠️ Please enter your Degree Program name!"); degreeInput.focus(); return; }
+        if (!deg) { alert("Please enter your Degree Program name!"); degreeInput.focus(); return; }
         localStorage.setItem('active_uni_mode', mode);
         localStorage.setItem(mode + '_degree', deg);
         toggleUniversityMode(mode);
         updateUI();
-        alert("✅ Profile switched successfully!");
+        alert("Profile switched successfully!");
     });
 }
 
@@ -959,7 +959,7 @@ async function loadSubjectsFromDB() {
 }
 
 window.editSubject = function(dbId) {
-    if (!degreeInput || degreeInput.value.trim() === "") { alert("⚠️ Please enter Degree Program name first!"); degreeInput.focus(); return; }
+    if (!degreeInput || degreeInput.value.trim() === "") { alert("Please enter Degree Program name first!"); degreeInput.focus(); return; }
     const sub = allSubjects.find(s => s.dbId === dbId);
     if (!sub) return;
     document.getElementById('subject-name').value = sub.name;
@@ -990,7 +990,7 @@ window.editSubject = function(dbId) {
 if (addBtn) {
     addBtn.addEventListener('click', async () => {
         if (!currentUser) return;
-        if (!degreeInput || degreeInput.value.trim() === "") { alert("⚠️ Please enter Degree name first!"); degreeInput.focus(); return; }
+        if (!degreeInput || degreeInput.value.trim() === "") { alert("Please enter Degree name first!"); degreeInput.focus(); return; }
 
         const name = document.getElementById('subject-name').value.trim();
         const year = document.getElementById('subject-year').value;
@@ -1089,9 +1089,9 @@ if (resetAllBtn) {
 const downloadPdfBtn = document.getElementById('download-pdf');
 if (downloadPdfBtn) {
     downloadPdfBtn.addEventListener('click', () => {
-        if (!degreeInput || degreeInput.value.trim() === "") { alert("⚠️ Enter degree name first!"); degreeInput.focus(); return; }
+        if (!degreeInput || degreeInput.value.trim() === "") { alert("Enter degree name first!"); degreeInput.focus(); return; }
         const activeSubjects = getActiveSubjects();
-        if (activeSubjects.length === 0) { alert("⚠️ Add at least one subject!"); return; }
+        if (activeSubjects.length === 0) { alert("Add at least one subject!"); return; }
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -1350,10 +1350,10 @@ if (pdfUpload) {
                     fullText += textContent.items.map(item => item.str).join(' ') + "\n";
                 }
                 document.getElementById('plagiarism-text').value = fullText.trim();
-                alert("✅ PDF text extracted successfully!");
+                alert("PDF text extracted successfully!");
             } catch (err) {
                 console.error("PDF Read Error:", err);
-                alert("❌ Failed to read PDF file.");
+                alert("Failed to read PDF file.");
             }
         };
     });
@@ -1393,14 +1393,14 @@ if (checkPlagiarismBtn) {
     checkPlagiarismBtn.addEventListener('click', async () => {
         const text = plagiarismText.value.trim();
         if (text === "") {
-            alert("⚠️ Please paste text or upload a PDF first!");
+            alert("Please paste text or upload a PDF first!");
             plagiarismText.focus();
             return;
         }
 
         const inputWords = text.split(/\s+/).length;
         if (inputWords < 10) {
-            alert("⚠️ Please enter a longer text (at least 10 words).");
+            alert("Please enter a longer text (at least 10 words).");
             return;
         }
 
@@ -1470,7 +1470,7 @@ if (checkPlagiarismBtn) {
 
             if (humanizeResponse.error) {
                 const activeName = getStudentFirstName();
-                alert(`⚠️ AI Limit reached during Humanizing, ${activeName}! 😅 Word quota එකෙන් කිසිම වර්ඩ් එකක් අඩු වුණේ නැහැ. පස්සේ ට්‍රයි කරන්න! 💛✨`);
+                alert(`AI Limit reached during Humanizing, ${activeName}! ඔයාගේ Word quota එකෙන් කිසිම වර්ඩ් එකක් අඩු වුණේ නැහැ. පස්සේ ට්‍රයි කරන්න!`);
                 
                 checkPlagiarismBtn.innerText = "Scan for Plagiarism & AI";
                 checkPlagiarismBtn.disabled = false;
@@ -1502,7 +1502,7 @@ if (checkPlagiarismBtn) {
             if (humanizeBox) humanizeBox.style.display = 'block';
         } catch (error) {
             console.error("API Error:", error);
-            alert("❌ Plagiarism scan failed.");
+            alert("Plagiarism scan failed.");
         } finally {
             checkPlagiarismBtn.innerText = "Scan for Plagiarism & AI";
             checkPlagiarismBtn.disabled = false;
@@ -1514,7 +1514,7 @@ if (copyHumanizedBtn) {
     copyHumanizedBtn.addEventListener('click', () => {
         humanizedOutputText.select();
         navigator.clipboard.writeText(humanizedOutputText.value);
-        alert("📋 Humanized text copied to clipboard!");
+        alert("Humanized text copied to clipboard!");
     });
 }
 
@@ -1533,7 +1533,7 @@ if (downloadHumanizedDocxBtn) {
     downloadHumanizedDocxBtn.addEventListener('click', () => {
         const text = humanizedOutputText.value;
         if (!text) {
-            alert("⚠️ No humanized text available to download!");
+            alert("No humanized text available to download!");
             return;
         }
 
