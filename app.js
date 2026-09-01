@@ -21,7 +21,6 @@ const storage = getStorage(app);
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
 
-// 🟢 Reusable SVGs 
 const svgs = {
     sun: `<svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
     cloud: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>`,
@@ -80,26 +79,15 @@ let currentUser = null;
 let editingSubjectId = null; 
 let myChart = null;
 
-const CLASS_THRESHOLDS = { 
-    FIRST_CLASS: 3.70, 
-    SECOND_UPPER: 3.30, 
-    SECOND_LOWER: 3.00, 
-    PASS: 2.00 
-};
+const CLASS_THRESHOLDS = { FIRST_CLASS: 3.70, SECOND_UPPER: 3.30, SECOND_LOWER: 3.00, PASS: 2.00 };
 
 function getStudentFirstName() {
-    if (currentUser && currentUser.displayName) {
-        return currentUser.displayName.split(" ")[0];
-    } else if (currentUser && currentUser.email) {
-        return currentUser.email.split('@')[0];
-    }
+    if (currentUser && currentUser.displayName) return currentUser.displayName.split(" ")[0];
+    else if (currentUser && currentUser.email) return currentUser.email.split('@')[0];
     return "Student";
 }
 
-function getActiveMode() {
-    return localStorage.getItem('active_uni_mode') || 'horizon';
-}
-
+function getActiveMode() { return localStorage.getItem('active_uni_mode') || 'horizon'; }
 function getActiveSubjects() {
     const activeMode = getActiveMode();
     return allSubjects.filter(sub => (sub.mode || 'horizon') === activeMode);
@@ -144,15 +132,25 @@ function updateDynamicGreeting(userName) {
 }
 
 function showView(viewName) {
-    const views = ['dashboard-hub', 'view-gpa', 'view-shortnotes', 'view-plagiarism', 'view-ieee', 'view-virtual-room'];
-    views.forEach(v => {
-        const el = document.getElementById(v);
-        if (el) el.style.display = 'none';
-    });
+    if (dashboardHub) dashboardHub.style.display = 'none';
+    if (viewGpa) viewGpa.style.display = 'none';
+    if (viewShortNotes) viewShortNotes.style.display = 'none';
+    if (viewPlagiarism) viewPlagiarism.style.display = 'none';
+    if (viewIeee) viewIeee.style.display = 'none';
+    if (viewVirtualRoom) viewVirtualRoom.style.display = 'none';
 
-    const target = document.getElementById(viewName === 'hub' ? 'dashboard-hub' : `view-${viewName}`);
-    if (target) {
-        target.style.display = viewName === 'virtualroom' ? 'flex' : 'block';
+    if (viewName === 'hub') {
+        if (dashboardHub) dashboardHub.style.display = 'block';
+    } else if (viewName === 'gpa') {
+        if (viewGpa) { viewGpa.style.display = 'block'; renderGPAChart(); }
+    } else if (viewName === 'shortnotes') {
+        if (viewShortNotes) viewShortNotes.style.display = 'block';
+    } else if (viewName === 'plagiarism') {
+        if (viewPlagiarism) viewPlagiarism.style.display = 'block';
+    } else if (viewName === 'ieee') {
+        if (viewIeee) viewIeee.style.display = 'block';
+    } else if (viewName === 'virtualroom') {
+        if (viewVirtualRoom) viewVirtualRoom.style.display = 'flex'; 
     }
     
     // Smooth scroll only if it's not the virtual room
@@ -645,7 +643,7 @@ if(menuMicBtn) {
                 };
 
                 mediaRecorder.onstop = async () => {
-                    isRecording = false; // Fixed: properly reset recording state
+                    isRecording = false; 
                     
                     if (recordingIndicator) {
                         recordingIndicator.style.display = 'none';
