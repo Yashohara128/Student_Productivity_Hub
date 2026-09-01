@@ -226,11 +226,13 @@ if (cardVirtualRoom) {
     cardVirtualRoom.addEventListener('click', async () => {
         if (!currentUser) { alert("Please login first!"); return; }
 
-        const userDocRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userDocRef);
-if (userSnap.exists() && userSnap.data().virtualRoomBanned) {
+        try {
+            const userDocRef = doc(db, "users", currentUser.uid);
+            const userSnap = await getDoc(userDocRef);
+
+            if (userSnap.exists() && userSnap.data().virtualRoomBanned) {
                 alert("⛔ Access Denied: You have been permanently banned from the Virtual Room due to repeated guideline violations.");
-                return; // Room එකට යන්න දෙන්නේ නැත, අනෙකුත් features සාමාන්‍ය පරිදි වැඩ කරයි!
+                return; 
             }
 
             if (userSnap.exists() && userSnap.data().faculty && userSnap.data().studentId) {
@@ -246,7 +248,6 @@ if (userSnap.exists() && userSnap.data().virtualRoomBanned) {
         }
     });
 }
-            
             // 🟢 Show Guidelines Modal when entering the room
             if(roomGuidelinesModal) {
                 roomGuidelinesModal.style.display = 'flex';
