@@ -21,6 +21,25 @@ const storage = getStorage(app);
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
 
+// 🟢 Reusable SVGs inside JS (No Emojis)
+const svgs = {
+    sun: `<svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
+    cloud: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>`,
+    sunset: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M12 10V2"/><path d="m4.93 10.93 1.41-1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41-1.41"/><path d="M22 22H2"/><path d="m16 6-4 4-4-4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg>`,
+    moon: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`,
+    user: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+    bot: `<svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>`,
+    folder: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`,
+    check: `<svg class="icon-sm" style="stroke:#22c55e;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`,
+    target: `<svg class="icon-sm" style="stroke:#38bdf8;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+    photo: `<svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+    doc: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+    mic: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`,
+    edit: `<svg class="icon-sm" style="stroke:#38bdf8; width:12px; height:12px;" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+    trash: `<svg class="icon-sm" style="stroke:#ef4444; width:12px; height:12px;" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
+    star: `<svg class="icon-sm" style="stroke:#fbbf24; fill:#fbbf24;" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+};
+
 const loginSection = document.getElementById('login-section');
 const appSection = document.getElementById('app-section');
 const userNameDisplay = document.getElementById('user-name');
@@ -57,38 +76,11 @@ let currentUser = null;
 let editingSubjectId = null; 
 let myChart = null;
 
-const CLASS_THRESHOLDS = {
-    FIRST_CLASS: 3.70,
-    SECOND_UPPER: 3.30,
-    SECOND_LOWER: 3.00,
-    PASS: 2.00
-};
-
-// 🟢 Reusable SVGs inside JS
-const svgs = {
-    sun: `<svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
-    cloud: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>`,
-    sunset: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M12 10V2"/><path d="m4.93 10.93 1.41-1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41-1.41"/><path d="M22 22H2"/><path d="m16 6-4 4-4-4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg>`,
-    moon: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`,
-    user: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
-    bot: `<svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>`,
-    folder: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`,
-    check: `<svg class="icon-sm" style="stroke:#22c55e;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`,
-    target: `<svg class="icon-sm" style="stroke:#38bdf8;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
-    photo: `<svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
-    doc: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
-    mic: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`,
-    edit: `<svg class="icon-sm" style="stroke:#38bdf8; width:12px; height:12px;" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
-    trash: `<svg class="icon-sm" style="stroke:#ef4444; width:12px; height:12px;" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
-    star: `<svg class="icon-sm" style="stroke:#fbbf24; fill:#fbbf24;" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
-};
+const CLASS_THRESHOLDS = { FIRST_CLASS: 3.70, SECOND_UPPER: 3.30, SECOND_LOWER: 3.00, PASS: 2.00 };
 
 function getStudentFirstName() {
-    if (currentUser && currentUser.displayName) {
-        return currentUser.displayName.split(" ")[0];
-    } else if (currentUser && currentUser.email) {
-        return currentUser.email.split('@')[0];
-    }
+    if (currentUser && currentUser.displayName) return currentUser.displayName.split(" ")[0];
+    else if (currentUser && currentUser.email) return currentUser.email.split('@')[0];
     return "Student";
 }
 
@@ -100,9 +92,7 @@ function getActiveSubjects() {
 
 if (loginBtn) {
     loginBtn.addEventListener('click', () => {
-        signInWithPopup(auth, provider)
-            .then((result) => { console.log("Login Success:", result.user.displayName); })
-            .catch((error) => { alert("Login Failed: " + error.message); });
+        signInWithPopup(auth, provider).catch((error) => { alert("Login Failed: " + error.message); });
     });
 }
 
@@ -129,19 +119,12 @@ function showView(viewName) {
     if (viewIeee) viewIeee.style.display = 'none';
     if (viewVirtualRoom) viewVirtualRoom.style.display = 'none';
 
-    if (viewName === 'hub') {
-        if (dashboardHub) dashboardHub.style.display = 'block';
-    } else if (viewName === 'gpa') {
-        if (viewGpa) { viewGpa.style.display = 'block'; renderGPAChart(); }
-    } else if (viewName === 'shortnotes') {
-        if (viewShortNotes) viewShortNotes.style.display = 'block';
-    } else if (viewName === 'plagiarism') {
-        if (viewPlagiarism) viewPlagiarism.style.display = 'block';
-    } else if (viewName === 'ieee') {
-        if (viewIeee) viewIeee.style.display = 'block';
-    } else if (viewName === 'virtualroom') {
-        if (viewVirtualRoom) viewVirtualRoom.style.display = 'flex'; 
-    }
+    if (viewName === 'hub') { if (dashboardHub) dashboardHub.style.display = 'block'; } 
+    else if (viewName === 'gpa') { if (viewGpa) { viewGpa.style.display = 'block'; renderGPAChart(); } } 
+    else if (viewName === 'shortnotes') { if (viewShortNotes) viewShortNotes.style.display = 'block'; } 
+    else if (viewName === 'plagiarism') { if (viewPlagiarism) viewPlagiarism.style.display = 'block'; } 
+    else if (viewName === 'ieee') { if (viewIeee) viewIeee.style.display = 'block'; } 
+    else if (viewName === 'virtualroom') { if (viewVirtualRoom) viewVirtualRoom.style.display = 'flex'; }
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -169,7 +152,7 @@ const chatSendBtn = document.getElementById('chat-send-btn');
 const leaveRoomBtn = document.getElementById('leave-room-btn'); 
 const clearMyChatBtn = document.getElementById('clear-my-chat-btn');
 
-// Attachment Menu Elements
+// 🟢 New Attachment Menu Elements
 const mainAttachBtn = document.getElementById('main-attach-btn');
 const attachmentMenu = document.getElementById('attachment-menu');
 const menuImageBtn = document.getElementById('menu-image-btn');
@@ -192,6 +175,7 @@ const acceptGuidelinesBtn = document.getElementById('accept-guidelines-btn');
 let currentStudentFaculty = null;
 let recordedAudioBlob = null;
 
+// 1. Open Room Logic
 if (cardVirtualRoom) {
     cardVirtualRoom.addEventListener('click', async () => {
         if (!currentUser) { alert("Please login first!"); return; }
@@ -217,6 +201,7 @@ if (acceptGuidelinesBtn) {
 
 if (closeIdModal) closeIdModal.addEventListener('click', () => { studentIdModal.style.display = 'none'; });
 
+// 2. ID Prefix Verification
 if (verifyIdBtn) {
     verifyIdBtn.addEventListener('click', async () => {
         const studentId = document.getElementById('student-id-input').value.trim().toUpperCase();
@@ -230,9 +215,7 @@ if (verifyIdBtn) {
             const querySnapshot = await getDocs(q);
 
             let isIdAlreadyTaken = false;
-            querySnapshot.forEach((doc) => {
-                if (doc.id !== currentUser.uid) { isIdAlreadyTaken = true; }
-            });
+            querySnapshot.forEach((doc) => { if (doc.id !== currentUser.uid) { isIdAlreadyTaken = true; } });
 
             if (isIdAlreadyTaken) {
                 alert("SECURITY ALERT: This Student ID is already registered!");
@@ -269,33 +252,30 @@ if (verifyIdBtn) {
     });
 }
 
+// 🚪 Leave Room Logic
 if (leaveRoomBtn) {
     leaveRoomBtn.addEventListener('click', async () => {
         if (!currentUser) return;
-        const confirmLeave = confirm("Are you sure you want to log out from this Virtual Room?");
-        if (confirmLeave) {
+        if (confirm("Are you sure you want to log out from this Virtual Room?")) {
             leaveRoomBtn.innerText = "Leaving...";
             try {
                 await updateDoc(doc(db, "users", currentUser.uid), { studentId: "", faculty: "" });
                 currentStudentFaculty = null;
                 showView('hub');
-            } catch (error) {
-                alert("Failed to leave room: " + error.message);
-            } finally {
-                leaveRoomBtn.innerText = "Leave";
-            }
+            } catch (error) { alert("Failed to leave room."); } 
+            finally { leaveRoomBtn.innerText = "Leave"; }
         }
     });
 }
 
+// 🧹 Clear Chat Logic 
 if (clearMyChatBtn) {
     clearMyChatBtn.addEventListener('click', async () => {
         if (!currentUser) return;
-        const confirmClear = confirm("Are you sure you want to clear the chat view for yourself?");
-        if (confirmClear) {
+        if (confirm("Are you sure you want to clear the chat view for yourself?")) {
             try {
                 await setDoc(doc(db, "users", currentUser.uid), { chatClearedAt: new Date().toISOString() }, { merge: true });
-                if (currentStudentFaculty) { openChatRoom(currentStudentFaculty); }
+                if (currentStudentFaculty) openChatRoom(currentStudentFaculty); 
             } catch (e) { alert("Failed to clear chat: " + e.message); }
         }
     });
@@ -307,6 +287,7 @@ function filterSensitiveData(text) {
     return safeText;
 }
 
+// 4. Send Message to Firestore
 if (chatSendBtn) {
     chatSendBtn.addEventListener('click', async () => {
         const text = chatInputText.value.trim();
@@ -317,12 +298,8 @@ if (chatSendBtn) {
 
         try {
             await addDoc(collection(db, "virtual_rooms"), {
-                faculty: currentStudentFaculty,
-                senderName: getStudentFirstName(),
-                senderId: currentUser.uid,
-                text: cleanedText,
-                type: 'text',
-                timestamp: new Date().toISOString()
+                faculty: currentStudentFaculty, senderName: getStudentFirstName(), senderId: currentUser.uid,
+                text: cleanedText, type: 'text', timestamp: new Date().toISOString()
             });
         } catch (e) { console.error("Error sending message:", e); }
     });
@@ -331,17 +308,26 @@ if (chatSendBtn) {
 if (chatInputText) {
     chatInputText.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
-            // Allows native browser newline!
+            // Allows native browser newline! No auto-send.
         }
     });
 }
 
-// Attachment Menu
+// 🟢 Toggle Attachment Menu Logic
 if (mainAttachBtn && attachmentMenu) {
     mainAttachBtn.addEventListener('click', (e) => {
+        // If it's currently recording, tapping main button stops it
+        if (isRecording && mediaRecorder) {
+            e.stopPropagation();
+            mediaRecorder.stop();
+            isRecording = false;
+            attachmentMenu.classList.remove('show');
+            return;
+        }
         e.stopPropagation();
         attachmentMenu.classList.toggle('show');
     });
+
     document.addEventListener('click', (e) => {
         if (!mainAttachBtn.contains(e.target) && !attachmentMenu.contains(e.target)) {
             attachmentMenu.classList.remove('show');
@@ -349,6 +335,7 @@ if (mainAttachBtn && attachmentMenu) {
     });
 }
 
+// 🟢 5. MEDIA UPLOAD LOGIC 
 if(menuImageBtn && chatImageInput) {
     menuImageBtn.addEventListener('click', () => { chatImageInput.click(); attachmentMenu.classList.remove('show'); });
     chatImageInput.addEventListener('change', (e) => {
@@ -385,6 +372,7 @@ if(menuDocBtn && chatDocInput) {
     });
 }
 
+// 🟢 6. VOICE MESSAGE LOGIC WITH PREVIEW
 let mediaRecorder;
 let audioChunks = [];
 let isRecording = false;
@@ -392,6 +380,7 @@ let isRecording = false;
 if(menuMicBtn) {
     menuMicBtn.addEventListener('click', async () => {
         attachmentMenu.classList.remove('show');
+
         if (!isRecording) {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -400,12 +389,16 @@ if(menuMicBtn) {
                 isRecording = true;
                 
                 if (recordingIndicator) recordingIndicator.style.display = 'flex';
+                
+                // Change main button to stop icon
                 mainAttachBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>`; 
                 mainAttachBtn.style.color = '#ef4444';
 
                 mediaRecorder.ondataavailable = e => { audioChunks.push(e.data); };
                 mediaRecorder.onstop = async () => {
                     if (recordingIndicator) recordingIndicator.style.display = 'none';
+                    
+                    // Reset main button
                     mainAttachBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>`;
                     mainAttachBtn.style.color = 'var(--text-muted)';
                     
@@ -419,14 +412,6 @@ if(menuMicBtn) {
                     }
                 };
             } catch (err) { alert("Microphone access denied!"); }
-        }
-    });
-
-    mainAttachBtn.addEventListener('click', () => {
-        if (isRecording && mediaRecorder) {
-            mediaRecorder.stop();
-            isRecording = false;
-            attachmentMenu.classList.remove('show');
         }
     });
 }
@@ -476,7 +461,7 @@ function uploadMediaToFirebase(fileOrBlob, fileName, type) {
 
 window.deleteVirtualMessage = async function(msgId) {
     if (!confirm("Are you sure you want to delete this message?")) return;
-    try { await deleteDoc(doc(db, "virtual_rooms", msgId)); } catch (e) { alert("Failed to delete message."); }
+    try { await deleteDoc(doc(db, "virtual_rooms", msgId)); } catch (e) {}
 };
 
 window.editVirtualMessage = async function(msgId, currentText) {
