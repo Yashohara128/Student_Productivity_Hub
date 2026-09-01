@@ -1,4 +1,3 @@
-import { checkAndBanViolator } from './moderator.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
 import { initIEEEModule } from './ieee.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
@@ -230,26 +229,6 @@ if (cardVirtualRoom) {
         const userDocRef = doc(db, "users", currentUser.uid);
         const userSnap = await getDoc(userDocRef);
 
-        if (userSnap.exists() && userSnap.data().isBanned) {
-            alert("⛔ Access Denied: You have been banned from the Virtual Room for violating guidelines.");
-            return; // Room එකට යන්න දෙන්නේ නැත
-        }
-
-        const roomGuidelinesModal = document.getElementById('room-guidelines-modal');
-        const studentIdModal = document.getElementById('student-id-modal');
-
-        if (userSnap.exists() && userSnap.data().faculty && userSnap.data().studentId) {
-            currentStudentFaculty = userSnap.data().faculty;
-            if (roomGuidelinesModal) roomGuidelinesModal.style.display = 'flex';
-            openChatRoom(currentStudentFaculty);
-        } else {
-            if (studentIdModal) studentIdModal.style.display = 'flex'; 
-        }
-    } catch (err) {
-        console.error("Error opening virtual room:", err);
-    }
-});
-
         if (userSnap.exists() && userSnap.data().faculty && userSnap.data().studentId) {
             currentStudentFaculty = userSnap.data().faculty;
             
@@ -413,31 +392,42 @@ if (cancelActionBtn) {
 // 4. Send & Edit Message Logic
 if (chatSendBtn) {
     chatSendBtn.addEventListener('click', async () => {
-        if (!chatInputText) return;
         const text = chatInputText.value.trim();
         if (!text || !currentStudentFaculty) return;
-
-        // 🟢 මෙන්න මෙතනින් Check වෙනවා (Spam හෝ Inappropriate නම් යවන්නේ නැහැ)
-        const isSafe = await checkAndBanViolator(text, currentUser, db, updateDoc, doc);
-        if (!isSafe) return;
 
         const cleanedText = filterSensitiveData(text);
         chatInputText.value = '';
 
-        // ඉතුරු යැවීමේ කෝඩ් එක මෙතන තියෙනවා...
-        let messagePayload = {
-            faculty: currentStudentFaculty, 
-            senderName: getStudentFirstName(), 
-            senderId: currentUser.uid,
-            text: cleanedText, 
-            type: 'text', 
-            timestamp: new Date().toISOString()
-        };
+        if (editingMessageId) {
+            try {
+                await updateDoc(doc(db, "virtual_rooms", editingMessageId), { text: cleanedText });
+            } catch (e) {
+                console.error(e);
+            }
+            editingMessageId = null;
+            if (actionBar) actionBar.style.display = 'none';
+            chatSendBtn.innerHTML = svgs.send;
+        } else {
+            let messagePayload = {
+                faculty: currentStudentFaculty,
+                senderName: getStudentFirstName(),
+                senderId: currentUser.uid,
+                text: cleanedText,
+                type: 'text',
+                timestamp: new Date().toISOString()
+            };
 
-        try { 
-            await addDoc(collection(db, "virtual_rooms"), messagePayload); 
-        } catch (e) {
-            console.error(e);
+            if (replyingToMessageData) {
+                messagePayload.replyTo = replyingToMessageData;
+                replyingToMessageData = null;
+                if (actionBar) actionBar.style.display = 'none';
+            }
+
+            try {
+                await addDoc(collection(db, "virtual_rooms"), messagePayload);
+            } catch (e) {
+                console.error("Error sending message:", e);
+            }
         }
     });
 }
