@@ -1,3 +1,4 @@
+import { checkAndBanViolator } from './moderator.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
 import { initIEEEModule } from './ieee.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
