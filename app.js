@@ -399,10 +399,10 @@ if (cancelActionBtn) {
 // 4. Send & Edit Message Logic (With 3-Strike Warning & WhatsApp-like Media Caption Support)
 if (chatSendBtn) {
     chatSendBtn.addEventListener('click', async () => {
-        if (!chatInputText) return;
+        if (!chatInputText || !currentStudentFaculty) return;
         const text = chatInputText.value.trim();
 
-        // 🟢 WhatsApp-like Pending Media & Caption Logic
+        // 🟢 WhatsApp-like Pending Media & Caption Logic (Handled First)
         if (pendingMediaFile) {
             const captionText = text;
             const fileToSend = pendingMediaFile;
@@ -417,7 +417,7 @@ if (chatSendBtn) {
             return;
         }
 
-        if (!text || !currentStudentFaculty) return;
+        if (!text) return;
 
         const forbiddenKeywords = ["sex", "nude", "porn", "xxx", "abuse", "sexy", "xxxxxx","hutta","huk","palyan","plyn","pko","hutti","ponnya","pinnya","pakya","kariya","keriya"];
         const lowerText = text.toLowerCase();
@@ -625,7 +625,7 @@ if (mainAttachBtn && attachmentMenu) {
     });
 }
 
-// 🟢 Media Upload Logic (WhatsApp-like Pending Support)
+// Media Upload Logic
 if(menuImageBtn && chatImageInput) {
     menuImageBtn.addEventListener('click', () => {
         chatImageInput.click();
@@ -663,7 +663,6 @@ if(menuImageBtn && chatImageInput) {
                         lastModified: Date.now()
                     });
                     
-                    // Hold in pending state so user can type caption
                     pendingMediaFile = compressedFile;
                     pendingMediaType = 'image';
                     chatInputText.placeholder = `📎 Image attached (${file.name}). Type a caption and press send...`;
@@ -768,12 +767,10 @@ if (sendVoiceBtn) {
     });
 }
 
-// Helper Function for Standard Media Upload
 function uploadMediaToFirebase(fileOrBlob, fileName, type) {
     uploadMediaWithCaptionToFirebase(fileOrBlob, fileName, type, "");
 }
 
-// 🟢 Helper Function to Upload Media with Caption Support
 async function uploadMediaWithCaptionToFirebase(fileOrBlob, fileName, type, caption) {
     const storageRef = ref(storage, `virtual_room_media/${Date.now()}_${fileName}`);
     const uploadTask = uploadBytesResumable(storageRef, fileOrBlob);
@@ -811,7 +808,7 @@ async function uploadMediaWithCaptionToFirebase(fileOrBlob, fileName, type, capt
     );
 }
 
-// 5. Load Real-time Messages (With Delete Trash Icon)
+// 5. Load Real-time Messages
 function openChatRoom(facultyName) {
     showView('virtualroom');
     if(activeFacultyLabel) {
