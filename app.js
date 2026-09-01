@@ -21,6 +21,9 @@ const storage = getStorage(app);
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
 
+// ==========================================
+// 🟢 REUSABLE SVG ICONS
+// ==========================================
 const svgs = {
     sun: `<svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
     cloud: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>`,
@@ -38,11 +41,14 @@ const svgs = {
     edit: `<svg class="icon-sm" style="stroke:currentColor; width:14px; height:14px;" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
     trash: `<svg class="icon-sm" style="stroke:currentColor; width:14px; height:14px;" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
     reply: `<svg class="icon-sm" style="stroke:currentColor; width:14px; height:14px;" viewBox="0 0 24 24"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>`,
-    send: `<svg class="icon-sm" viewBox="0 0 24 24" id="send-btn-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`,
+    send: `<svg class="icon-sm" viewBox="0 0 24 24" id="send-btn-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,
     star: `<svg class="icon-sm" style="stroke:#fbbf24; fill:#fbbf24;" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
     info: `<svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12.01" y2="16"/><line x1="12" y1="8" x2="12" y2="12"/></svg>`
 };
 
+// ==========================================
+// 🟢 DOM REFERENCES & APP STATE
+// ==========================================
 const loginSection = document.getElementById('login-section');
 const appSection = document.getElementById('app-section');
 const userNameDisplay = document.getElementById('user-name');
@@ -59,20 +65,43 @@ const viewPlagiarism = document.getElementById('view-plagiarism');
 const viewIeee = document.getElementById('view-ieee');
 const viewVirtualRoom = document.getElementById('view-virtual-room');
 
+const cardGpa = document.getElementById('card-gpa');
+const cardShortNotes = document.getElementById('card-shortnotes');
+const cardPlagiarism = document.getElementById('card-plagiarism');
+const cardIeee = document.getElementById('card-ieee');
+const cardVirtualRoom = document.getElementById('card-virtual-room');
+
+const backToHubGpa = document.getElementById('back-to-hub-gpa');
+const backToHubShortNotes = document.getElementById('back-to-hub-shortnotes');
+const backToHubPlagiarism = document.getElementById('back-to-hub-plagiarism');
+const backToHubIeee = document.getElementById('back-to-hub-ieee');
+const backToHubRoom = document.getElementById('back-to-hub-room');
+
 let allSubjects = []; 
 let currentUser = null; 
 let editingSubjectId = null; 
 let myChart = null;
 
-const CLASS_THRESHOLDS = { FIRST_CLASS: 3.70, SECOND_UPPER: 3.30, SECOND_LOWER: 3.00, PASS: 2.00 };
+const CLASS_THRESHOLDS = { 
+    FIRST_CLASS: 3.70, 
+    SECOND_UPPER: 3.30, 
+    SECOND_LOWER: 3.00, 
+    PASS: 2.00 
+};
 
 function getStudentFirstName() {
-    if (currentUser && currentUser.displayName) return currentUser.displayName.split(" ")[0];
-    else if (currentUser && currentUser.email) return currentUser.email.split('@')[0];
+    if (currentUser && currentUser.displayName) {
+        return currentUser.displayName.split(" ")[0];
+    } else if (currentUser && currentUser.email) {
+        return currentUser.email.split('@')[0];
+    }
     return "Student";
 }
 
-function getActiveMode() { return localStorage.getItem('active_uni_mode') || 'horizon'; }
+function getActiveMode() { 
+    return localStorage.getItem('active_uni_mode') || 'horizon'; 
+}
+
 function getActiveSubjects() {
     const activeMode = getActiveMode();
     return allSubjects.filter(sub => (sub.mode || 'horizon') === activeMode);
@@ -80,7 +109,13 @@ function getActiveSubjects() {
 
 if (loginBtn) {
     loginBtn.addEventListener('click', () => {
-        signInWithPopup(auth, provider).catch((error) => { alert("❌ Login Failed: " + error.message); });
+        signInWithPopup(auth, provider)
+            .then((result) => { 
+                console.log("Login Success:", result.user.displayName); 
+            })
+            .catch((error) => { 
+                alert("❌ Login Failed: " + error.message); 
+            });
     });
 }
 
@@ -89,11 +124,22 @@ function updateDynamicGreeting(userName) {
     if (!greetingEl) return;
     const now = new Date();
     const hours = now.getHours();
-    let timeGreeting = "", iconSvg = "";
-    if (hours >= 5 && hours < 12) { timeGreeting = "Good Morning"; iconSvg = svgs.sun; }
-    else if (hours >= 12 && hours < 17) { timeGreeting = "Good Afternoon"; iconSvg = svgs.cloud; }
-    else if (hours >= 17 && hours < 21) { timeGreeting = "Good Evening"; iconSvg = svgs.sunset; }
-    else { timeGreeting = "Good Night"; iconSvg = svgs.moon; }
+    let timeGreeting = "";
+    let iconSvg = "";
+
+    if (hours >= 5 && hours < 12) { 
+        timeGreeting = "Good Morning"; 
+        iconSvg = svgs.sun; 
+    } else if (hours >= 12 && hours < 17) { 
+        timeGreeting = "Good Afternoon"; 
+        iconSvg = svgs.cloud; 
+    } else if (hours >= 17 && hours < 21) { 
+        timeGreeting = "Good Evening"; 
+        iconSvg = svgs.sunset; 
+    } else { 
+        timeGreeting = "Good Night"; 
+        iconSvg = svgs.moon; 
+    }
     
     const formattedDate = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     greetingEl.innerHTML = `<span class="flex-align">${iconSvg} ${timeGreeting}, <span style="color: var(--text-color); font-weight: 600;">${userName}</span>!</span> <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 2px;">📅 ${formattedDate}</span>`;
@@ -126,14 +172,16 @@ function showView(viewName) {
     }
 }
 
-if (document.getElementById('card-gpa')) document.getElementById('card-gpa').addEventListener('click', () => showView('gpa'));
-if (document.getElementById('card-shortnotes')) document.getElementById('card-shortnotes').addEventListener('click', () => showView('shortnotes'));
-if (document.getElementById('card-plagiarism')) document.getElementById('card-plagiarism').addEventListener('click', () => showView('plagiarism'));
-if (document.getElementById('card-ieee')) document.getElementById('card-ieee').addEventListener('click', () => showView('ieee'));
+if (cardGpa) cardGpa.addEventListener('click', () => showView('gpa'));
+if (cardShortNotes) cardShortNotes.addEventListener('click', () => showView('shortnotes'));
+if (cardPlagiarism) cardPlagiarism.addEventListener('click', () => showView('plagiarism'));
+if (cardIeee) cardIeee.addEventListener('click', () => showView('ieee'));
 
-document.querySelectorAll('.btn-back').forEach(btn => {
-    btn.addEventListener('click', () => showView('hub'));
-});
+if (backToHubGpa) backToHubGpa.addEventListener('click', () => showView('hub'));
+if (backToHubShortNotes) backToHubShortNotes.addEventListener('click', () => showView('hub'));
+if (backToHubPlagiarism) backToHubPlagiarism.addEventListener('click', () => showView('hub'));
+if (backToHubIeee) backToHubIeee.addEventListener('click', () => showView('hub'));
+if (backToHubRoom) backToHubRoom.addEventListener('click', () => showView('hub'));
 
 // ==========================================
 // 🎓 VIRTUAL ROOM & FACULTY VERIFICATION
@@ -144,12 +192,14 @@ let replyingToMessageData = null;
 let selectedMessagesToDelete = new Set();
 let pressTimer;
 
-// Robust Event Delegation for Virtual Room Card Trigger
 document.addEventListener('click', async (e) => {
     const virtualCard = e.target.closest('#card-virtual-room');
     if (!virtualCard) return;
 
-    if (!currentUser) { alert("Please login first!"); return; }
+    if (!currentUser) { 
+        alert("Please login first!"); 
+        return; 
+    }
 
     try {
         const userDocRef = doc(db, "users", currentUser.uid);
@@ -174,7 +224,9 @@ document.addEventListener('click', async (e) => {
 const verifyIdBtn = document.getElementById('verify-id-btn');
 if (verifyIdBtn) {
     verifyIdBtn.addEventListener('click', async () => {
-        const studentId = document.getElementById('student-id-input').value.trim().toUpperCase();
+        const studentIdInput = document.getElementById('student-id-input');
+        if (!studentIdInput) return;
+        const studentId = studentIdInput.value.trim().toUpperCase();
         if (!studentId) { alert("Please enter your Student ID."); return; }
 
         verifyIdBtn.innerText = "Verifying...";
@@ -185,8 +237,8 @@ if (verifyIdBtn) {
             const querySnapshot = await getDocs(q);
 
             let isIdAlreadyTaken = false;
-            querySnapshot.forEach((doc) => {
-                if (doc.id !== currentUser.uid) isIdAlreadyTaken = true;
+            querySnapshot.forEach((docSnap) => {
+                if (docSnap.id !== currentUser.uid) isIdAlreadyTaken = true;
             });
 
             if (isIdAlreadyTaken) {
@@ -201,12 +253,23 @@ if (verifyIdBtn) {
             else if (studentId.startsWith("EDU")) assignedFaculty = "Faculty of Education";
             else if (studentId.startsWith("MGT")) assignedFaculty = "Faculty of Management";
             else if (studentId.startsWith("SCI")) assignedFaculty = "Faculty of Science";
-            else { alert("Invalid Student ID prefix!"); verifyIdBtn.innerText = "Verify & Join Room ➔"; verifyIdBtn.disabled = false; return; }
+            else { 
+                alert("Invalid Student ID prefix!"); 
+                verifyIdBtn.innerText = "Verify & Join Room ➔"; 
+                verifyIdBtn.disabled = false; 
+                return; 
+            }
 
             await setDoc(doc(db, "users", currentUser.uid), { studentId, faculty: assignedFaculty }, { merge: true });
-            document.getElementById('student-id-modal').style.display = 'none';
+            
+            const studentIdModal = document.getElementById('student-id-modal');
+            if (studentIdModal) studentIdModal.style.display = 'none';
+            
             currentStudentFaculty = assignedFaculty;
-            document.getElementById('room-guidelines-modal').style.display = 'flex';
+            
+            const roomGuidelinesModal = document.getElementById('room-guidelines-modal');
+            if (roomGuidelinesModal) roomGuidelinesModal.style.display = 'flex';
+            
             openChatRoom(assignedFaculty);
             verifyIdBtn.innerText = "Verify & Join Room ➔";
             verifyIdBtn.disabled = false;
@@ -221,14 +284,16 @@ if (verifyIdBtn) {
 const acceptGuidelinesBtn = document.getElementById('accept-guidelines-btn');
 if (acceptGuidelinesBtn) {
     acceptGuidelinesBtn.addEventListener('click', () => {
-        document.getElementById('room-guidelines-modal').style.display = 'none';
+        const roomGuidelinesModal = document.getElementById('room-guidelines-modal');
+        if (roomGuidelinesModal) roomGuidelinesModal.style.display = 'none';
     });
 }
 
 const closeIdModal = document.getElementById('close-id-modal');
 if (closeIdModal) {
     closeIdModal.addEventListener('click', () => {
-        document.getElementById('student-id-modal').style.display = 'none';
+        const studentIdModal = document.getElementById('student-id-modal');
+        if (studentIdModal) studentIdModal.style.display = 'none';
     });
 }
 
@@ -258,8 +323,8 @@ if (clearMyChatBtn) {
 }
 
 function filterSensitiveData(text) {
-    let safeText = text.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, ` ${svgs.trash} <i>[Hidden]</i> `);
-    safeText = safeText.replace(/(?:\+94|0)[0-9]{9}/g, ` ${svgs.trash} <i>[Hidden]</i> `);
+    let safeText = text.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, ` ${svgs.trash} <i>[Emails hidden]</i> `);
+    safeText = safeText.replace(/(?:\+94|0)[0-9]{9}/g, ` ${svgs.trash} <i>[Numbers hidden]</i> `);
     return safeText;
 }
 
@@ -282,6 +347,7 @@ if (cancelActionBtn) {
 
 if (chatSendBtn) {
     chatSendBtn.addEventListener('click', async () => {
+        if (!chatInputText) return;
         const text = chatInputText.value.trim();
         if (!text || !currentStudentFaculty) return;
 
@@ -319,15 +385,15 @@ if (chatInputText) {
 window.setEditMessage = function(msgId, currentText) {
     editingMessageId = msgId;
     replyingToMessageData = null;
-    chatInputText.value = decodeURIComponent(currentText);
+    if(chatInputText) chatInputText.value = decodeURIComponent(currentText);
     if(actionBar) {
         actionBar.style.display = 'flex';
         actionBarTitle.innerHTML = `${svgs.edit} Editing Message`;
         actionBarTitle.style.color = "#38bdf8";
         actionBarText.innerText = chatInputText.value;
     }
-    chatSendBtn.innerHTML = svgs.checkAll;
-    chatInputText.focus();
+    if(chatSendBtn) chatSendBtn.innerHTML = svgs.checkAll;
+    if(chatInputText) chatInputText.focus();
 };
 
 window.setReplyMessage = function(senderName, currentText) {
@@ -340,8 +406,8 @@ window.setReplyMessage = function(senderName, currentText) {
         actionBarTitle.style.color = "#a855f7";
         actionBarText.innerText = decodedText;
     }
-    chatSendBtn.innerHTML = svgs.send; 
-    chatInputText.focus();
+    if(chatSendBtn) chatSendBtn.innerHTML = svgs.send; 
+    if(chatInputText) chatInputText.focus();
 };
 
 window.startLongPress = function(msgId, isMe) {
@@ -482,15 +548,19 @@ if(menuMicBtn) {
                 isRecording = true;
                 
                 if (recordingIndicator) recordingIndicator.style.display = 'flex';
-                mainAttachBtn.innerHTML = `🛑`; 
-                mainAttachBtn.style.color = '#ef4444';
+                if (mainAttachBtn) {
+                    mainAttachBtn.innerHTML = `🛑`; 
+                    mainAttachBtn.style.color = '#ef4444';
+                }
 
                 mediaRecorder.ondataavailable = e => { audioChunks.push(e.data); };
                 mediaRecorder.onstop = async () => {
                     isRecording = false;
                     if (recordingIndicator) recordingIndicator.style.display = 'none';
-                    mainAttachBtn.innerHTML = `<svg class="icon-lg" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>`;
-                    mainAttachBtn.style.color = 'var(--text-muted)';
+                    if (mainAttachBtn) {
+                        mainAttachBtn.innerHTML = `<svg class="icon-lg" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>`;
+                        mainAttachBtn.style.color = 'var(--text-muted)';
+                    }
                     
                     recordedAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                     audioChunks = [];
@@ -531,12 +601,20 @@ function uploadMediaToFirebase(fileOrBlob, fileName, type) {
     const storageRef = ref(storage, `virtual_room_media/${Date.now()}_${fileName}`);
     const uploadTask = uploadBytesResumable(storageRef, fileOrBlob);
 
-    const originalBtnHTML = chatSendBtn.innerHTML;
-    chatSendBtn.innerHTML = "⏳";
-    chatSendBtn.disabled = true;
+    const originalBtnHTML = chatSendBtn ? chatSendBtn.innerHTML : "";
+    if (chatSendBtn) {
+        chatSendBtn.innerHTML = "⏳";
+        chatSendBtn.disabled = true;
+    }
 
     uploadTask.on('state_changed', () => {}, 
-        (error) => { alert("Upload failed: " + error.message); chatSendBtn.innerHTML = originalBtnHTML; chatSendBtn.disabled = false; }, 
+        (error) => { 
+            alert("Upload failed: " + error.message); 
+            if (chatSendBtn) {
+                chatSendBtn.innerHTML = originalBtnHTML; 
+                chatSendBtn.disabled = false; 
+            }
+        }, 
         async () => {
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
             let displayTxt = type === 'audio' ? `${svgs.mic} Voice Message` : (type === 'image' ? `${svgs.photo} Photo` : `${svgs.doc} Document`);
@@ -546,8 +624,10 @@ function uploadMediaToFirebase(fileOrBlob, fileName, type) {
                 text: displayTxt, type: type, fileName: fileName, fileUrl: downloadURL, timestamp: new Date().toISOString()
             });
 
-            chatSendBtn.innerHTML = originalBtnHTML;
-            chatSendBtn.disabled = false;
+            if (chatSendBtn) {
+                chatSendBtn.innerHTML = originalBtnHTML;
+                chatSendBtn.disabled = false;
+            }
         }
     );
 }
@@ -596,6 +676,8 @@ function openChatRoom(facultyName) {
                 <div><b>English:</b><br>1. Be respectful while chatting.<br><b style="color:#ef4444;">2. Do not share nudity or explicit content.</b><br><b style="color:#a855f7;">3. Please upload media with smaller file sizes.</b></div>
             </div>
         `;
+
+        if (!chatMessagesContainer) return;
 
         if (msgs.length === 0) {
             chatMessagesContainer.innerHTML = `${bannerHtml}<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: auto; margin-bottom: auto;">No messages yet. Say hi! 👋</div>`;
@@ -690,4 +772,152 @@ async function loadSubjectsFromDB() {
     } catch (e) {}
 }
 
-function updateUI() {}
+function updateUI() {
+    const activeSubjects = getActiveSubjects();
+    const currentGPA = parseFloat(calculateOverallCGPA());
+    const cgpaDisplay = document.getElementById('cgpa-display');
+    const classDisplay = document.getElementById('class-display');
+
+    if (cgpaDisplay) cgpaDisplay.innerText = currentGPA.toFixed(2);
+    if (classDisplay) classDisplay.innerText = activeSubjects.length > 0 ? determineDegreeClass(currentGPA) : "Pending...";
+
+    const goalContent = document.getElementById('goal-content');
+    if (goalContent) {
+        const thresholds = [
+            { name: "Pass", min: CLASS_THRESHOLDS.PASS }, { name: "Second Class (Lower)", min: CLASS_THRESHOLDS.SECOND_LOWER },
+            { name: "Second Class (Upper)", min: CLASS_THRESHOLDS.SECOND_UPPER }, { name: "First Class", min: CLASS_THRESHOLDS.FIRST_CLASS }
+        ];
+        let html = '';
+        thresholds.forEach(t => {
+            const isActive = currentGPA >= t.min;
+            const diff = (t.min - currentGPA).toFixed(2);
+            html += `<div class="goal-item ${isActive ? 'goal-active' : ''}"><div class="flex-align">${isActive ? svgs.check : svgs.target} <b>${t.name} (>= ${t.min.toFixed(2)})</b></div>${!isActive ? `<small style="color:#38bdf8; margin-top:2px;">Need <b>${diff}</b> more points</small>` : `<small style="color:#22c55e; margin-top:2px;">Target Achieved!</small>`}</div>`;
+        });
+        goalContent.innerHTML = html;
+    }
+
+    renderGPAChart();
+
+    const container = document.getElementById('academic-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (activeSubjects.length === 0) {
+        container.innerHTML = `<div class="glass-card empty-state" style="text-align: center; color: var(--text-muted); padding: 2rem;">No subjects added in this profile yet.</div>`;
+        return;
+    }
+
+    [1, 2, 3, 4].forEach(year => {
+        const yearSubs = activeSubjects.filter(s => s.year == year);
+        if (yearSubs.length === 0) return;
+        const yearGPA = calculateYearGPA(year);
+
+        let yearHTML = `<div class="glass-card year-card"><div class="year-header"><div class="year-title">Year ${year}</div><div style="font-size: 1rem; font-weight: 500;">Year GPA: <span style="color: #38bdf8; font-weight: 600;">${yearGPA}</span></div></div>`;
+
+        [1, 2].forEach(sem => {
+            const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
+            if (semSubs.length === 0) return;
+            const semGPA = calculateSemesterGPA(year, sem);
+
+            yearHTML += `<div class="semester-box"><div class="semester-header"><div class="semester-title">Semester ${sem}</div><div style="font-size: 0.85rem; color: var(--text-muted);">Semester GPA: <span style="color: #a855f7; font-weight: 600;">${semGPA}</span></div></div><div class="table-responsive"><table><thead><tr><th>Subject Name</th><th>Credits</th><th>Grade / Status</th><th>Action</th></tr></thead><tbody>`;
+
+            semSubs.forEach(sub => {
+                let displayGrade = sub.gradePoint === -1 ? sub.gradeText + getStatusAdvice(sub.gradeText) : sub.gradePoint.toFixed(2);
+                yearHTML += `<tr><td>${sub.name}</td><td>${sub.credit}</td><td style="line-height: 1.3; padding: 8px 0;">${displayGrade}</td><td><button onclick="editSubject('${sub.dbId}')" class="btn-edit">${svgs.edit} Edit</button> <button onclick="removeSubject('${sub.dbId}')" class="btn-remove">${svgs.trash} Remove</button></td></tr>`;
+            });
+
+            yearHTML += `</tbody></table></div></div>`;
+        });
+        yearHTML += `</div>`;
+        container.innerHTML += yearHTML;
+    });
+}
+
+function calculateSemesterGPA(year, semester) {
+    const subs = getActiveSubjects().filter(s => s.year == year && s.semester == semester && s.gradePoint !== -1);
+    let creds = subs.reduce((acc, s) => acc + s.credit, 0);
+    let pts = subs.reduce((acc, s) => acc + (s.credit * s.gradePoint), 0);
+    return creds === 0 ? "0.00" : (pts / creds).toFixed(2);
+}
+
+function calculateYearGPA(year) {
+    const subs = getActiveSubjects().filter(s => s.year == year && s.gradePoint !== -1);
+    let creds = subs.reduce((acc, s) => acc + s.credit, 0);
+    let pts = subs.reduce((acc, s) => acc + (s.credit * s.gradePoint), 0);
+    return creds === 0 ? "0.00" : (pts / creds).toFixed(2);
+}
+
+function calculateOverallCGPA() {
+    const subs = getActiveSubjects().filter(s => s.gradePoint !== -1);
+    let creds = subs.reduce((acc, s) => acc + s.credit, 0);
+    let pts = subs.reduce((acc, s) => acc + (s.credit * s.gradePoint), 0);
+    return creds === 0 ? "0.00" : (pts / creds).toFixed(2);
+}
+
+function determineDegreeClass(cgpa) {
+    if (cgpa >= CLASS_THRESHOLDS.FIRST_CLASS) return "First Class";
+    if (cgpa >= CLASS_THRESHOLDS.SECOND_UPPER) return "Second Class (Upper)";
+    if (cgpa >= CLASS_THRESHOLDS.SECOND_LOWER) return "Second Class (Lower)";
+    if (cgpa >= CLASS_THRESHOLDS.PASS) return "Pass";
+    return "Below Pass mark (< 2.00)";
+}
+
+function getStatusAdvice(gradeText) {
+    if (gradeText.toLowerCase().includes("absent") || gradeText.toLowerCase().includes("absant")) return `<br><small style="color: #f87171;">Absent - Need Medical</small>`;
+    if (gradeText.toLowerCase().includes("medical")) return `<br><small style="color: #f87171;">Medical Subject - Retake Exam</small>`;
+    if (gradeText === "NC-C" || gradeText === "F") return `<br><small style="color: #f87171;">Retake Exam & C/A Next Attempt</small>`;
+    if (gradeText === "NC-E") return `<br><small style="color: #fbbf24;">Retake Your Exam Next Attempt</small>`;
+    if (gradeText === "NE") return `<br><small style="color: #60a5fa;">Exam & CA Pending. Maintain 80% Attendance</small>`;
+    return "";
+}
+
+function renderGPAChart() {
+    const activeSubjects = getActiveSubjects();
+    const ctx = document.getElementById('gpaChart');
+    if (!ctx) return;
+
+    let labels = [], semGPAs = [], cumulativeGPAs = [];
+    [1, 2, 3, 4].forEach(year => {
+        [1, 2].forEach(sem => {
+            const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
+            if (semSubs.length > 0) {
+                labels.push(`Y${year} S${sem}`);
+                let creds = 0, pts = 0;
+                semSubs.forEach(sub => { if (sub.gradePoint !== -1) { creds += sub.credit; pts += (sub.credit * sub.gradePoint); } });
+                semGPAs.push(creds > 0 ? (pts / creds).toFixed(2) : 0);
+            }
+        });
+    });
+
+    let totalC = 0, totalP = 0;
+    [1, 2, 3, 4].forEach(year => {
+        [1, 2].forEach(sem => {
+            const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
+            if (semSubs.length > 0) {
+                semSubs.forEach(sub => { if (sub.gradePoint !== -1) { totalC += sub.credit; totalP += (sub.credit * sub.gradePoint); } });
+                cumulativeGPAs.push(totalC > 0 ? (totalP / totalC).toFixed(2) : 0);
+            }
+        });
+    });
+
+    const isLight = document.body.classList.contains('light-mode');
+    const textColor = isLight ? '#0f172a' : '#e2e8f0';
+    const gridColor = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.05)';
+
+    if (myChart) myChart.destroy();
+    myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: 'Semester GPA', data: semGPAs, borderColor: '#a855f7', backgroundColor: 'rgba(168, 85, 247, 0.1)', borderWidth: 2, tension: 0.3, fill: true },
+                { label: 'Cumulative CGPA', data: cumulativeGPAs, borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', borderWidth: 3, tension: 0.3, fill: true }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: textColor, font: { family: 'Poppins' } } } },
+            scales: { y: { min: 0, max: 4.3, grid: { color: gridColor }, ticks: { color: textColor } }, x: { grid: { color: gridColor }, ticks: { color: textColor } } }
+        }
+    });
+}
