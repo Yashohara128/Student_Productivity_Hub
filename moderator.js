@@ -1,4 +1,4 @@
-// moderator.js - Instant Auto-Ban & Content Blocker
+// moderator.js - Instant Synchronous Content Blocker & Auto-Ban
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
@@ -28,8 +28,8 @@ document.addEventListener('click', async (e) => {
     }
 }, true);
 
-// 2. Instant Intercept Message Sending (Auto-Remove & Immediate Ban)
-document.addEventListener('click', async (e) => {
+// 2. Instant Synchronous Intercept Message Sending
+document.addEventListener('click', (e) => {
     const sendBtn = e.target.closest('#chat-send-btn');
     if (!sendBtn) return;
 
@@ -55,25 +55,24 @@ document.addEventListener('click', async (e) => {
     }
 
     if (isViolating) {
-        // Stop message from sending completely
+        // 🛑 SYNCHRONOUSLY STOP EVENT SO APP.JS NEVER SEES IT
         e.stopImmediatePropagation();
         e.preventDefault();
 
         // Clear input field immediately
         chatInput.value = "";
 
-        try {
-            // Instant Auto-Ban on the very first violation
-            await updateDoc(doc(db, "users", user.uid), {
-                isBanned: true,
-                banReason: `Instant Ban: Used prohibited word (${matchedWord})`
-            });
+        alert(`⛔ BANNED: Your message contained a prohibited word ("${matchedWord}"). You have been permanently banned from the Virtual Room!`);
 
-            alert(`⛔ BANNED: Your message contained a prohibited word ("${matchedWord}"). You have been permanently banned from the Virtual Room!`);
-            location.reload(); // Refresh to block access immediately
-        } catch (err) {
+        // Perform database ban in the background without blocking the stop event
+        updateDoc(doc(db, "users", user.uid), {
+            isBanned: true,
+            banReason: `Instant Ban: Used prohibited word (${matchedWord})`
+        }).then(() => {
+            location.reload(); // Refresh after ban is saved
+        }).catch((err) => {
             console.error("Instant ban error:", err);
-        }
-        return;
+            location.reload();
+        });
     }
-}, true);
+}, true); // Capturing phase runs before app.js
