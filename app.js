@@ -771,7 +771,7 @@ function uploadMediaToFirebase(fileOrBlob, fileName, type) {
     uploadMediaWithCaptionToFirebase(fileOrBlob, fileName, type, "");
 }
 
-// 🟢 Helper Function to Upload Media with Caption & Error Recovery Support
+// 🟢 Bypass Firebase Storage & Save Directly to Firestore as Base64 (No Billing/CORS needed!)
 async function uploadMediaWithCaptionToFirebase(fileOrBlob, fileName, type, caption) {
     if (!currentUser || !currentStudentFaculty) {
         alert("Please login and join a virtual room first!");
@@ -782,55 +782,51 @@ async function uploadMediaWithCaptionToFirebase(fileOrBlob, fileName, type, capt
         return;
     }
 
-    const storageRef = ref(storage, `virtual_room_media/${Date.now()}_${fileName}`);
-    const uploadTask = uploadBytesResumable(storageRef, fileOrBlob);
-
     if (chatSendBtn) {
         chatSendBtn.innerHTML = "⏳";
         chatSendBtn.disabled = true;
     }
 
-    uploadTask.on('state_changed', 
-        (snapshot) => {}, 
-        (error) => {
-            console.error("Storage Upload Error:", error);
-            alert("Upload failed: " + error.message);
+    const reader = new FileReader();
+    reader.readAsDataURL(fileOrBlob);
+    reader.onload = async function () {
+        try {
+            const base64DataUrl = reader.result;
+            let displayTxt = caption ? caption : (type === 'audio' ? `${svgs.mic} Voice Message` : (type === 'image' ? `${svgs.photo} Photo` : `${svgs.doc} Document`));
+            
+            await addDoc(collection(db, "virtual_rooms"), {
+                faculty: currentStudentFaculty,
+                senderName: getStudentFirstName(),
+                senderId: currentUser.uid,
+                text: displayTxt,
+                type: type,
+                fileName: fileName,
+                fileUrl: base64DataUrl,
+                timestamp: new Date().toISOString()
+            });
+        } catch (e) {
+            console.error("Firestore Save Error:", e);
+            alert("Failed to save message: " + e.message);
+        } finally {
             if (chatSendBtn) {
                 chatSendBtn.innerHTML = svgs.send;
                 chatSendBtn.disabled = false;
             }
-        }, 
-        async () => {
-            try {
-                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                let displayTxt = caption ? caption : (type === 'audio' ? `${svgs.mic} Voice Message` : (type === 'image' ? `${svgs.photo} Photo` : `${svgs.doc} Document`));
-                
-                await addDoc(collection(db, "virtual_rooms"), {
-                    faculty: currentStudentFaculty,
-                    senderName: getStudentFirstName(),
-                    senderId: currentUser.uid,
-                    text: displayTxt,
-                    type: type,
-                    fileName: fileName,
-                    fileUrl: downloadURL,
-                    timestamp: new Date().toISOString()
-                });
-            } catch (e) {
-                console.error("Firestore Save Error:", e);
-                alert("Failed to save message: " + e.message);
-            } finally {
-                if (chatSendBtn) {
-                    chatSendBtn.innerHTML = svgs.send;
-                    chatSendBtn.disabled = false;
-                }
-                if (chatInputText) {
-                    chatInputText.placeholder = "Type a message...";
-                }
-                if (chatImageInput) chatImageInput.value = '';
-                if (chatDocInput) chatDocInput.value = '';
+            if (chatInputText) {
+                chatInputText.placeholder = "Type a message...";
             }
+            if (chatImageInput) chatImageInput.value = '';
+            if (chatDocInput) chatDocInput.value = '';
         }
-    );
+    };
+    reader.onerror = function (error) {
+        console.error("File Read Error: ", error);
+        alert("File conversion failed.");
+        if (chatSendBtn) {
+            chatSendBtn.innerHTML = svgs.send;
+            chatSendBtn.disabled = false;
+        }
+    };
 }
 
 // 5. Load Real-time Messages
@@ -898,7 +894,7 @@ function openChatRoom(facultyName) {
             if (msg.type === 'image') {
                 contentHtml = `<img src="${msg.fileUrl}" style="max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer;" onclick="window.open('${msg.fileUrl}', '_blank')">`;
             } else if (msg.type === 'document') {
-                contentHtml = `<a href="${msg.fileUrl}" target="_blank" style="color: #38bdf8; text-decoration: underline;" class="flex-align">${svgs.doc} ${msg.fileName || 'Download'}</a>`;
+                contentHtml = `<a href="${msg.fileUrl}" download="${msg.fileName || 'file'}" style="color: #38bdf8; text-decoration: underline;" class="flex-align">${svgs.doc} ${msg.fileName || 'Download'}</a>`;
             } else if (msg.type === 'audio') {
                 contentHtml = `<audio controls style="height: 35px; max-width: 200px; margin-top: 5px;"><source src="${msg.fileUrl}" type="audio/webm"></audio>`;
             } else {
