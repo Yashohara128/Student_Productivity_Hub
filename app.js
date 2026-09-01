@@ -224,7 +224,10 @@ let pressTimer;
 // 1. Open Room Logic
 if (cardVirtualRoom) {
     cardVirtualRoom.addEventListener('click', async () => {
-        if (!currentUser) { alert("Please login first!"); return; }
+        if (!currentUser) { 
+            alert("Please login first!"); 
+            return; 
+        }
 
         try {
             const userDocRef = doc(db, "users", currentUser.uid);
@@ -252,7 +255,8 @@ if (cardVirtualRoom) {
         }
     });
 }
-            // 🟢 Show Guidelines Modal when entering the room
+
+// Dismiss Guidelines Modal
             if(roomGuidelinesModal) {
                 roomGuidelinesModal.style.display = 'flex';
             }
