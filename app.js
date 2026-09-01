@@ -151,14 +151,18 @@ const chatMessagesContainer = document.getElementById('chat-messages-container')
 const chatInputText = document.getElementById('chat-input-text');
 const chatSendBtn = document.getElementById('chat-send-btn');
 const leaveRoomBtn = document.getElementById('leave-room-btn'); 
-
-const chatImageBtn = document.getElementById('chat-image-btn');
-const chatImageInput = document.getElementById('chat-image-input');
-const chatDocBtn = document.getElementById('chat-doc-btn');
-const chatDocInput = document.getElementById('chat-doc-input');
-const chatMicBtn = document.getElementById('chat-mic-btn');
-const recordingIndicator = document.getElementById('recording-indicator');
 const clearMyChatBtn = document.getElementById('clear-my-chat-btn');
+
+// Attachment Menu Elements
+const mainAttachBtn = document.getElementById('main-attach-btn');
+const attachmentMenu = document.getElementById('attachment-menu');
+const menuImageBtn = document.getElementById('menu-image-btn');
+const menuDocBtn = document.getElementById('menu-doc-btn');
+const menuMicBtn = document.getElementById('menu-mic-btn');
+
+// Hidden File Inputs
+const chatImageInput = document.getElementById('chat-image-input');
+const chatDocInput = document.getElementById('chat-doc-input');
 
 // Voice Preview Elements
 const voicePreviewBar = document.getElementById('voice-preview-bar');
@@ -166,6 +170,11 @@ const previewAudioElement = document.getElementById('preview-audio-element');
 const cancelVoiceBtn = document.getElementById('cancel-voice-btn');
 const sendVoiceBtn = document.getElementById('send-voice-btn');
 const normalInputControls = document.getElementById('normal-input-controls');
+const recordingIndicator = document.getElementById('recording-indicator');
+
+// Guidelines Modal Elements
+const roomGuidelinesModal = document.getElementById('room-guidelines-modal');
+const acceptGuidelinesBtn = document.getElementById('accept-guidelines-btn');
 
 let currentStudentFaculty = null;
 let recordedAudioBlob = null;
@@ -180,10 +189,21 @@ if (cardVirtualRoom) {
 
         if (userSnap.exists() && userSnap.data().faculty && userSnap.data().studentId) {
             currentStudentFaculty = userSnap.data().faculty;
+            
+            // 🟢 Show Guidelines Modal when entering the room
+            if(roomGuidelinesModal) roomGuidelinesModal.style.display = 'flex';
+
             openChatRoom(currentStudentFaculty);
         } else {
             studentIdModal.style.display = 'flex'; 
         }
+    });
+}
+
+// Dismiss Guidelines Modal
+if (acceptGuidelinesBtn) {
+    acceptGuidelinesBtn.addEventListener('click', () => {
+        if(roomGuidelinesModal) roomGuidelinesModal.style.display = 'none';
     });
 }
 
@@ -236,6 +256,9 @@ if (verifyIdBtn) {
             alert(`Verified! Welcome to the ${assignedFaculty} Virtual Room.`);
             studentIdModal.style.display = 'none';
             currentStudentFaculty = assignedFaculty;
+
+            // Show Guidelines Pop-up
+            if(roomGuidelinesModal) roomGuidelinesModal.style.display = 'flex';
             openChatRoom(assignedFaculty);
 
         } catch (e) {
@@ -324,7 +347,7 @@ if (chatSendBtn) {
     });
 }
 
-// 🟢 Do not auto-send on enter, allowing Next Line
+// 🟢 Do not auto-send on enter, allowing Next Line natively
 if (chatInputText) {
     chatInputText.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -333,9 +356,28 @@ if (chatInputText) {
     });
 }
 
+// 🟢 Toggle Attachment Menu
+if (mainAttachBtn && attachmentMenu) {
+    mainAttachBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        attachmentMenu.classList.toggle('show');
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!mainAttachBtn.contains(e.target) && !attachmentMenu.contains(e.target)) {
+            attachmentMenu.classList.remove('show');
+        }
+    });
+}
+
 // 🟢 5. MEDIA UPLOAD LOGIC (Auto-Image Compression & Document Handling)
-if(chatImageBtn && chatImageInput) {
-    chatImageBtn.addEventListener('click', () => chatImageInput.click());
+if(menuImageBtn && chatImageInput) {
+    menuImageBtn.addEventListener('click', () => {
+        chatImageInput.click();
+        attachmentMenu.classList.remove('show');
+    });
+    
     chatImageInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file || !currentStudentFaculty) return;
@@ -371,8 +413,12 @@ if(chatImageBtn && chatImageInput) {
     });
 }
 
-if(chatDocBtn && chatDocInput) {
-    chatDocBtn.addEventListener('click', () => chatDocInput.click());
+if(menuDocBtn && chatDocInput) {
+    menuDocBtn.addEventListener('click', () => {
+        chatDocInput.click();
+        attachmentMenu.classList.remove('show');
+    });
+
     chatDocInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file || !currentStudentFaculty) return;
@@ -385,8 +431,10 @@ let mediaRecorder;
 let audioChunks = [];
 let isRecording = false;
 
-if(chatMicBtn) {
-    chatMicBtn.addEventListener('click', async () => {
+if(menuMicBtn) {
+    menuMicBtn.addEventListener('click', async () => {
+        attachmentMenu.classList.remove('show');
+
         if (!isRecording) {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -395,15 +443,18 @@ if(chatMicBtn) {
                 isRecording = true;
                 
                 if (recordingIndicator) recordingIndicator.style.display = 'block';
-                chatMicBtn.innerText = '⏹️';
-                chatMicBtn.style.color = '#ef4444';
+                
+                // Allow tapping main button to stop recording too
+                mainAttachBtn.innerHTML = `🛑`; 
+                mainAttachBtn.style.color = '#ef4444';
 
                 mediaRecorder.ondataavailable = e => { audioChunks.push(e.data); };
 
                 mediaRecorder.onstop = async () => {
                     if (recordingIndicator) recordingIndicator.style.display = 'none';
-                    chatMicBtn.innerText = '🎤';
-                    chatMicBtn.style.color = '#38bdf8';
+                    
+                    mainAttachBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>`;
+                    mainAttachBtn.style.color = 'var(--text-muted)';
                     
                     recordedAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                     audioChunks = [];
@@ -418,9 +469,15 @@ if(chatMicBtn) {
             } catch (err) {
                 alert("Microphone access denied! Please allow microphone permissions.");
             }
-        } else {
+        }
+    });
+
+    // Tap main button again to stop recording manually
+    mainAttachBtn.addEventListener('click', () => {
+        if (isRecording && mediaRecorder) {
             mediaRecorder.stop();
             isRecording = false;
+            attachmentMenu.classList.remove('show');
         }
     });
 }
@@ -555,40 +612,8 @@ function openChatRoom(facultyName) {
 
         msgs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-        const bannerHtml = `
-            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 12px 14px; border-radius: 12px; font-size: 0.82rem; color: var(--text-color); line-height: 1.5; margin-bottom: 6px;">
-                <div style="font-weight: bold; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-size: 0.9rem;">
-                    <span>💡</span> Virtual Room Guidelines / මාර්ගෝපදේශ / வழிகாட்டுதல்கள்
-                </div>
-
-                <!-- English -->
-                <div><b>English:</b><br>
-                1. Please be mindful of your language and respectful while chatting, as seniors and fellow campus members are present in this virtual room.<br>
-                2. Chat clear option and chat timer options remove messages from your device only, whereas the message delete option removes the message completely for everyone.<br>
-                3. Avoid sensitive content such as inappropriate material, phone numbers, email addresses, and spam messages to prevent your account from being blocked.<br>
-                4. We believe this virtual room helps you share educational information safely and cooperatively across the faculty. - <i>Web Admin Team</i></div>
-                <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 8px 0;">
-
-                <!-- Sinhala -->
-                <div><b>සිංහල:</b><br>
-                1. මෙම virtual room එක ඇතුලේ ඔයලගේ campus එකේ අයියලා අක්කලා ඉන්න නිසා chat කිරිමේදි වචන භාවිතය ගැන සැලකිලිමත් වන්න.<br>
-                2. chat clear option එක හරහා සහ chat timer option තුලින් අදාල කාල සිමාවේ දී ඔබගේ චැට් එක ඔබගේ උපකරණයෙන් පමණක් ඉවත් වන අතර message delete option එක මගින් message එක සම්පුර්ණණයෙන්ම ඉවත් වීම සිදු වේ.<br>
-                3. අසභ්‍ය අන්තර්ගතයන්, දුරකතන අංක, ඊමේල් ලිපින, spam messages වැනි සංවේදි පණිවිඩ යැවීම නිසා ඔබගේ ගිණුම අවහිර වී යා හැකි බව මතක තබා ගන්න.<br>
-                4. මෙම virtual room පහසුකම මගින් ඔබගේ campus එක තුල සමස්ත faculty එක ඇතුලත සහයෝගිතාවයෙන් ආරක්ෂිත ලෙස අධ්‍යාපනික තොරතුරු බෙදා ගැනීමට පහසුකම සැලසෙනු ඇතැයි අප විශ්වාස කරමු. - <i>Web Admin Team</i></div>
-                <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 8px 0;">
-
-                <!-- Tamil -->
-                <div><b>தமிழ்:</b><br>
-                1. இந்த மெய்நிகர் அறையில் உங்கள் வளாகத்தின் மூத்த மாணவர்களும் அக்காக்களும் அண்ணன்களும் இருப்பதால், அரட்டையடிக்கும்போது வார்த்தைப் பயன்பாட்டில் கவனமாக இருக்கவும்.<br>
-                2. அரட்டை தெளிவு விருப்பம் (Chat clear option) மற்றும் அரட்டை டைமர் விருப்பம் (Chat timer option) மூலம் குறிப்பிட்ட நேரத்தில் உங்கள் அரட்டை உங்கள் சாதனத்திலிருந்து மட்டுமே நீக்கப்படும், அதே நேரத்தில் செய்தி நீக்குதல் விருப்பம் (Message delete option) செய்தியை முழுமையாக அகற்றும்.<br>
-                3. ஆபாசமான உள்ளடக்கங்கள், தொலைபேசி எண்கள், மின்னஞ்சல் முகவரிகள், ஸ்பேம் செய்திகள் போன்ற உணர்திறன் வாய்ந்த செய்திகளை அனுப்புவது உங்கள் கணக்கு முடக்கப்படுவதற்குக் காரணமாகலாம் என்பதை நினைவில் கொள்ளுங்கள்.<br>
-                4. இந்த மெய்நிகர் அறை வசதியானது உங்கள் வளாகத்திற்குள் முழு பீடத்திலும் ஒத்துழைப்புடன் பாதுகாப்பாக கல்வித் தகவல்களைப் பகிர்ந்து கொள்ள உதவும் என்று நாங்கள் நம்புகிறோம். - <i>Web Admin Team</i></div>
-            </div>
-        `;
-
         if (msgs.length === 0) {
             chatMessagesContainer.innerHTML = `
-                ${bannerHtml}
                 <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: auto; margin-bottom: auto;">
                     No messages yet. Say hi to your friends! 👋
                 </div>
@@ -596,7 +621,7 @@ function openChatRoom(facultyName) {
             return;
         }
 
-        let html = bannerHtml;
+        let html = '';
 
         msgs.forEach(msg => {
             const isMe = msg.senderId === currentUser.uid;
@@ -609,7 +634,7 @@ function openChatRoom(facultyName) {
             } else if (msg.type === 'audio') {
                 contentHtml = `<audio controls style="height: 35px; max-width: 220px; margin-top: 5px; border-radius: 20px;"><source src="${msg.fileUrl}" type="audio/webm">Your browser does not support audio.</audio>`;
             } else {
-                contentHtml = `${msg.text}`;
+                contentHtml = `${msg.text.replace(/\n/g, '<br>')}`; // Render newlines in chat correctly
             }
 
             html += `
@@ -641,17 +666,25 @@ if (aiToggleBtn && aiAgentSidebar) {
             // Mobile toggle
             aiAgentSidebar.classList.toggle('mobile-open');
             if (aiAgentSidebar.classList.contains('mobile-open')) {
-                aiToggleBtn.innerHTML = "✕ Close Chat";
+                aiToggleBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                Close Chat`;
             } else {
-                aiToggleBtn.innerHTML = "🤖 Open AI Chat";
+                aiToggleBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                Open AI Chat`;
             }
         } else {
             // Desktop toggle
             aiAgentSidebar.classList.toggle('collapsed');
             if (aiAgentSidebar.classList.contains('collapsed')) {
-                aiToggleBtn.innerHTML = "🤖 Open AI Chat";
+                aiToggleBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                Open AI Chat`;
             } else {
-                aiToggleBtn.innerHTML = "✕ Close Chat";
+                aiToggleBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                Close Chat`;
             }
         }
     });
