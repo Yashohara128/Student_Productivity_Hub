@@ -257,6 +257,7 @@ if (cardVirtualRoom) {
         } else {
             studentIdModal.style.display = 'flex'; 
         }
+       }
     });
 }
 
