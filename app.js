@@ -213,6 +213,10 @@ let replyingToMessageData = null;
 let selectedMessagesToDelete = new Set();
 let pressTimer;
 
+// Pending Media Variables for WhatsApp-like caption support
+let pendingMediaFile = null;
+let pendingMediaType = null;
+
 // 1. Open Room Logic (Banned Check)
 if (cardVirtualRoom) {
     cardVirtualRoom.addEventListener('click', async () => {
@@ -392,11 +396,27 @@ if (cancelActionBtn) {
     });
 }
 
-// 4. Send & Edit Message Logic (With 3-Strike Warning & Auto-Ban System)
+// 4. Send & Edit Message Logic (With 3-Strike Warning & WhatsApp-like Media Caption Support)
 if (chatSendBtn) {
     chatSendBtn.addEventListener('click', async () => {
         if (!chatInputText) return;
         const text = chatInputText.value.trim();
+
+        // 🟢 WhatsApp-like Pending Media & Caption Logic
+        if (pendingMediaFile) {
+            const captionText = text;
+            const fileToSend = pendingMediaFile;
+            const fileType = pendingMediaType;
+
+            pendingMediaFile = null;
+            pendingMediaType = null;
+            chatInputText.value = '';
+            chatInputText.placeholder = "Type a message...";
+
+            await uploadMediaWithCaptionToFirebase(fileToSend, fileToSend.name, fileType, captionText);
+            return;
+        }
+
         if (!text || !currentStudentFaculty) return;
 
         const forbiddenKeywords = ["sex", "nude", "porn", "xxx", "abuse", "sexy", "xxxxxx","hutta","huk","palyan","plyn","pko","hutti","ponnya","pinnya","pakya","kariya","keriya"];
@@ -605,7 +625,7 @@ if (mainAttachBtn && attachmentMenu) {
     });
 }
 
-// Media Upload Logic
+// 🟢 Media Upload Logic (WhatsApp-like Pending Support)
 if(menuImageBtn && chatImageInput) {
     menuImageBtn.addEventListener('click', () => {
         chatImageInput.click();
@@ -642,7 +662,13 @@ if(menuImageBtn && chatImageInput) {
                         type: 'image/jpeg',
                         lastModified: Date.now()
                     });
-                    uploadMediaToFirebase(compressedFile, file.name, 'image');
+                    
+                    // Hold in pending state so user can type caption
+                    pendingMediaFile = compressedFile;
+                    pendingMediaType = 'image';
+                    chatInputText.placeholder = `📎 Image attached (${file.name}). Type a caption and press send...`;
+                    chatInputText.focus();
+
                 }, 'image/jpeg', 0.7);
             };
         };
@@ -658,7 +684,11 @@ if(menuDocBtn && chatDocInput) {
     chatDocInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file || !currentStudentFaculty) return;
-        uploadMediaToFirebase(file, file.name, 'document');
+
+        pendingMediaFile = file;
+        pendingMediaType = 'document';
+        chatInputText.placeholder = `📎 Document attached (${file.name}). Type a caption and press send...`;
+        chatInputText.focus();
     });
 }
 
@@ -738,7 +768,13 @@ if (sendVoiceBtn) {
     });
 }
 
+// Helper Function for Standard Media Upload
 function uploadMediaToFirebase(fileOrBlob, fileName, type) {
+    uploadMediaWithCaptionToFirebase(fileOrBlob, fileName, type, "");
+}
+
+// 🟢 Helper Function to Upload Media with Caption Support
+async function uploadMediaWithCaptionToFirebase(fileOrBlob, fileName, type, caption) {
     const storageRef = ref(storage, `virtual_room_media/${Date.now()}_${fileName}`);
     const uploadTask = uploadBytesResumable(storageRef, fileOrBlob);
 
@@ -755,7 +791,7 @@ function uploadMediaToFirebase(fileOrBlob, fileName, type) {
         }, 
         async () => {
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            let displayTxt = type === 'audio' ? `${svgs.mic} Voice Message` : (type === 'image' ? `${svgs.photo} Photo` : `${svgs.doc} Document`);
+            let displayTxt = caption ? caption : (type === 'audio' ? `${svgs.mic} Voice Message` : (type === 'image' ? `${svgs.photo} Photo` : `${svgs.doc} Document`));
             
             await addDoc(collection(db, "virtual_rooms"), {
                 faculty: currentStudentFaculty,
@@ -770,6 +806,7 @@ function uploadMediaToFirebase(fileOrBlob, fileName, type) {
 
             chatSendBtn.innerHTML = originalBtnHTML;
             chatSendBtn.disabled = false;
+            chatInputText.placeholder = "Type a message...";
         }
     );
 }
