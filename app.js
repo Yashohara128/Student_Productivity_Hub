@@ -255,20 +255,6 @@ if (cardVirtualRoom) {
         }
     });
 }
-
-// Dismiss Guidelines Modal
-            if(roomGuidelinesModal) {
-                roomGuidelinesModal.style.display = 'flex';
-            }
-
-            openChatRoom(currentStudentFaculty);
-        } else {
-            studentIdModal.style.display = 'flex'; 
-        }
-       }
-    });
-}
-
 // Dismiss Guidelines Modal
 if (acceptGuidelinesBtn) {
     acceptGuidelinesBtn.addEventListener('click', () => {
