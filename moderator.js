@@ -1,14 +1,12 @@
-// moderator.js - Standalone Auto-Moderation System
+// moderator.js - Instant Auto-Ban & Content Blocker
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
 const auth = getAuth();
 const db = getFirestore();
 
-// Prohibited words (Sexual content & Hate speech list)
-const forbiddenKeywords = ["sex", "nude", "porn", "xxx", "abuse", "sexy", "xxxxxx","hutta","huk","palyan","plyn","pko","hutti","hutta"]; 
-let lastMessageTime = 0;
-let spamWarningCount = 0;
+// Prohibited words list (Oyaata kamathi wachan mekata thawa add karanna puluwan)
+const forbiddenKeywords =  ["sex", "nude", "porn", "xxx", "abuse", "sexy", "xxxxxx","hutta","huk","palyan","plyn","pko","hutti","hutta"]; 
 
 // 1. Intercept Virtual Room Entry (Check if Banned)
 document.addEventListener('click', async (e) => {
@@ -28,9 +26,9 @@ document.addEventListener('click', async (e) => {
     } catch (err) {
         console.error("Ban check error:", err);
     }
-}, true); // Capturing phase runs before app.js
+}, true);
 
-// 2. Intercept Message Sending (Anti-Spam, Content Filter & Auto-Ban)
+// 2. Instant Intercept Message Sending (Auto-Remove & Immediate Ban)
 document.addEventListener('click', async (e) => {
     const sendBtn = e.target.closest('#chat-send-btn');
     if (!sendBtn) return;
@@ -44,16 +42,6 @@ document.addEventListener('click', async (e) => {
     const user = auth.currentUser;
     if (!user) return;
 
-    // Anti-Spam Check (2 seconds gap)
-    const now = Date.now();
-    if (now - lastMessageTime < 2000) {
-        e.stopImmediatePropagation();
-        e.preventDefault();
-        alert("⚠️ Please wait a moment before sending another message. (Anti-Spam)");
-        return;
-    }
-
-    // Sexual Content & Hate Speech Filter
     const lowerText = text.toLowerCase();
     let isViolating = false;
     let matchedWord = "";
@@ -67,27 +55,25 @@ document.addEventListener('click', async (e) => {
     }
 
     if (isViolating) {
+        // Stop message from sending completely
         e.stopImmediatePropagation();
         e.preventDefault();
-        
-        spamWarningCount++;
-        alert(`🚨 WARNING: Inappropriate content detected (${matchedWord}). Repeated violations will result in an auto-ban!`);
 
-        // Auto-Ban after 3 violations
-        if (spamWarningCount >= 3) {
-            try {
-                await updateDoc(doc(db, "users", user.uid), {
-                    isBanned: true,
-                    banReason: "Violation of Chat Guidelines (Sexual/Hate Content or Spam)"
-                });
-                alert("⛔ You have been automatically banned from the Virtual Room due to repeated violations.");
-                location.reload();
-            } catch (err) {
-                console.error("Auto-ban error:", err);
-            }
+        // Clear input field immediately
+        chatInput.value = "";
+
+        try {
+            // Instant Auto-Ban on the very first violation
+            await updateDoc(doc(db, "users", user.uid), {
+                isBanned: true,
+                banReason: `Instant Ban: Used prohibited word (${matchedWord})`
+            });
+
+            alert(`⛔ BANNED: Your message contained a prohibited word ("${matchedWord}"). You have been permanently banned from the Virtual Room!`);
+            location.reload(); // Refresh to block access immediately
+        } catch (err) {
+            console.error("Instant ban error:", err);
         }
         return;
     }
-
-    lastMessageTime = Date.now();
-}, true); // Capturing phase runs before app.js
+}, true);
