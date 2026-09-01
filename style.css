@@ -34,9 +34,9 @@ body {
 }
 
 /* 🟢 SVG Icon Utilities */
-.icon-sm { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.icon-md { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.icon-lg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.icon-sm { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.icon-md { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.icon-lg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
 .feature-icon-wrapper { color: #38bdf8; margin-bottom: 1rem; display: inline-flex; justify-content: center; }
 .feature-icon-wrapper svg { width: 44px; height: 44px; stroke-width: 1.5; }
 .flex-align { display: flex; align-items: center; gap: 6px; }
@@ -155,7 +155,9 @@ th { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font
 .btn-erase-sem { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.6rem 1rem; border-radius: 0.5rem; cursor: pointer; width: 100%; font-weight: 500; font-size: 0.85rem; }
 .btn-reset-all { background: #ef4444; color: white; border: none; padding: 0.6rem 1rem; border-radius: 0.5rem; cursor: pointer; font-weight: 500; width: 100%; font-size: 0.85rem; }
 
-/* 🟢 UI Lock & Sidebar */
+/* =========================================
+   🟢 UI Lock & AI Sidebar Fix
+   ========================================= */
 #ai-toggle-btn {
     position: fixed !important; top: 15px !important; left: 20px !important; z-index: 999999 !important;
     background: linear-gradient(135deg, #38bdf8, #2563eb); color: white; border: none; border-radius: 50px;
