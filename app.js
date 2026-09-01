@@ -399,7 +399,7 @@ if (chatSendBtn) {
         const text = chatInputText.value.trim();
         if (!text || !currentStudentFaculty) return;
 
-        const forbiddenKeywords = ["sex", "nude", "porn", "xxx", "abuse", "sexy", "xxxxxx","hutta","huk","palyan","plyn","pko","hutti"];
+        const forbiddenKeywords = ["sex", "nude", "porn", "xxx", "abuse", "sexy", "xxxxxx","hutta","huk","palyan","plyn","pko","hutti","ponnya","pinnya","pakya","kariya","keriya"];
         const lowerText = text.toLowerCase();
         let isViolating = false;
         let matchedWord = "";
