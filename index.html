@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Student Productivity Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=74">
+    <link rel="stylesheet" href="style.css?v=75">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -16,7 +16,6 @@
     <div class="bg-glow circle-1"></div>
     <div class="bg-glow circle-2"></div>
 
-    <!-- 🟢 PC & Mobile Universal AI Agent Toggle Button -->
     <button id="ai-toggle-btn">
         <svg class="icon-md" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
         Open AI Chat
@@ -30,7 +29,6 @@
         </select>
     </div>
 
-    <!-- Pricing Modal -->
     <div id="pricing-modal" class="modal-overlay" style="display: none;">
         <div class="glass-card modal-box" style="max-width: 600px;">
             <h3 style="color: var(--heading-gradient-1); margin-bottom: 0.5rem;" class="flex-align justify-center">
@@ -73,7 +71,6 @@
         </div>
     </div>
 
-    <!-- Review Modal -->
     <div id="review-modal" class="modal-overlay" style="display: none;">
         <div class="glass-card modal-box" style="max-width: 480px; text-align: left; position: relative;">
             <button id="close-review-modal" style="position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-color); font-size: 1.2rem; cursor: pointer;">
@@ -120,7 +117,6 @@
         </div>
     </div>
 
-    <!-- 🟢 Virtual Room Guidelines Popup Modal -->
     <div id="room-guidelines-modal" class="modal-overlay" style="display: none;">
         <div class="glass-card modal-box" style="max-width: 600px; text-align: left; position: relative;">
             
@@ -130,7 +126,6 @@
             </div>
 
             <div style="font-size: 0.85rem; color: var(--text-color); line-height: 1.6; max-height: 60vh; overflow-y: auto; padding-right: 10px;">
-                <!-- English -->
                 <div style="margin-bottom: 12px;"><b>English:</b><br>
                 1. Please be mindful of your language and respectful while chatting, as seniors and fellow campus members are present in this virtual room.<br>
                 2. Chat clear option and chat timer options remove messages from your device only, whereas the message delete option removes the message completely for everyone.<br>
@@ -138,7 +133,6 @@
                 4. We believe this virtual room helps you share educational information safely and cooperatively across the faculty. - <i>Web Admin Team</i></div>
                 <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 12px 0;">
 
-                <!-- Sinhala -->
                 <div style="margin-bottom: 12px;"><b>සිංහල:</b><br>
                 1. මෙම virtual room එක ඇතුලේ ඔයලගේ campus එකේ අයියලා අක්කලා ඉන්න නිසා chat කිරිමේදි වචන භාවිතය ගැන සැලකිලිමත් වන්න.<br>
                 2. chat clear option එක හරහා සහ chat timer option තුලින් අදාල කාල සිමාවේ දී ඔබගේ චැට් එක ඔබගේ උපකරණයෙන් පමණක් ඉවත් වන අතර message delete option එක මගින් message එක සම්පුර්ණණයෙන්ම ඉවත් වීම සිදු වේ.<br>
@@ -146,7 +140,6 @@
                 4. මෙම virtual room පහසුකම මගින් ඔබගේ campus එක තුල සමස්ተ faculty එක ඇතුලත සහයෝගිතාවයෙන් ආරක්ෂිත ලෙස අධ්‍යාපනික තොරතුරු බෙදා ගැනීමට පහසුකම සැලසෙනු ඇතැයි අප විශ්වාස කරමු. - <i>Web Admin Team</i></div>
                 <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 12px 0;">
 
-                <!-- Tamil -->
                 <div><b>தமிழ்:</b><br>
                 1. இந்த மெய்நிகர் அறையில் உங்கள் வளாகத்தின் மூத்த மாணவர்களும் அக்காக்களும் அண்ணன்களும் இருப்பதால், அரட்டையடிக்கும்போது வார்த்தைப் பயன்பாட்டில் கவனமாக இருக்கவும்.<br>
                 2. அரட்டை தெளிவு விருப்பம் (Chat clear option) மற்றும் அரட்டை டைமர் விருப்பம் (Chat timer option) மூலம் குறிப்பிட்ட நேரத்தில் உங்கள் அரட்டை உங்கள் சாதனத்திலிருந்து மட்டுமே நீக்கப்படும், அதே நேரத்தில் செய்தி நீக்குதல் விருப்பம் (Message delete option) செய்தியை முழுமையாக அகற்றும்.<br>
@@ -158,22 +151,18 @@
         </div>
     </div>
 
-    <!-- Login Section -->
     <div id="login-section" class="glass-card login-card" style="max-width: 450px;">
         <h1>Welcome to Student Productivity Hub</h1>
         <p class="login-sub">Please login with Google to access your academic tools</p>
-        
         <button id="login-btn" class="btn-google">
             <svg class="icon-md" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             Login with Google
         </button>
     </div>
 
-    <!-- Main App Section with Left AI Agent Sidebar -->
     <div id="app-section" style="display: none;">
         <div class="app-layout-container">
             
-            <!-- 🤖 Persistent Left AI Study Agent Sidebar -->
             <aside id="ai-agent-sidebar" class="ai-agent-sidebar collapsed">
                 <div style="padding: 65px 20px 15px 20px; border-bottom: 1px solid var(--card-border); display: flex; align-items: center; justify-content: space-between;">
                     <h3 style="color: var(--heading-gradient-1); font-size: 1rem; margin: 0; display: flex; align-items: center; gap: 8px;">
@@ -183,7 +172,6 @@
                     <span style="font-size: 0.65rem; background: #22c55e; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 600;">ONLINE</span>
                 </div>
 
-                <!-- Chat Messages Container -->
                 <div id="ai-chat-messages" style="flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 0.85rem;">
                     <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 10px; border-radius: 8px; color: var(--text-color);">
                         <div class="flex-align" style="margin-bottom:4px; color:#38bdf8;">
@@ -193,36 +181,28 @@
                     </div>
                 </div>
 
-                <!-- Chat Input & File Attachment Form -->
                 <div style="padding: 15px; border-top: 1px solid var(--card-border); background: transparent;">
                     <div id="ai-file-indicator" style="font-size: 0.7rem; color: #38bdf8; margin-bottom: 5px; display: none; align-items:center; gap:4px;"></div>
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <input type="file" id="ai-file-input" accept=".pdf,.txt,.doc,.docx" style="display: none;">
                         <button id="ai-attach-btn" title="Attach Document / PDF" style="background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-color); padding: 8px; border-radius: 6px; cursor: pointer; display:flex; align-items:center; justify-content:center;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                            <svg class="icon-md" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                         </button>
                         <textarea id="ai-chat-input" rows="1" placeholder="Ask anything..." style="flex: 1; padding: 8px; border-radius: 6px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); font-size: 0.8rem; resize: none; overflow-y: auto;"></textarea>
                         <button id="ai-send-btn" style="background: #3b82f6; color: white; border: none; padding: 0 12px; height: 36px; border-radius: 6px; cursor: pointer; font-weight: 600; display:flex; align-items:center; justify-content:center;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            <svg class="icon-sm" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                         </button>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
                         <button id="ai-clear-btn" style="background: none; border: none; color: var(--text-muted); font-size: 0.7rem; cursor: pointer; display:flex; align-items:center; gap:4px;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                            Clear Chat
-                        </button>
-                        <button id="logout-btn" style="background: none; border: none; color: #ef4444; font-size: 0.75rem; cursor: pointer; display:flex; align-items:center; gap:4px;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                            Logout
+                            <svg class="icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Clear Chat
                         </button>
                     </div>
                 </div>
             </aside>
 
-            <!-- 💻 Right Dynamic Main Content Area -->
             <main class="main-content">
                 
-                <!-- Main Header with Upgrade and Global Logout Button -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--card-border); flex-wrap: wrap; gap: 10px;">
                     <h3 id="welcome-greeting" style="font-size: 0.95rem; color: var(--heading-gradient-1); margin: 0; display:flex; align-items:center; gap:6px;">
                         <svg class="icon-md" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Welcome, <span id="user-name">Student</span>!
@@ -233,13 +213,11 @@
                             <svg class="icon-sm" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Upgrade Plan
                         </button>
                         <button id="main-logout-btn" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: 0.3s; display:flex; align-items:center; gap:4px;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                            Logout
+                            <svg class="icon-sm" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Logout
                         </button>
                     </div>
                 </div>
 
-                <!-- Dashboard Hub -->
                 <div id="dashboard-hub" style="display: block;">
                     <div style="text-align: center; margin-bottom: 2rem;">
                         <h1 style="font-size: 2.2rem; font-weight: 600; background: linear-gradient(to right, var(--heading-gradient-1), var(--heading-gradient-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px;">Student Productivity Hub</h1>
@@ -248,390 +226,66 @@
 
                     <div class="feature-cards-grid">
                         <div class="glass-card feature-card" id="card-gpa">
-                            <div class="feature-icon-wrapper">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                            </div>
+                            <div class="feature-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
                             <h2>GPA & Class Tracker</h2>
-                            <p>Calculate your semester GPAs, track cumulative CGPA, analyze progress with charts, and generate professional PDF transcripts.</p>
+                            <p>Calculate your semester GPAs, track cumulative CGPA, analyze progress with charts.</p>
                             <button class="btn-launch">Open Tracker ➔</button>
                         </div>
-
                         <div class="glass-card feature-card" id="card-ieee">
-                            <div class="feature-icon-wrapper">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-                            </div>
+                            <div class="feature-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg></div>
                             <h2>IEEE References Generator</h2>
-                            <p>Instantly generate accurate IEEE 7th Edition academic references and citations for your research reports and dissertations.</p>
+                            <p>Instantly generate accurate IEEE 7th Edition academic references and citations.</p>
                             <button class="btn-launch">Open Generator ➔</button>
                         </div>
-
                         <div class="glass-card feature-card" id="card-shortnotes">
-                            <div class="feature-icon-wrapper">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                            </div>
+                            <div class="feature-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
                             <h2>AI PDF Short Note Generator</h2>
-                            <p>Upload your lecture or study PDF and instantly generate structured short notes with key points using Groq AI.</p>
+                            <p>Upload your lecture or study PDF and instantly generate structured short notes.</p>
                             <button class="btn-launch">Open Generator ➔</button>
                         </div>
-
                         <div class="glass-card feature-card" id="card-plagiarism">
-                            <div class="feature-icon-wrapper">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M9 11l2 2 4-4"/></svg>
-                            </div>
+                            <div class="feature-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M9 11l2 2 4-4"/></svg></div>
                             <h2>Plagiarism & AI Humanizer</h2>
-                            <p>Scan your essay drafts for originality and instantly humanize robotic or flagged text to sound 100% natural and unique.</p>
+                            <p>Scan your essay drafts for originality and instantly humanize robotic or flagged text.</p>
                             <button class="btn-launch">Open Checker ➔</button>
                         </div>
-
-                        <!-- 🟢 Virtual Room Card -->
                         <div class="glass-card feature-card" id="card-virtual-room">
-                            <div class="feature-icon-wrapper">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                            </div>
+                            <div class="feature-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
                             <h2>Student Virtual Room</h2>
                             <h4>[Horizon Students Only]</h4>
-                            <p>Join your faculty's exclusive real-time virtual chat room to discuss academics and share resources securely & safely.</p>
+                            <p>Join your faculty's exclusive real-time virtual chat room to discuss academics securely.</p>
                             <button class="btn-launch">Join Room ➔</button>
                         </div>
-
                     </div>
                 </div>
 
-                <!-- GPA Tracker View -->
                 <div id="view-gpa" class="sub-interface" style="display: none;">
-                    <div style="margin-bottom: 1.5rem;">
-                        <button class="btn-back flex-align" id="back-to-hub-gpa"><svg class="icon-sm" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to Dashboard</button>
-                    </div>
-
-                    <div class="header">
-                        <h1 class="flex-align justify-center"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg> GPA & Class Tracker</h1>
-                        
-                        <div style="margin: 10px auto; max-width: 380px;">
-                            <select id="university-selector" style="padding: 0.6rem; border-radius: 0.5rem; font-size: 0.85rem; width: 100%; cursor: pointer;">
-                                <option value="horizon" selected>Horizon Campus Student (Auto Grading)</option>
-                                <option value="other">Other University Student (Select Grade & Custom Point)</option>
-                            </select>
-                        </div>
-
-                        <div style="margin: 10px auto; max-width: 380px; display: flex; gap: 8px;">
-                            <input type="text" id="degree-name" placeholder="Enter Degree Name" style="flex: 1;">
-                            <button id="profile-ok-btn" class="btn-download" style="margin-top: 0; padding: 0.5rem 1.2rem !important; cursor: pointer;">OK</button>
-                        </div>
-
-                        <div style="margin-top: 15px;">
-                            <button id="download-pdf" class="btn-download"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Your GPA Certificate</button>
-                        </div>
-                    </div>
-
-                    <div class="dashboard">
-                        <div class="glass-card dash-box">
-                            <h2>Overall Cumulative CGPA</h2>
-                            <p id="cgpa-display" class="highlight-text">0.00</p>
-                        </div>
-                        <div class="glass-card dash-box">
-                            <h2>Overall Predicted Class</h2>
-                            <p id="class-display" class="class-text">Pending...</p>
-                        </div>
-                    </div>
-
-                    <div id="goal-section" class="glass-card form-section">
-                        <h3 class="flex-align"><svg class="icon-md" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Academic Goals & Next Class Tracker</h3>
-                        <div id="goal-content"></div>
-                    </div>
-
-                    <div class="glass-card form-section">
-                        <h3 class="flex-align"><svg class="icon-md" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> CGPA & Semester Progress Analytics</h3>
-                        <div style="position: relative; height: 260px; width: 100%;">
-                            <canvas id="gpaChart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="glass-card form-section">
-                        <h3 id="form-title">Add New Subject</h3>
-                        <div class="form-grid">
-                            <input type="text" id="subject-name" placeholder="Subject Name (E.g. Data Structures)">
-                            
-                            <select id="subject-year">
-                                <option value="" disabled selected>Select Year</option>
-                                <option value="1">1st Year</option>
-                                <option value="2">2nd Year</option>
-                                <option value="3">3rd Year</option>
-                                <option value="4">4th Year</option>
-                            </select>
-
-                            <select id="subject-semester">
-                                <option value="" disabled selected>Select Semester</option>
-                                <option value="1">1st Semester</option>
-                                <option value="2">2nd Semester</option>
-                            </select>
-
-                            <select id="credit">
-                                <option value="" disabled selected>Credits</option>
-                                <option value="1">1 Credit</option>
-                                <option value="2">2 Credits</option>
-                                <option value="3">3 Credits</option>
-                                <option value="4">4 Credits</option>
-                                <option value="5">5 Credits</option>
-                                <option value="6">6 Credits</option>
-                            </select>
-
-                            <select id="grade">
-                                <option value="" disabled selected>Grade</option>
-                                <option value="4.00">A+ (4.00)</option>
-                                <option value="4.00">A (4.00)</option>
-                                <option value="3.70">A- (3.70)</option>
-                                <option value="3.30">B+ (3.30)</option>
-                                <option value="3.00">B (3.00)</option>
-                                <option value="2.70">B- (2.70)</option>
-                                <option value="2.30">C+ (2.30)</option>
-                                <option value="2.00">C (2.00)</option>
-                                <option value="1.70">C- (1.70)</option>
-                                <option value="1.30">D+ (1.30)</option>
-                                <option value="1.00">D (1.00)</option>
-                                <option value="0.00">E (0.00)</option>
-                                <option value="-1">NC-C</option>
-                                <option value="-1">NC-E</option>
-                                <option value="-1">NE</option>
-                                <option value="-1">F</option>
-                                <option value="-1">Absent</option>
-                                <option value="-1">Medical</option>
-                            </select>
-
-                            <div id="other-uni-box" style="display: none; grid-column: 1 / -1; gap: 10px;">
-                                <select id="other-grade-letter" style="flex: 1;">
-                                    <option value="" disabled selected>Select Grade (A to F / Repeat)</option>
-                                    <option value="A+">A+</option>
-                                    <option value="A">A</option>
-                                    <option value="A-">A-</option>
-                                    <option value="B+">B+</option>
-                                    <option value="B">B</option>
-                                    <option value="B-">B-</option>
-                                    <option value="C+">C+</option>
-                                    <option value="C">C</option>
-                                    <option value="C-">C-</option>
-                                    <option value="D+">D+</option>
-                                    <option value="D">D</option>
-                                    <option value="E">E</option>
-                                    <option value="F">F (Fail)</option>
-                                    <option value="Absent">Absent</option>
-                                    <option value="Medical">Medical</option>
-                                    <option value="Repeat">Repeat (RA / Absent)</option>
-                                </select>
-                                <input type="number" step="0.01" id="custom-grade-point" placeholder="Enter Grade Point (e.g. 4.0, 3.7)" style="flex: 1;">
-                            </div>
-                        </div>
-                        <button id="add-btn" class="btn-add flex-align"><svg class="icon-sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add to List</button>
-                    </div>
-
-                    <div id="academic-container"></div>
-
-                    <div class="glass-card form-section reset-card">
-                        <h3>GPA Data Management & Reset Options</h3>
-                        <div class="reset-grid">
-                            <div>
-                                <h4>Erase Specific Semester</h4>
-                                <div class="erase-select-group">
-                                    <select id="erase-year">
-                                        <option value="" disabled selected>Year</option>
-                                        <option value="1">Year 1</option>
-                                        <option value="2">Year 2</option>
-                                        <option value="3">Year 3</option>
-                                        <option value="4">Year 4</option>
-                                    </select>
-                                    <select id="erase-semester">
-                                        <option value="" disabled selected>Semester</option>
-                                        <option value="1">Sem 1</option>
-                                        <option value="2">Sem 2</option>
-                                    </select>
-                                </div>
-                                <button id="erase-sem-btn" class="btn-erase-sem">Erase Semester Data</button>
-                            </div>
-                            <div class="full-reset-box">
-                                <h4>Full Data Reset</h4>
-                                <p>Permanently delete all stored subjects across all years.</p>
-                                <button id="reset-all-btn" class="btn-reset-all">Reset All Data</button>
-                            </div>
-                        </div>
-                    </div>
+                    <div style="margin-bottom: 1.5rem;"><button class="btn-back flex-align" id="back-to-hub-gpa"><svg class="icon-sm" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to Dashboard</button></div>
+                    <div class="header"><h1><svg class="icon-lg" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg> GPA & Class Tracker</h1></div>
                 </div>
-
-                <!-- IEEE Citation Generator View -->
                 <div id="view-ieee" class="sub-interface" style="display: none;">
-                    <div style="margin-bottom: 1.5rem;">
-                        <button class="btn-back flex-align" id="back-to-hub-ieee"><svg class="icon-sm" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to Dashboard</button>
-                    </div>
-
-                    <div class="header">
-                        <h1 class="flex-align justify-center"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> IEEE Citation & Reference Generator</h1>
-                        <p style="color: var(--text-muted); font-size: 0.9rem;">Format your research papers and book references into standard IEEE style</p>
-                    </div>
-
-                    <div class="glass-card form-section">
-                        <h3>Reference Details</h3>
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                            <div>
-                                <label style="font-size: 0.8rem; font-weight: 500; display: block; margin-bottom: 0.4rem;">Source Type:</label>
-                                <select id="ieee-source-type" style="width: 100%;">
-                                    <option value="journal">Journal Article</option>
-                                    <option value="book">Book</option>
-                                    <option value="conference">Conference Proceedings</option>
-                                    <option value="website">Website / Online Article</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style="font-size: 0.8rem; font-weight: 500; display: block; margin-bottom: 0.4rem;">Publication Year:</label>
-                                <input type="text" id="ieee-year" placeholder="E.g. 2026">
-                            </div>
-                        </div>
-
-                        <div style="margin-bottom: 1rem;">
-                            <label style="font-size: 0.8rem; font-weight: 500; display: block; margin-bottom: 0.4rem;">Author(s) [Format: First initial. Last name]:</label>
-                            <input type="text" id="ieee-author" placeholder="E.g. M. K. Perera and J. A. Silva">
-                        </div>
-
-                        <div style="margin-bottom: 1rem;">
-                            <label style="font-size: 0.8rem; font-weight: 500; display: block; margin-bottom: 0.4rem;">Article / Book / Paper Title:</label>
-                            <input type="text" id="ieee-title" placeholder="E.g. Real-Time Data Structures in Mobile Computing">
-                        </div>
-
-                        <div style="margin-bottom: 1rem;">
-                            <label style="font-size: 0.8rem; font-weight: 500; display: block; margin-bottom: 0.4rem;" id="ieee-source-label">Journal / Publisher Name:</label>
-                            <input type="text" id="ieee-source" placeholder="E.g. IEEE Transactions on Education">
-                        </div>
-
-                        <div id="ieee-url-box" style="margin-bottom: 1rem; display: none;">
-                            <label style="font-size: 0.8rem; font-weight: 500; display: block; margin-bottom: 0.4rem;">Website URL:</label>
-                            <input type="text" id="ieee-url" placeholder="E.g. https://example.com/article">
-                        </div>
-
-                        <button id="generate-ieee-btn" class="btn-add flex-align" style="width: 100%; margin-top: 0;"><svg class="icon-sm" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Generate IEEE Reference</button>
-
-                        <div id="ieee-result-section" style="margin-top: 1.5rem; display: none; padding: 1.2rem; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 0.5rem;">
-                            <h4 class="flex-align" style="color: var(--heading-gradient-1); margin-bottom: 0.5rem;"><svg class="icon-sm" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Formatted IEEE Reference</h4>
-                            <textarea id="ieee-output-text" rows="3" readonly style="width: 100%; padding: 0.8rem; border-radius: 0.5rem; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); font-size: 0.85rem; margin-bottom: 0.8rem; resize: vertical;"></textarea>
-                            <button id="copy-ieee-btn" class="btn-download flex-align" style="font-size: 0.75rem !important; padding: 0.4rem 1rem !important;"><svg class="icon-sm" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Reference</button>
-                        </div>
-                    </div>
+                    <div style="margin-bottom: 1.5rem;"><button class="btn-back flex-align" id="back-to-hub-ieee"><svg class="icon-sm" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to Dashboard</button></div>
+                    <div class="header"><h1><svg class="icon-lg" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> IEEE Citation Generator</h1></div>
                 </div>
-                            
-                <!-- AI PDF Short Note Generator View -->
                 <div id="view-shortnotes" class="sub-interface" style="display: none;">
-                    <div style="margin-bottom: 1.5rem;">
-                        <button class="btn-back flex-align" id="back-to-hub-shortnotes"><svg class="icon-sm" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to Dashboard</button>
-                    </div>
-
-                    <div class="header">
-                        <h1 class="flex-align justify-center"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> AI PDF Short Note Generator</h1>
-                        <p style="color: var(--text-muted); font-size: 0.9rem;">Upload a lecture PDF and let Gemini AI generate structured short notes instantly</p>
-                    </div>
-
-                    <div class="glass-card form-section">
-                        <h3>Upload Study Material & Generate Notes</h3>
-                        
-                        <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--input-bg); padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--input-border);">
-                            <label for="note-pdf-upload" class="flex-align" style="font-size: 0.85rem; color: var(--text-muted); cursor: pointer;"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Select Lecture PDF:</label>
-                            <input type="file" id="note-pdf-upload" accept=".pdf" style="font-size: 0.8rem; cursor: pointer;">
-                            <span id="note-pdf-file-name" style="font-size: 0.75rem; color: #38bdf8; font-weight: 500;"></span>
-                        </div>
-
-                        <div style="margin-bottom: 1rem;">
-                            <label style="font-size: 0.8rem; font-weight: 500; display: block; margin-bottom: 0.4rem;">Custom Note Instructions (Optional):</label>
-                            <input type="text" id="note-custom-prompt" placeholder="E.g., Focus more on definitions, formulas and key takeaways..." style="width: 100%; padding: 0.8rem; border-radius: 0.5rem; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border);">
-                        </div>
-
-                        <button id="generate-notes-btn" class="btn-add flex-align" style="width: 100%; margin-top: 0;"><svg class="icon-sm" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Generate Short Notes</button>
-
-                        <div id="note-loading" style="display: none; text-align: center; margin-top: 1.5rem; color: var(--heading-gradient-1);">
-                            <p class="flex-align justify-center"><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Extracting text and generating short notes using Gemini AI... Please wait.</p>
-                        </div>
-
-                        <div id="note-result-section" style="margin-top: 1.5rem; display: none; padding: 1.2rem; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 0.5rem;">
-                            <h4 class="flex-align" style="color: var(--heading-gradient-1); margin-bottom: 0.5rem;"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Generated Short Notes</h4>
-                            
-                            <textarea id="generated-notes-output" rows="12" readonly style="width: 100%; padding: 0.8rem; border-radius: 0.5rem; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); font-size: 0.85rem; margin-bottom: 0.8rem; resize: vertical;"></textarea>
-                            
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <button id="download-notes-docx-btn" class="btn-download flex-align" style="background: #2563eb !important;"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Download as Word</button>
-                                <button id="download-notes-pdf-btn" class="btn-download flex-align" style="font-size: 0.75rem !important; padding: 0.4rem 1rem !important; background: linear-gradient(to right, #16a34a, #22c55e) !important;"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Download as PDF</button>
-                            </div>
-                        </div>
-                    </div>
+                    <div style="margin-bottom: 1.5rem;"><button class="btn-back flex-align" id="back-to-hub-shortnotes"><svg class="icon-sm" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to Dashboard</button></div>
+                    <div class="header"><h1><svg class="icon-lg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> AI PDF Short Note Generator</h1></div>
                 </div>
-
-                <!-- Plagiarism Checker View -->
                 <div id="view-plagiarism" class="sub-interface" style="display: none;">
-                    <div style="margin-bottom: 1.5rem;">
-                        <button class="btn-back flex-align" id="back-to-hub-plagiarism"><svg class="icon-sm" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to Dashboard</button>
-                    </div>
-
-                    <div class="header">
-                        <h1 class="flex-align justify-center"><svg class="icon-lg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M9 11l2 2 4-4"/></svg> Plagiarism Checker & AI Humanizer</h1>
-                        <p style="color: var(--text-muted); font-size: 0.9rem;">Scan text uniqueness and rewrite robotic content into natural human tone</p>
-                    </div>
-
-                    <div class="glass-card form-section">
-                        <h3>Paste Your Assignment Draft or Upload PDF</h3>
-                        <textarea id="plagiarism-text" rows="5" placeholder="Paste your essay, report or paragraph here..." style="width: 100%; padding: 1rem; border-radius: 0.5rem; resize: vertical; margin-bottom: 0.8rem;"></textarea>
-                        
-                        <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--input-bg); padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--input-border);">
-                            <label for="pdf-upload" class="flex-align" style="font-size: 0.85rem; color: var(--text-muted); cursor: pointer;"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Upload PDF Assignment:</label>
-                            <input type="file" id="pdf-upload" accept=".pdf" style="font-size: 0.8rem; cursor: pointer;">
-                            <span id="pdf-file-name" style="font-size: 0.75rem; color: #38bdf8; font-weight: 500;"></span>
-                        </div>
-
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button id="check-plagiarism-btn" class="btn-add flex-align" style="flex: 1; margin-top: 0;"><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M9 11l2 2 4-4"/></svg> Scan for Plagiarism & AI</button>
-                        </div>
-
-                        <div id="plagiarism-result" style="margin-top: 1.5rem; display: none; padding: 1.2rem; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 0.5rem;">
-                            <h4 class="flex-align" style="color: var(--heading-gradient-1); margin-bottom: 0.5rem;"><svg class="icon-sm" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Originality & AI Scan Report</h4>
-                            <p id="plagiarism-stats" style="font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem;"></p>
-                            
-                            <div id="humanize-box" style="display: none; border-top: 1px solid var(--card-border); padding-top: 1rem; margin-top: 1rem;">
-                                <h4 class="flex-align" style="color: var(--heading-gradient-2); margin-bottom: 0.5rem;"><svg class="icon-sm" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> AI Humanized Version</h4>
-                                <p id="humanized-stats" style="font-size: 0.85rem; color: #22c55e; margin-bottom: 0.5rem; font-weight: 500;"></p>
-                                
-                                <textarea id="humanized-output-text" rows="6" readonly style="width: 100%; padding: 0.8rem; border-radius: 0.5rem; background: var(--input-bg); font-size: 0.85rem; margin-bottom: 0.8rem;"></textarea>
-                                
-                                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                    <button id="copy-humanized-btn" class="btn-download flex-align" style="font-size: 0.75rem !important; padding: 0.4rem 1rem !important;"><svg class="icon-sm" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Text</button>
-                                    <button id="download-humanized-docx-btn" class="btn-download flex-align" style="background: #2563eb !important;"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Download as Word</button>
-                                    <button id="download-humanized-pdf-btn" class="btn-download flex-align" style="font-size: 0.75rem !important; padding: 0.4rem 1rem !important; background: linear-gradient(to right, #16a34a, #22c55e) !important;"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Download as PDF</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <div style="margin-bottom: 1.5rem;"><button class="btn-back flex-align" id="back-to-hub-plagiarism"><svg class="icon-sm" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to Dashboard</button></div>
+                    <div class="header"><h1><svg class="icon-lg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M9 11l2 2 4-4"/></svg> Plagiarism Checker & AI Humanizer</h1></div>
                 </div>
 
-                <!-- 🟢 Student ID Verification Modal -->
-                <div id="student-id-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); z-index: 1000; justify-content: center; align-items: center;">
-                    <div class="glass-card" style="width: 90%; max-width: 400px; padding: 2rem; text-align: center;">
-                        <h3 style="margin-bottom: 10px;">🎓 Verify Your Faculty</h3>
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">Enter your official Student ID to join your faculty's virtual room.</p>
-                        <input type="text" id="student-id-input" placeholder="e.g. ITBNM-25XX-XXXX" style="width: 100%; text-transform: uppercase; text-align: center; font-weight: bold; font-size: 1.1rem; margin-bottom: 15px;">
-                        <button id="verify-id-btn" class="btn-launch" style="width: 100%;">Verify & Join Room ➔</button>
-                        <button id="close-id-modal" class="btn-download" style="width: 100%; margin-top: 10px; background: transparent !important; color: var(--text-muted) !important; border: 1px solid var(--input-border) !important;">Cancel</button>
-                    </div>
-                </div>
-
-                <!-- 🟢 Virtual Room (Chat Interface) View -->
                 <div id="view-virtual-room" class="sub-interface" style="display: none; height: 100%; flex-direction: column; justify-content: space-between;">
                     
-                    <!-- Header with Leave Button, Clear Chat & Disappearing Timer -->
                     <div style="margin-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                         <button class="btn-back flex-align" id="back-to-hub-room" style="padding: 6px 12px; font-size: 0.8rem;"><svg class="icon-sm" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
                         
                         <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                            <!-- ⏳ Disappearing Timer Selector -->
                             <select id="disappearing-timer-select" style="font-size: 0.75rem; padding: 5px 8px; border-radius: 12px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); cursor: pointer; outline: none;">
-                                <option value="off">⏳ Timer: Off</option>
-                                <option value="7">⏳ 7 Days</option>
-                                <option value="14">⏳ 14 Days</option>
-                                <option value="30">⏳ 30 Days</option>
+                                <option value="off">⏳ Timer: Off</option><option value="7">⏳ 7 Days</option><option value="14">⏳ 14 Days</option><option value="30">⏳ 30 Days</option>
                             </select>
 
-                            <!-- 🧹 Clear Chat Button -->
                             <button id="clear-my-chat-btn" style="background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); color: #a855f7; padding: 5px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: 0.3s; display:flex; align-items:center; gap:4px;" title="Clear chat view for you only">
                                 <svg class="icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Clear Chat
                             </button>
@@ -646,22 +300,26 @@
                         </div>
                     </div>
 
-                    <!-- Chat Messages Area -->
-                    <div id="chat-messages-container" class="glass-card" style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 8px;">
+                    <div id="multi-delete-bar" class="multi-delete-bar" style="display: none;">
+                        <span id="multi-delete-count">0 messages selected</span>
+                        <div class="flex-align">
+                            <button id="cancel-multi-delete" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 4px;">Cancel</button>
+                            <button id="confirm-multi-delete" style="background: #ef4444; color: white; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-weight: bold; font-size: 0.8rem; box-shadow: 0 2px 10px rgba(239, 68, 68, 0.4);">Delete Selected</button>
+                        </div>
+                    </div>
+
+                    <div id="chat-messages-container" class="glass-card" style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 8px;">
                         <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: auto; margin-bottom: auto;">
                             Loading messages...
                         </div>
                     </div>
 
-                    <!-- 🟢 Fully Spacious & Clean Chat Input Area -->
                     <div class="glass-card" style="display: flex; flex-direction: column; padding: 12px 14px; flex-shrink: 0; border-radius: 20px; position: relative; gap: 8px; overflow: visible;">
                         
-                        <!-- Recording Indicator -->
                         <div id="recording-indicator" style="display: none; position: absolute; top: -38px; left: 12px; font-size: 0.75rem; color: #ef4444; font-weight: bold; background: var(--card-bg); padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(239,68,68,0.3); z-index: 10; align-items:center; gap:4px;">
                             <svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg> Recording... (Tap Mic to stop)
                         </div>
 
-                        <!-- Voice Preview Bar -->
                         <div id="voice-preview-bar" style="display: none; align-items: center; gap: 8px; width: 100%; padding: 2px 0;">
                             <span class="flex-align" style="font-size: 0.75rem; color: #38bdf8; font-weight: 500;"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Preview:</span>
                             <audio id="preview-audio-element" controls style="height: 36px; flex: 1;"></audio>
@@ -669,75 +327,44 @@
                             <button id="send-voice-btn" style="background: #22c55e; color: white; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display:flex; align-items:center; justify-content:center;" title="Send Voice"><svg class="icon-sm" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
                         </div>
 
-                        <!-- Normal Input Controls -->
+                        <div id="chat-action-bar" class="chat-action-bar" style="display: none;">
+                            <div style="display: flex; flex-direction: column; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; flex: 1;">
+                                <b id="action-bar-title" style="color: #a855f7; font-size: 0.75rem;">Editing Message</b>
+                                <span id="action-bar-text" style="font-size: 0.75rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis;">...</span>
+                            </div>
+                            <button id="cancel-action-btn" style="background: none; border: none; color: var(--text-muted); cursor: pointer;"><svg class="icon-md" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                        </div>
+
                         <div style="position: relative; width: 100%; display: flex; align-items: center; gap: 8px;">
                             
-                            <!-- 🟢 Attachment Menu Popup -->
                             <div class="attachment-menu" id="attachment-menu">
-                                <button class="attach-option image" id="menu-image-btn">
-                                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                                    Photos / Images
-                                </button>
-                                <button class="attach-option doc" id="menu-doc-btn">
-                                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                                    Documents / Files
-                                </button>
-                                <button class="attach-option mic" id="menu-mic-btn">
-                                    <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                                    Voice Note
-                                </button>
+                                <button class="attach-option image" id="menu-image-btn"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Photos / Images</button>
+                                <button class="attach-option doc" id="menu-doc-btn"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Documents / Files</button>
+                                <button class="attach-option mic" id="menu-mic-btn"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Voice Note</button>
                             </div>
 
-                            <!-- Single Attachment Icon -->
                             <button id="main-attach-btn" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; flex-shrink: 0; padding:6px; transition: 0.3s;">
                                 <svg class="icon-lg" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                             </button>
 
-                            <!-- Hidden Inputs -->
                             <input type="file" id="chat-image-input" accept="image/*" style="display: none;">
                             <input type="file" id="chat-doc-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.7z" style="display: none;">
 
-                            <div id="normal-input-controls" style="display: flex; gap: 8px; align-items: center; width: 100%;">
-                                <!-- Textarea -->
-                                <textarea id="chat-input-text" placeholder="Type a message..." style="flex: 1; min-width: 0; margin: 0; padding: 12px 16px; font-size: 1rem; border-radius: 22px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); outline: none; resize: none; overflow-y: auto;" rows="1"></textarea>
-
-                                <!-- Send Button -->
-                                <button id="chat-send-btn" style="width: 44px; height: 44px; background: linear-gradient(135deg, #38bdf8, #2563eb); color: white; border: none; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; cursor: pointer; flex-shrink: 0; box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3);">
-                                    <svg class="icon-sm" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                                </button>
-                            </div>
-
+                            <textarea id="chat-input-text" placeholder="Type a message..." style="flex: 1; min-width: 0; margin: 0; padding: 12px 16px; font-size: 1rem; border-radius: 22px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); outline: none; resize: none; overflow-y: auto;" rows="1"></textarea>
+                            
+                            <button id="chat-send-btn" style="width: 44px; height: 44px; background: linear-gradient(135deg, #38bdf8, #2563eb); color: white; border: none; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; cursor: pointer; flex-shrink: 0; box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3); margin-left: 2px;">
+                                <svg class="icon-sm" viewBox="0 0 24 24" id="send-btn-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Footer Card -->
                 <div class="glass-card footer-card" style="margin-top: 3rem;">
                     <div class="footer-profile">
                         <img src="developer.jpeg" alt="Developer" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=Yasho'">
                         <h2>Developed by</h2>
                         <h3>Mr.G.K.M.P.Y Ganewaththa</h3>
                         <p>Bsc(Hons) in Networking & Mobile Computing</p>
-                        <p>Faculty Of IT - Intake 16</p>
-                        <p>Horizon Campus</p>
-                    </div>
-
-                    <h4 class="flex-align justify-center"><svg class="icon-md" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12.01" y2="16"/><line x1="12" y1="8" x2="12" y2="12"/></svg> Help Us Improve & Share Your Feedback!</h4>
-                    <p class="footer-desc text-center">We'd love to hear your thoughts or feature suggestions to make this app even better.</p>
-                    
-                    <div style="margin: 1.5rem 0; text-align: left;">
-                        <h5 style="color: var(--heading-gradient-1); font-size: 0.95rem; margin-bottom: 8px; text-align: center; display:flex; justify-content:center; align-items:center; gap:6px;">
-                            <svg class="icon-md" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> Student Community Feedback
-                        </h5>
-                        <div id="public-reviews-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; padding-right: 4px;">
-                            <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">Loading student reviews...</div>
-                        </div>
-                    </div>
-
-                    <div class="footer-btn-group">
-                        <button class="btn-review review-now-btn flex-align" style="cursor: pointer;"><svg class="icon-sm" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Review Now</button>
-                        <a href="https://wa.me/94762068122" target="_blank" class="btn-wa flex-align"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> WhatsApp</a>
-                        <a href="mailto:maleeshaganewatta@gmail.com" target="_blank" class="btn-email flex-align"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Email</a>
                     </div>
                 </div>
 
@@ -745,6 +372,6 @@
         </div>
     </div>
     
-    <script type="module" src="app.js?v=74"></script>
+    <script type="module" src="app.js?v=76"></script>
 </body>
 </html>
