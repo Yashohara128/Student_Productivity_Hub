@@ -395,6 +395,28 @@ if (chatSendBtn) {
         const text = chatInputText.value.trim();
         if (!text || !currentStudentFaculty) return;
 
+        const forbiddenKeywords =  ["sex", "nude", "porn", "xxx", "abuse", "sexy", "xxxxxx","hutta","huk","palyan","plyn","pko","hutti","hutta"];
+         const lowerText = text.toLowerCase(); for (let word of forbiddenKeywords) {
+             if (lowerText.includes(word)) {
+                 chatInputText.value = "";
+                alert(`⛔ BANNED: Prohibited word detected ("${word}"). You are permanently banned!`);
+                 try {
+                    await updateDoc(doc(db, "users", currentUser.uid), {
+                        isBanned: true,
+                       banReason: `Instant Ban: Used prohibited word (${word})`
+                    });
+              } catch (err) {
+                   console.error("Ban error:", err);
+                 }
+                 location.reload();
+                return;
+            }
+        }
+ 
+     const cleanedText = filterSensitiveData(text);
+
+        
+
         const cleanedText = filterSensitiveData(text);
         chatInputText.value = '';
 
