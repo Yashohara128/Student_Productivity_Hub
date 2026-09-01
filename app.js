@@ -228,9 +228,24 @@ if (cardVirtualRoom) {
 
         const userDocRef = doc(db, "users", currentUser.uid);
         const userSnap = await getDoc(userDocRef);
+if (userSnap.exists() && userSnap.data().virtualRoomBanned) {
+                alert("⛔ Access Denied: You have been permanently banned from the Virtual Room due to repeated guideline violations.");
+                return; // Room එකට යන්න දෙන්නේ නැත, අනෙකුත් features සාමාන්‍ය පරිදි වැඩ කරයි!
+            }
 
-        if (userSnap.exists() && userSnap.data().faculty && userSnap.data().studentId) {
-            currentStudentFaculty = userSnap.data().faculty;
+            if (userSnap.exists() && userSnap.data().faculty && userSnap.data().studentId) {
+                currentStudentFaculty = userSnap.data().faculty;
+                if (roomGuidelinesModal) roomGuidelinesModal.style.display = 'flex';
+                openChatRoom(currentStudentFaculty);
+            } else {
+                if (studentIdModal) studentIdModal.style.display = 'flex'; 
+            }
+        } catch (err) {
+            console.error("Error opening virtual room:", err);
+            alert("Error opening virtual room: " + err.message);
+        }
+    });
+}
             
             // 🟢 Show Guidelines Modal when entering the room
             if(roomGuidelinesModal) {
@@ -392,25 +407,55 @@ if (cancelActionBtn) {
 // 4. Send & Edit Message Logic
 if (chatSendBtn) {
     chatSendBtn.addEventListener('click', async () => {
+        if (!chatInputText) return;
         const text = chatInputText.value.trim();
         if (!text || !currentStudentFaculty) return;
 
-        const forbiddenKeywords =  ["sex", "nude", "porn", "xxx", "abuse", "sexy", "xxxxxx","hutta","huk","palyan","plyn","pko","hutti","hutta"];
-         const lowerText = text.toLowerCase(); for (let word of forbiddenKeywords) {
-             if (lowerText.includes(word)) {
-                 chatInputText.value = "";
-                alert(`⛔ BANNED: Prohibited word detected ("${word}"). You are permanently banned!`);
-                 try {
-                    await updateDoc(doc(db, "users", currentUser.uid), {
-                        isBanned: true,
-                       banReason: `Instant Ban: Used prohibited word (${word})`
-                    });
-              } catch (err) {
-                   console.error("Ban error:", err);
-                 }
-                 location.reload();
-                return;
+        // 🟢 3-Times Warning & Auto-Moderation System
+        const forbiddenKeywords = ["sex", "nude", "porn", "xxx", "abuse", "sexy", "xxxxxx","hutta","huk","palyan","plyn","pko","hutti"];
+        const lowerText = text.toLowerCase();
+        let isViolating = false;
+        let matchedWord = "";
+
+        for (let word of forbiddenKeywords) {
+            if (lowerText.includes(word)) {
+                isViolating = true;
+                matchedWord = word;
+                break;
             }
+        }
+
+        if (isViolating) {
+            chatInputText.value = ""; // Message එක Auto-delete වෙනවා
+
+            try {
+                const userRef = doc(db, "users", currentUser.uid);
+                const userSnap = await getDoc(userRef);
+                let userData = userSnap.exists() ? userSnap.data() : {};
+                
+                // Warnings ගණන 1කින් වැඩි කරනවා
+                let currentWarnings = (userData.roomWarnings || 0) + 1;
+
+                if (currentWarnings >= 3) {
+                    // 3 වන වතාව නම් Virtual Room එකෙන් සදහටම Banned කරනවා (අනෙකුත් features වැඩ කරයි)
+                    await updateDoc(userRef, {
+                        roomWarnings: currentWarnings,
+                        virtualRoomBanned: true,
+                        banReason: `Banned due to 3 guideline violations (Last word: ${matchedWord})`
+                    });
+                    alert(`⛔ PERMANENTLY BANNED: You have used prohibited words 3 times ("${matchedWord}"). You are now permanently banned from the Virtual Room.`);
+                    location.reload(); 
+                } else {
+                    // 1 හෝ 2 වතාව නම් Warning එකක් පෙන්වයි
+                    await updateDoc(userRef, {
+                        roomWarnings: currentWarnings
+                    });
+                    alert(`⚠️ WARNING (${currentWarnings}/3): Prohibited word detected ("${matchedWord}"). Your message was deleted. Reaching 3 warnings will result in a permanent ban from the Virtual Room.`);
+                }
+            } catch (err) {
+                console.error("Warning update error:", err);
+            }
+            return; // මැසේජ් එක යැවීම නවත්වයි
         }
 
         const cleanedText = filterSensitiveData(text);
@@ -811,6 +856,14 @@ function openChatRoom(facultyName) {
 
         msgs.forEach(msg => {
             const isMe = msg.senderId === currentUser.uid;
+            let actionsHtml = `
+        <div class="msg-actions">
+            <button class="reply-btn" onclick="setReplyMessage('${msg.senderName}', '${encodeURIComponent(msg.type === 'text' ? msg.text : 'Media')}')" title="Reply">${svgs.reply}</button>
+            ${isMe && msg.type === 'text' ? `<button class="edit-btn" onclick="setEditMessage('${msg.msgId}', '${encodeURIComponent(msg.text)}')" title="Edit">${svgs.edit}</button>` : ''}
+            ${isMe ? `<button class="delete-btn" onclick="deleteVirtualMessage('${msg.msgId}')" title="Delete" style="background:none; border:none; cursor:pointer; padding:2px;">${svgs.trash}</button>` : ''}
+        </div>
+    `;
+});
 
             let contentHtml = "";
             if (msg.type === 'image') {
