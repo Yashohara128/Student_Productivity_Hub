@@ -31,12 +31,15 @@ const svgs = {
     bot: `<svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>`,
     folder: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`,
     check: `<svg class="icon-sm" style="stroke:#22c55e;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`,
+    checkAll: `<svg class="icon-sm" style="stroke:#22c55e;" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
     target: `<svg class="icon-sm" style="stroke:#38bdf8;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
     photo: `<svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
     doc: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
     mic: `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`,
-    edit: `<svg class="icon-sm" style="stroke:#38bdf8; width:12px; height:12px;" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
-    trash: `<svg class="icon-sm" style="stroke:#ef4444; width:12px; height:12px;" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
+    edit: `<svg class="icon-sm" style="stroke:#38bdf8; width:14px; height:14px;" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+    trash: `<svg class="icon-sm" style="stroke:#ef4444; width:14px; height:14px;" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
+    reply: `<svg class="icon-sm" style="stroke:#a855f7; width:14px; height:14px;" viewBox="0 0 24 24"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>`,
+    send: `<svg class="icon-sm" viewBox="0 0 24 24" id="send-btn-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`,
     star: `<svg class="icon-sm" style="stroke:#fbbf24; fill:#fbbf24;" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
 };
 
@@ -76,7 +79,12 @@ let currentUser = null;
 let editingSubjectId = null; 
 let myChart = null;
 
-const CLASS_THRESHOLDS = { FIRST_CLASS: 3.70, SECOND_UPPER: 3.30, SECOND_LOWER: 3.00, PASS: 2.00 };
+const CLASS_THRESHOLDS = {
+    FIRST_CLASS: 3.70,
+    SECOND_UPPER: 3.30,
+    SECOND_LOWER: 3.00,
+    PASS: 2.00
+};
 
 function getStudentFirstName() {
     if (currentUser && currentUser.displayName) return currentUser.displayName.split(" ")[0];
@@ -112,19 +120,13 @@ function updateDynamicGreeting(userName) {
 }
 
 function showView(viewName) {
-    if (dashboardHub) dashboardHub.style.display = 'none';
-    if (viewGpa) viewGpa.style.display = 'none';
-    if (viewShortNotes) viewShortNotes.style.display = 'none';
-    if (viewPlagiarism) viewPlagiarism.style.display = 'none';
-    if (viewIeee) viewIeee.style.display = 'none';
-    if (viewVirtualRoom) viewVirtualRoom.style.display = 'none';
-
-    if (viewName === 'hub') { if (dashboardHub) dashboardHub.style.display = 'block'; } 
-    else if (viewName === 'gpa') { if (viewGpa) { viewGpa.style.display = 'block'; renderGPAChart(); } } 
-    else if (viewName === 'shortnotes') { if (viewShortNotes) viewShortNotes.style.display = 'block'; } 
-    else if (viewName === 'plagiarism') { if (viewPlagiarism) viewPlagiarism.style.display = 'block'; } 
-    else if (viewName === 'ieee') { if (viewIeee) viewIeee.style.display = 'block'; } 
-    else if (viewName === 'virtualroom') { if (viewVirtualRoom) viewVirtualRoom.style.display = 'flex'; }
+    const views = ['dashboard-hub', 'view-gpa', 'view-shortnotes', 'view-plagiarism', 'view-ieee', 'view-virtual-room'];
+    views.forEach(v => {
+        const el = document.getElementById(v);
+        if (el) el.style.display = 'none';
+    });
+    const target = document.getElementById(viewName === 'hub' ? 'dashboard-hub' : `view-${viewName}`);
+    if (target) target.style.display = viewName === 'virtualroom' ? 'flex' : 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -139,6 +141,7 @@ if (backToHubPlagiarism) backToHubPlagiarism.addEventListener('click', () => sho
 if (backToHubIeee) backToHubIeee.addEventListener('click', () => showView('hub'));
 if (backToHubRoom) backToHubRoom.addEventListener('click', () => showView('hub'));
 
+
 // ==========================================
 // 🎓 VIRTUAL ROOM & FACULTY VERIFICATION
 // ==========================================
@@ -152,7 +155,6 @@ const chatSendBtn = document.getElementById('chat-send-btn');
 const leaveRoomBtn = document.getElementById('leave-room-btn'); 
 const clearMyChatBtn = document.getElementById('clear-my-chat-btn');
 
-// 🟢 New Attachment Menu Elements
 const mainAttachBtn = document.getElementById('main-attach-btn');
 const attachmentMenu = document.getElementById('attachment-menu');
 const menuImageBtn = document.getElementById('menu-image-btn');
@@ -168,12 +170,24 @@ const sendVoiceBtn = document.getElementById('send-voice-btn');
 const normalInputControls = document.getElementById('normal-input-controls');
 const recordingIndicator = document.getElementById('recording-indicator');
 
-// Guidelines Modal
 const roomGuidelinesModal = document.getElementById('room-guidelines-modal');
 const acceptGuidelinesBtn = document.getElementById('accept-guidelines-btn');
 
+const actionBar = document.getElementById('chat-action-bar');
+const actionBarTitle = document.getElementById('action-bar-title');
+const actionBarText = document.getElementById('action-bar-text');
+const cancelActionBtn = document.getElementById('cancel-action-btn');
+
+const multiDeleteBar = document.getElementById('multi-delete-bar');
+const multiDeleteCount = document.getElementById('multi-delete-count');
+const confirmMultiDeleteBtn = document.getElementById('confirm-multi-delete');
+const cancelMultiDeleteBtn = document.getElementById('cancel-multi-delete');
+
 let currentStudentFaculty = null;
 let recordedAudioBlob = null;
+let editingMessageId = null;
+let replyingToMessageData = null;
+let selectedMessagesToDelete = new Set(); 
 
 // 1. Open Room Logic
 if (cardVirtualRoom) {
@@ -276,7 +290,7 @@ if (clearMyChatBtn) {
             try {
                 await setDoc(doc(db, "users", currentUser.uid), { chatClearedAt: new Date().toISOString() }, { merge: true });
                 if (currentStudentFaculty) openChatRoom(currentStudentFaculty); 
-            } catch (e) { alert("Failed to clear chat: " + e.message); }
+            } catch (e) { alert("Failed to clear chat."); }
         }
     });
 }
@@ -287,7 +301,18 @@ function filterSensitiveData(text) {
     return safeText;
 }
 
-// 4. Send Message to Firestore
+// Inline Action Canceled
+if(cancelActionBtn){
+    cancelActionBtn.addEventListener('click', () => {
+        editingMessageId = null;
+        replyingToMessageData = null;
+        actionBar.style.display = 'none';
+        chatInputText.value = '';
+        chatSendBtn.innerHTML = svgs.send;
+    });
+}
+
+// 4. Send / Edit Message to Firestore
 if (chatSendBtn) {
     chatSendBtn.addEventListener('click', async () => {
         const text = chatInputText.value.trim();
@@ -296,27 +321,112 @@ if (chatSendBtn) {
         const cleanedText = filterSensitiveData(text);
         chatInputText.value = '';
 
-        try {
-            await addDoc(collection(db, "virtual_rooms"), {
-                faculty: currentStudentFaculty, senderName: getStudentFirstName(), senderId: currentUser.uid,
-                text: cleanedText, type: 'text', timestamp: new Date().toISOString()
-            });
-        } catch (e) { console.error("Error sending message:", e); }
-    });
-}
+        if (editingMessageId) {
+            try {
+                await updateDoc(doc(db, "virtual_rooms", editingMessageId), { text: cleanedText });
+            } catch(e) {}
+            editingMessageId = null;
+            actionBar.style.display = 'none';
+            chatSendBtn.innerHTML = svgs.send;
+        } else {
+            let messagePayload = {
+                faculty: currentStudentFaculty,
+                senderName: getStudentFirstName(),
+                senderId: currentUser.uid,
+                text: cleanedText,
+                type: 'text',
+                timestamp: new Date().toISOString()
+            };
 
-if (chatInputText) {
-    chatInputText.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            // Allows native browser newline! No auto-send.
+            if (replyingToMessageData) {
+                messagePayload.replyTo = replyingToMessageData;
+                replyingToMessageData = null;
+                actionBar.style.display = 'none';
+            }
+
+            try { await addDoc(collection(db, "virtual_rooms"), messagePayload); } catch (e) {}
         }
     });
 }
 
-// 🟢 Toggle Attachment Menu Logic
+// 🟢 Do not auto-send on enter, allowing Next Line
+if (chatInputText) {
+    chatInputText.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            // Native browser newline is preserved. 
+            // If you want Shift+Enter to newline and Enter to send, uncomment below:
+            /*
+            e.preventDefault();
+            chatSendBtn.click();
+            */
+        }
+    });
+}
+
+// Export functions for HTML onclick
+window.setEditMessage = function(msgId, currentText) {
+    editingMessageId = msgId;
+    replyingToMessageData = null;
+    chatInputText.value = decodeURIComponent(currentText);
+    actionBar.style.display = 'flex';
+    actionBarTitle.innerHTML = `${svgs.edit} Editing Message`;
+    actionBarTitle.style.color = "#38bdf8";
+    actionBarText.innerText = chatInputText.value;
+    chatSendBtn.innerHTML = svgs.checkAll;
+    chatInputText.focus();
+};
+
+window.setReplyMessage = function(senderName, currentText) {
+    editingMessageId = null;
+    const decodedText = decodeURIComponent(currentText);
+    replyingToMessageData = { senderName, text: decodedText };
+    
+    actionBar.style.display = 'flex';
+    actionBarTitle.innerHTML = `${svgs.reply} Replying to ${senderName}`;
+    actionBarTitle.style.color = "#a855f7";
+    actionBarText.innerText = decodedText;
+    chatSendBtn.innerHTML = svgs.send; 
+    chatInputText.focus();
+};
+
+window.toggleMessageSelection = function(msgId, checkbox) {
+    if (checkbox.checked) selectedMessagesToDelete.add(msgId);
+    else selectedMessagesToDelete.delete(msgId);
+    updateMultiDeleteBar();
+};
+
+function updateMultiDeleteBar() {
+    if (selectedMessagesToDelete.size > 0) {
+        multiDeleteBar.style.display = 'flex';
+        multiDeleteCount.innerText = `${selectedMessagesToDelete.size} message(s) selected`;
+    } else {
+        multiDeleteBar.style.display = 'none';
+    }
+}
+
+if(cancelMultiDeleteBtn){
+    cancelMultiDeleteBtn.addEventListener('click', () => {
+        selectedMessagesToDelete.clear();
+        document.querySelectorAll('.chat-checkbox').forEach(cb => cb.checked = false);
+        updateMultiDeleteBar();
+    });
+}
+
+if(confirmMultiDeleteBtn){
+    confirmMultiDeleteBtn.addEventListener('click', async () => {
+        if (confirm(`Are you sure you want to delete ${selectedMessagesToDelete.size} message(s)?`)) {
+            for (let msgId of selectedMessagesToDelete) {
+                try { await deleteDoc(doc(db, "virtual_rooms", msgId)); } catch (e) {}
+            }
+            selectedMessagesToDelete.clear();
+            updateMultiDeleteBar();
+        }
+    });
+}
+
+// 🟢 Attachment Menu Logic
 if (mainAttachBtn && attachmentMenu) {
     mainAttachBtn.addEventListener('click', (e) => {
-        // If it's currently recording, tapping main button stops it
         if (isRecording && mediaRecorder) {
             e.stopPropagation();
             mediaRecorder.stop();
@@ -335,7 +445,6 @@ if (mainAttachBtn && attachmentMenu) {
     });
 }
 
-// 🟢 5. MEDIA UPLOAD LOGIC 
 if(menuImageBtn && chatImageInput) {
     menuImageBtn.addEventListener('click', () => { chatImageInput.click(); attachmentMenu.classList.remove('show'); });
     chatImageInput.addEventListener('change', (e) => {
@@ -372,11 +481,6 @@ if(menuDocBtn && chatDocInput) {
     });
 }
 
-// 🟢 6. VOICE MESSAGE LOGIC WITH PREVIEW
-let mediaRecorder;
-let audioChunks = [];
-let isRecording = false;
-
 if(menuMicBtn) {
     menuMicBtn.addEventListener('click', async () => {
         attachmentMenu.classList.remove('show');
@@ -389,16 +493,12 @@ if(menuMicBtn) {
                 isRecording = true;
                 
                 if (recordingIndicator) recordingIndicator.style.display = 'flex';
-                
-                // Change main button to stop icon
                 mainAttachBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>`; 
                 mainAttachBtn.style.color = '#ef4444';
 
                 mediaRecorder.ondataavailable = e => { audioChunks.push(e.data); };
                 mediaRecorder.onstop = async () => {
                     if (recordingIndicator) recordingIndicator.style.display = 'none';
-                    
-                    // Reset main button
                     mainAttachBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>`;
                     mainAttachBtn.style.color = 'var(--text-muted)';
                     
@@ -459,20 +559,9 @@ function uploadMediaToFirebase(fileOrBlob, fileName, type) {
     );
 }
 
-window.deleteVirtualMessage = async function(msgId) {
-    if (!confirm("Are you sure you want to delete this message?")) return;
-    try { await deleteDoc(doc(db, "virtual_rooms", msgId)); } catch (e) {}
-};
-
-window.editVirtualMessage = async function(msgId, currentText) {
-    const newText = prompt("Edit your message:", decodeURIComponent(currentText));
-    if (newText === null || newText.trim() === "") return;
-    try { await updateDoc(doc(db, "virtual_rooms", msgId), { text: filterSensitiveData(newText.trim()) }); } catch (e) {}
-};
-
 function openChatRoom(facultyName) {
     showView('virtualroom');
-    if(activeFacultyLabel) activeFacultyLabel.innerHTML = `<span class="flex-align">🎓 ${facultyName} Room</span>`;
+    if(activeFacultyLabel) activeFacultyLabel.innerHTML = `<span class="flex-align">🎓 ${facultyName}</span>`;
     
     const q = query(collection(db, "virtual_rooms"), where("faculty", "==", facultyName));
 
@@ -502,7 +591,7 @@ function openChatRoom(facultyName) {
         msgs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
         if (msgs.length === 0) {
-            chatMessagesContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: auto; margin-bottom: auto;">No messages yet. Say hi to your friends! ${svgs.user}</div>`;
+            chatMessagesContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: auto; margin-bottom: auto;">No messages yet. Say hi! ${svgs.user}</div>`;
             return;
         }
 
@@ -510,23 +599,47 @@ function openChatRoom(facultyName) {
         msgs.forEach(msg => {
             const isMe = msg.senderId === currentUser.uid;
             let contentHtml = "";
+
             if (msg.type === 'image') {
-                contentHtml = `<img src="${msg.fileUrl}" style="max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer;" onclick="window.open('${msg.fileUrl}', '_blank')">`;
+                contentHtml = `<img src="${msg.fileUrl}" style="max-width: 100%; border-radius: 8px; margin-top: 5px;">`;
             } else if (msg.type === 'document') {
-                contentHtml = `<a href="${msg.fileUrl}" target="_blank" style="color: #38bdf8; text-decoration: underline; font-weight: 500; font-size: 0.85rem;" class="flex-align">${svgs.doc} ${msg.fileName || 'Download File'}</a>`;
+                contentHtml = `<a href="${msg.fileUrl}" target="_blank" style="color: #38bdf8; text-decoration: underline;" class="flex-align">${svgs.doc} ${msg.fileName || 'Download'}</a>`;
             } else if (msg.type === 'audio') {
-                contentHtml = `<audio controls style="height: 35px; max-width: 220px; margin-top: 5px; border-radius: 20px;"><source src="${msg.fileUrl}" type="audio/webm"></audio>`;
+                contentHtml = `<audio controls style="height: 35px; max-width: 200px; margin-top: 5px;"><source src="${msg.fileUrl}" type="audio/webm"></audio>`;
             } else {
                 contentHtml = `${msg.text.replace(/\n/g, '<br>')}`; 
             }
 
-            html += `
-                <div style="align-self: ${isMe ? 'flex-end' : 'flex-start'}; max-width: 80%; background: ${isMe ? 'rgba(56, 189, 248, 0.15)' : 'var(--input-bg)'}; border: 1px solid ${isMe ? 'rgba(56, 189, 248, 0.3)' : 'var(--input-border)'}; padding: 10px 14px; border-radius: 12px; border-top-right-radius: ${isMe ? '2px' : '12px'}; border-top-left-radius: ${!isMe ? '2px' : '12px'}; display: flex; flex-direction: column; position: relative;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 3px;">
-                        ${!isMe ? `<span style="font-size: 0.7rem; color: #a855f7; font-weight: bold;">${msg.senderName}</span>` : '<span></span>'}
-                        ${isMe ? `<div style="display: flex; gap: 6px;"><button onclick="editVirtualMessage('${msg.msgId}', '${encodeURIComponent(msg.text || '')}')" style="background: none; border: none; cursor: pointer; padding: 0;" title="Edit">${svgs.edit}</button><button onclick="deleteVirtualMessage('${msg.msgId}')" style="background: none; border: none; cursor: pointer; padding: 0;" title="Delete">${svgs.trash}</button></div>` : ''}
+            let replyBlockHtml = '';
+            if (msg.replyTo) {
+                replyBlockHtml = `
+                    <div class="reply-block">
+                        <strong style="color: #a855f7;">${msg.replyTo.senderName}</strong><br>
+                        ${msg.replyTo.text}
                     </div>
-                    <div style="color: var(--text-color); font-size: 0.9rem; line-height: 1.4;">${contentHtml}</div>
+                `;
+            }
+
+            let checkboxHtml = '';
+            if (isMe) {
+                const isChecked = selectedMessagesToDelete.has(msg.msgId) ? 'checked' : '';
+                checkboxHtml = `<input type="checkbox" class="chat-checkbox" onchange="toggleMessageSelection('${msg.msgId}', this)" ${isChecked}>`;
+            }
+
+            html += `
+                <div style="align-self: ${isMe ? 'flex-end' : 'flex-start'}; display: flex; align-items: center; width: 100%; justify-content: ${isMe ? 'flex-end' : 'flex-start'}; margin-bottom: 4px;">
+                    ${isMe ? checkboxHtml : ''}
+                    <div class="msg-bubble ${isMe ? 'msg-me' : 'msg-other'}">
+                        
+                        <div class="msg-actions">
+                            <button onclick="setReplyMessage('${msg.senderName}', '${encodeURIComponent(msg.type === 'text' ? msg.text : 'Media')}')" style="background: none; border: none; cursor: pointer;" title="Reply">${svgs.reply}</button>
+                            ${isMe && msg.type === 'text' ? `<button onclick="setEditMessage('${msg.msgId}', '${encodeURIComponent(msg.text)}')" style="background: none; border: none; cursor: pointer;" title="Edit">${svgs.edit}</button>` : ''}
+                        </div>
+
+                        ${!isMe ? `<span class="msg-sender">${msg.senderName}</span>` : ''}
+                        ${replyBlockHtml}
+                        <div>${contentHtml}</div>
+                    </div>
                 </div>
             `;
         });
@@ -535,7 +648,7 @@ function openChatRoom(facultyName) {
     });
 }
 
-// --- 🟢 AI Agent Open / Close Toggle Logic ---
+// 🟢 AI Agent Open / Close Toggle Logic
 const aiToggleBtn = document.getElementById('ai-toggle-btn');
 const aiAgentSidebar = document.getElementById('ai-agent-sidebar');
 
@@ -559,6 +672,7 @@ if (aiToggleBtn && aiAgentSidebar) {
     });
 }
 
+// --- Global Reviews Modal ---
 const reviewModal = document.getElementById('review-modal');
 const closeReviewModalBtn = document.getElementById('close-review-modal');
 const closeGotItBtn = document.getElementById('close-modal-btn');
@@ -586,6 +700,7 @@ if (modalSubmitReviewBtn) {
             await addDoc(collection(db, "global_reviews"), {
                 userName: currentUser.displayName || getStudentFirstName(), userEmail: currentUser.email, rating, comment, createdAt: new Date().toISOString()
             });
+            alert("Thank you for your feedback!");
             modalReviewComment.value = ''; modalReviewRating.selectedIndex = 0;
         } catch (e) { alert("Failed to submit review."); } 
         finally { modalSubmitReviewBtn.innerText = "Submit Review"; modalSubmitReviewBtn.disabled = false; }
@@ -647,237 +762,7 @@ window.startPayHerePayment = function(planName, amount, wordLimit) {
     payhere.startPayment(payment);
 };
 
-// --- PERSISTENT AI STUDY AGENT ---
-const aiChatMessages = document.getElementById('ai-chat-messages');
-const aiChatInput = document.getElementById('ai-chat-input');
-const aiSendBtn = document.getElementById('ai-send-btn');
-const aiClearBtn = document.getElementById('ai-clear-btn');
-const aiFileInput = document.getElementById('ai-file-input');
-const aiAttachBtn = document.getElementById('ai-attach-btn');
-const aiFileIndicator = document.getElementById('ai-file-indicator');
-
-let attachedAiFileText = "";
-
-if (aiAttachBtn && aiFileInput) {
-    aiAttachBtn.addEventListener('click', () => aiFileInput.click());
-    aiFileInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        aiFileIndicator.style.display = 'flex';
-        aiFileIndicator.innerHTML = `${svgs.folder} Attached: ${file.name}`;
-
-        if (file.type === "application/pdf") {
-            const reader = new FileReader();
-            reader.readAsArrayBuffer(file);
-            reader.onload = async function() {
-                const typedarray = new Uint8Array(this.result);
-                try {
-                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                    let fullText = "";
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const page = await pdf.getPage(i);
-                        const textContent = await page.getTextContent();
-                        fullText += textContent.items.map(item => item.str).join(' ') + "\n";
-                    }
-                    attachedAiFileText = fullText.trim();
-                } catch (err) {}
-            };
-        } else {
-            const reader = new FileReader();
-            reader.readAsText(file);
-            reader.onload = function(e) { attachedAiFileText = e.target.result; };
-        }
-    });
-}
-
-async function sendQueryToAIAgent() {
-    const text = aiChatInput.value.trim();
-    if (!text && !attachedAiFileText) return;
-
-    let displayMsg = text;
-    if (attachedAiFileText && !text) displayMsg = "Please analyze the attached document.";
-
-    aiChatMessages.innerHTML += `
-        <div style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); padding: 10px; border-radius: 8px; color: var(--text-color); align-self: flex-end; max-width: 90%;">
-            <b>You:</b> ${displayMsg.replace(/\n/g, '<br>')} ${attachedAiFileText ? `<br><small class="flex-align" style="color: #38bdf8; margin-top:4px;">${svgs.doc} [Document Attached]</small>` : ''}
-        </div>
-    `;
-    aiChatInput.value = '';
-    aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
-
-    const loadingId = 'ai-loading-' + Date.now();
-    aiChatMessages.innerHTML += `
-        <div id="${loadingId}" style="background: var(--input-bg); padding: 8px 12px; border-radius: 8px; color: var(--text-muted); font-style: italic; display:flex; align-items:center; gap:6px;">
-            ${svgs.bot} AI Agent is thinking...
-        </div>
-    `;
-    aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
-
-    const activeStudentName = getStudentFirstName();
-
-    try {
-        const response = await fetch('/api/chat', {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: text || "Please summarize and explain this attached document.", fileContent: attachedAiFileText, studentName: activeStudentName })
-        });
-        const data = await response.json();
-        document.getElementById(loadingId).remove();
-
-        if (data.error) {
-            aiChatMessages.innerHTML += `
-                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: 8px; color: var(--text-color);">
-                    <b class="flex-align">${svgs.bot} AI Buddy:</b><br>Oyage daily limit eka poddak touch una wage, ${activeStudentName}! Podi welawak idala ayith try karanna.
-                </div>
-            `;
-            return;
-        }
-
-        aiChatMessages.innerHTML += `
-            <div style="background: var(--input-bg); border: 1px solid var(--input-border); padding: 10px; border-radius: 8px; color: var(--text-color); line-height: 1.5;">
-                <b class="flex-align" style="margin-bottom:6px;">${svgs.bot} AI Agent:</b>${data.reply.replace(/\n/g, '<br>')}
-            </div>
-        `;
-    } catch (err) {
-        if (document.getElementById(loadingId)) document.getElementById(loadingId).remove();
-        aiChatMessages.innerHTML += `
-            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: 8px; color: var(--text-color);">
-                <b class="flex-align">${svgs.bot} AI Buddy:</b><br>Oops! Podi connection issue ekak wage, ${activeStudentName}. Ayith try karමුද?
-            </div>
-        `;
-    } finally {
-        attachedAiFileText = "";
-        if (aiFileIndicator) aiFileIndicator.style.display = 'none';
-        if (aiFileInput) aiFileInput.value = '';
-        aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
-    }
-}
-
-if (aiSendBtn) aiSendBtn.addEventListener('click', sendQueryToAIAgent);
-
-if (aiChatInput) {
-    aiChatInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) { }
-    });
-}
-
-if (aiClearBtn) {
-    aiClearBtn.addEventListener('click', () => {
-        const activeStudentName = getStudentFirstName();
-        aiChatMessages.innerHTML = `
-            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 10px; border-radius: 8px; color: var(--text-color);">
-                <span class="flex-align" style="margin-bottom:4px; color:#38bdf8;">${svgs.user} Hey ${activeStudentName}!</span> Chat cleared. How can I help you with your studies today?
-            </div>
-        `;
-        attachedAiFileText = "";
-        if (aiFileIndicator) aiFileIndicator.style.display = 'none';
-    });
-}
-
-// --- AI PDF SHORT NOTE GENERATOR LOGIC ---
-const notePdfUpload = document.getElementById('note-pdf-upload');
-const notePdfFileName = document.getElementById('note-pdf-file-name');
-const generateNotesBtn = document.getElementById('generate-notes-btn');
-const noteLoading = document.getElementById('note-loading');
-const noteResultSection = document.getElementById('note-result-section');
-const generatedNotesOutput = document.getElementById('generated-notes-output');
-const downloadNotesDocxBtn = document.getElementById('download-notes-docx-btn');
-const downloadNotesPdfBtn = document.getElementById('download-notes-pdf-btn');
-
-let extractedNoteText = "";
-
-if (notePdfUpload) {
-    notePdfUpload.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        notePdfFileName.innerHTML = `<span class="flex-align">${svgs.folder} ${file.name}</span>`;
-
-        const reader = new FileReader();
-        reader.readAsArrayBuffer(file);
-        reader.onload = async function() {
-            const typedarray = new Uint8Array(this.result);
-            try {
-                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                let fullText = "";
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    fullText += textContent.items.map(item => item.str).join(' ') + "\n";
-                }
-                extractedNoteText = fullText.trim();
-            } catch (err) {}
-        };
-    });
-}
-
-if (generateNotesBtn) {
-    generateNotesBtn.addEventListener('click', async () => {
-        if (!extractedNoteText) { alert("Please upload a lecture PDF first!"); return; }
-
-        const customPromptInput = document.getElementById('note-custom-prompt');
-        const customPrompt = customPromptInput ? customPromptInput.value.trim() : "";
-
-        if (noteLoading) noteLoading.style.display = 'block';
-        if (noteResultSection) noteResultSection.style.display = 'none';
-        generateNotesBtn.disabled = true;
-        generateNotesBtn.innerHTML = `<svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Generating Progress...`;
-
-        try {
-            const response = await fetch('/api/shortnotes', {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: extractedNoteText, prompt: customPrompt || "Generate well-structured short notes." })
-            });
-
-            const data = await response.json();
-            if (data.error) { alert("Error: " + data.error); return; }
-
-            if (data.result) {
-                generatedNotesOutput.value = data.result;
-                if (noteResultSection) noteResultSection.style.display = 'block';
-            }
-        } catch (error) {
-        } finally {
-            if (noteLoading) noteLoading.style.display = 'none';
-            generateNotesBtn.disabled = false;
-            generateNotesBtn.innerHTML = `<svg class="icon-sm" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Generate Short Notes`;
-        }
-    });
-}
-
-// Download handlers
-if (downloadNotesDocxBtn) {
-    downloadNotesDocxBtn.addEventListener('click', () => {
-        const text = generatedNotesOutput.value;
-        if (!text) return;
-        let formattedHtml = text.split('\n').map(line => {
-            let trimmed = line.trim();
-            if (trimmed.startsWith('# ')) return `<h1>${trimmed.substring(2)}</h1>`;
-            else if (trimmed.startsWith('## ')) return `<h2>${trimmed.substring(3)}</h2>`;
-            else if (trimmed.startsWith('### ')) return `<h3>${trimmed.substring(4)}</h3>`;
-            else if (trimmed.startsWith('• ') || trimmed.startsWith('- ')) return `<li>${trimmed.substring(2)}</li>`;
-            else if (trimmed === '') return `<br>`;
-            else return `<p>${trimmed}</p>`;
-        }).join('');
-
-        let wordContent = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><style>body{font-family:'Times New Roman',serif;}h1,h2,h3{color:#0f172a;}</style></head><body>${formattedHtml}</body></html>`;
-        const blob = new Blob(['\ufeff' + wordContent], { type: 'application/msword' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = 'Short_Notes.doc'; a.click(); URL.revokeObjectURL(url);
-    });
-}
-
-if (downloadNotesPdfBtn) {
-    downloadNotesPdfBtn.addEventListener('click', () => {
-        const text = generatedNotesOutput.value;
-        if (!text) return;
-        let printWindow = window.open('', '_blank');
-        printWindow.document.write(`<html><head><style>body{font-family:sans-serif;}</style></head><body><pre>${text}</pre><script>window.onload=()=>window.print();</script></body></html>`);
-        printWindow.document.close();
-    });
-}
-
-// --- GPA TRACKER & UNIVERSITY MODES ---
+// --- GPA TRACKER LOGIC ---
 const universitySelector = document.getElementById('university-selector');
 const profileOkBtn = document.getElementById('profile-ok-btn');
 const gradeSelect = document.getElementById('grade');
@@ -921,26 +806,6 @@ if (themeSelector) {
     applyTheme(themeSelector.value);
 }
 
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        currentUser = user;
-        updateDynamicGreeting(getStudentFirstName());
-        initIEEEModule();
-        if (loginSection) loginSection.style.display = "none";
-        if (appSection) appSection.style.display = "block";
-        showView('hub');
-        await loadSubjectsFromDB();
-    } else {
-        currentUser = null;
-        if (loginSection) loginSection.style.display = "block";
-        if (appSection) appSection.style.display = "none";
-    }
-});
-
-const performLogout = () => { signOut(auth).then(() => { allSubjects = []; currentStudentFaculty = null; showView('hub'); updateUI(); }); };
-if (logoutBtn) { logoutBtn.addEventListener('click', performLogout); }
-if (mainLogoutBtn) { mainLogoutBtn.addEventListener('click', performLogout); }
-
 async function loadSubjectsFromDB() {
     try {
         allSubjects = [];
@@ -973,7 +838,7 @@ window.editSubject = function(dbId) {
         }
     }
     editingSubjectId = dbId;
-    if (addBtn) addBtn.innerHTML = `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Update Subject`;
+    if (addBtn) addBtn.innerHTML = `${svgs.edit} Update Subject`;
 };
 
 if (addBtn) {
@@ -1020,7 +885,7 @@ if (addBtn) {
             document.getElementById('subject-semester').selectedIndex = 0;
             document.getElementById('credit').selectedIndex = 0;
             if (gradeSelect) gradeSelect.selectedIndex = 0;
-            addBtn.innerHTML = `<svg class="icon-sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add to List`;
+            addBtn.innerHTML = `${svgs.check} Add to List`;
             updateUI();
         } catch (e) { }
         addBtn.disabled = false;
@@ -1245,6 +1110,7 @@ function updateUI() {
     });
 }
 
+// --- PLAGIARISM CHECKER & AI HUMANIZER ---
 const checkPlagiarismBtn = document.getElementById('check-plagiarism-btn');
 const plagiarismText = document.getElementById('plagiarism-text');
 const plagiarismResult = document.getElementById('plagiarism-result');
@@ -1254,6 +1120,33 @@ const humanizedOutputText = document.getElementById('humanized-output-text');
 const copyHumanizedBtn = document.getElementById('copy-humanized-btn');
 const downloadHumanizedPdfBtn = document.getElementById('download-humanized-pdf-btn');
 const downloadHumanizedDocxBtn = document.getElementById('download-humanized-docx-btn');
+const pdfUpload = document.getElementById('pdf-upload');
+const pdfFileName = document.getElementById('pdf-file-name');
+
+if (pdfUpload) {
+    pdfUpload.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        pdfFileName.innerHTML = `<span class="flex-align">${svgs.folder} ${file.name}</span>`;
+
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(file);
+        reader.onload = async function() {
+            const typedarray = new Uint8Array(this.result);
+            try {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                let fullText = "";
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    fullText += textContent.items.map(item => item.str).join(' ') + "\n";
+                }
+                document.getElementById('plagiarism-text').value = fullText.trim();
+            } catch (err) {}
+        };
+    });
+}
 
 async function trueAIHumanizer(inputText) {
     try {
@@ -1290,11 +1183,13 @@ if (checkPlagiarismBtn) {
 
             const activeWordLimit = userData.wordLimit || 10000;
             if (userData.wordCountUsed + inputWords > activeWordLimit) {
-                alert(`Monthly Quota Reached!`);
                 openPricingModal();
-                checkPlagiarismBtn.innerHTML = `<svg class="icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M9 11l2 2 4-4"/></svg> Scan for Plagiarism & AI`;
+                checkPlagiarismBtn.innerHTML = `${svgs.target} Scan for Plagiarism & AI`;
                 checkPlagiarismBtn.disabled = false; return;
             }
+
+            plagiarismResult.style.display = 'none';
+            if (humanizeBox) humanizeBox.style.display = 'none';
 
             const apiKey = "e52d65e1d8mshc4a85875ea5c502p18f622jsn296fe9b1c2d2";
             const apiHost = "plagiarism-checker-and-auto-citation-generator-multi-lingual.p.rapidapi.com";
@@ -1310,8 +1205,7 @@ if (checkPlagiarismBtn) {
             const humanizeResponse = await trueAIHumanizer(text);
 
             if (humanizeResponse.error) {
-                alert(`AI Limit reached! Try again later.`);
-                checkPlagiarismBtn.innerHTML = `<svg class="icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M9 11l2 2 4-4"/></svg> Scan for Plagiarism & AI`;
+                checkPlagiarismBtn.innerHTML = `${svgs.target} Scan for Plagiarism & AI`;
                 checkPlagiarismBtn.disabled = false; return;
             }
 
@@ -1319,15 +1213,6 @@ if (checkPlagiarismBtn) {
             await updateDoc(userRef, { wordCountUsed: newTotalUsed, lastResetMonth: currentMonth });
 
             if (humanizedOutputText) humanizedOutputText.value = humanizeResponse.result;
-
-            const humanizedStatsEl = document.getElementById('humanized-stats');
-            if (humanizedStatsEl) {
-                humanizedStatsEl.innerHTML = `
-                    <b>Post-Humanize Status:</b><br>
-                    • Risk Level: <b style="color: #22c55e;">0.0% (Clean & Undetectable)</b><br>
-                    • Tone Status: <b style="color: #38bdf8;">100% Natural Academic Human Tone</b>
-                `;
-            }
 
             plagiarismStats.innerHTML = `
                 <b>Original Scan Report:</b><br>
@@ -1339,8 +1224,237 @@ if (checkPlagiarismBtn) {
             if (humanizeBox) humanizeBox.style.display = 'block';
         } catch (error) {
         } finally {
-            checkPlagiarismBtn.innerHTML = `<svg class="icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M9 11l2 2 4-4"/></svg> Scan for Plagiarism & AI`;
+            checkPlagiarismBtn.innerHTML = `${svgs.target} Scan for Plagiarism & AI`;
             checkPlagiarismBtn.disabled = false;
         }
+    });
+}
+
+if (copyHumanizedBtn) {
+    copyHumanizedBtn.addEventListener('click', () => {
+        humanizedOutputText.select();
+        navigator.clipboard.writeText(humanizedOutputText.value);
+    });
+}
+
+// --- AI STUDY AGENT ---
+const aiChatInput = document.getElementById('ai-chat-input');
+const aiSendBtn = document.getElementById('ai-send-btn');
+const aiClearBtn = document.getElementById('ai-clear-btn');
+const aiFileInput = document.getElementById('ai-file-input');
+const aiAttachBtn = document.getElementById('ai-attach-btn');
+const aiFileIndicator = document.getElementById('ai-file-indicator');
+let attachedAiFileText = "";
+
+if (aiAttachBtn && aiFileInput) {
+    aiAttachBtn.addEventListener('click', () => aiFileInput.click());
+    aiFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        aiFileIndicator.style.display = 'flex';
+        aiFileIndicator.innerHTML = `${svgs.folder} Attached: ${file.name}`;
+        if (file.type === "application/pdf") {
+            const reader = new FileReader();
+            reader.readAsArrayBuffer(file);
+            reader.onload = async function() {
+                const typedarray = new Uint8Array(this.result);
+                try {
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                    let fullText = "";
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        fullText += textContent.items.map(item => item.str).join(' ') + "\n";
+                    }
+                    attachedAiFileText = fullText.trim();
+                } catch (err) {}
+            };
+        } else {
+            const reader = new FileReader();
+            reader.readAsText(file);
+            reader.onload = function(e) { attachedAiFileText = e.target.result; };
+        }
+    });
+}
+
+async function sendQueryToAIAgent() {
+    const text = aiChatInput.value.trim();
+    if (!text && !attachedAiFileText) return;
+
+    let displayMsg = text;
+    if (attachedAiFileText && !text) displayMsg = "Please analyze the attached document.";
+
+    aiChatMessages.innerHTML += `
+        <div style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); padding: 10px; border-radius: 8px; color: var(--text-color); align-self: flex-end; max-width: 90%;">
+            <b>You:</b> ${displayMsg.replace(/\n/g, '<br>')} ${attachedAiFileText ? `<br><small class="flex-align" style="color: #38bdf8; margin-top:4px;">${svgs.doc} [Document Attached]</small>` : ''}
+        </div>
+    `;
+    aiChatInput.value = '';
+    aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+
+    const loadingId = 'ai-loading-' + Date.now();
+    aiChatMessages.innerHTML += `
+        <div id="${loadingId}" style="background: var(--input-bg); padding: 8px 12px; border-radius: 8px; color: var(--text-muted); font-style: italic; display:flex; align-items:center; gap:6px;">
+            ${svgs.bot} AI Agent is thinking...
+        </div>
+    `;
+    aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+
+    const activeStudentName = getStudentFirstName();
+
+    try {
+        const response = await fetch('/api/chat', {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text || "Please summarize and explain this attached document.", fileContent: attachedAiFileText, studentName: activeStudentName })
+        });
+        const data = await response.json();
+        document.getElementById(loadingId).remove();
+
+        if (data.error) {
+            aiChatMessages.innerHTML += `
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: 8px; color: var(--text-color);">
+                    <b class="flex-align">${svgs.bot} AI Buddy:</b><br>Oyage daily limit eka touch wela.
+                </div>
+            `;
+            return;
+        }
+
+        aiChatMessages.innerHTML += `
+            <div style="background: var(--input-bg); border: 1px solid var(--input-border); padding: 10px; border-radius: 8px; color: var(--text-color); line-height: 1.5;">
+                <b class="flex-align" style="margin-bottom:6px;">${svgs.bot} AI Agent:</b>${data.reply.replace(/\n/g, '<br>')}
+            </div>
+        `;
+    } catch (err) {
+        if (document.getElementById(loadingId)) document.getElementById(loadingId).remove();
+    } finally {
+        attachedAiFileText = "";
+        if (aiFileIndicator) aiFileIndicator.style.display = 'none';
+        if (aiFileInput) aiFileInput.value = '';
+        aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+    }
+}
+
+if (aiSendBtn) aiSendBtn.addEventListener('click', sendQueryToAIAgent);
+if (aiChatInput) {
+    aiChatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { }
+    });
+}
+if (aiClearBtn) {
+    aiClearBtn.addEventListener('click', () => {
+        aiChatMessages.innerHTML = `
+            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 10px; border-radius: 8px; color: var(--text-color);">
+                <span class="flex-align" style="margin-bottom:4px; color:#38bdf8;">${svgs.user} Hey ${getStudentFirstName()}!</span> Chat cleared. How can I help you with your studies today?
+            </div>
+        `;
+    });
+}
+
+// --- AI PDF SHORT NOTE GENERATOR ---
+const notePdfUpload = document.getElementById('note-pdf-upload');
+const notePdfFileName = document.getElementById('note-pdf-file-name');
+const generateNotesBtn = document.getElementById('generate-notes-btn');
+const noteLoading = document.getElementById('note-loading');
+const noteResultSection = document.getElementById('note-result-section');
+const generatedNotesOutput = document.getElementById('generated-notes-output');
+const downloadNotesDocxBtn = document.getElementById('download-notes-docx-btn');
+const downloadNotesPdfBtn = document.getElementById('download-notes-pdf-btn');
+
+let extractedNoteText = "";
+
+if (notePdfUpload) {
+    notePdfUpload.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        notePdfFileName.innerHTML = `<span class="flex-align">${svgs.folder} ${file.name}</span>`;
+
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(file);
+        reader.onload = async function() {
+            const typedarray = new Uint8Array(this.result);
+            try {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                let fullText = "";
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    fullText += textContent.items.map(item => item.str).join(' ') + "\n";
+                }
+                extractedNoteText = fullText.trim();
+            } catch (err) {}
+        };
+    });
+}
+
+if (generateNotesBtn) {
+    generateNotesBtn.addEventListener('click', async () => {
+        if (!extractedNoteText) { alert("Please upload a lecture PDF first!"); return; }
+        const customPromptInput = document.getElementById('note-custom-prompt');
+        const customPrompt = customPromptInput ? customPromptInput.value.trim() : "";
+
+        if (noteLoading) noteLoading.style.display = 'block';
+        if (noteResultSection) noteResultSection.style.display = 'none';
+        generateNotesBtn.disabled = true;
+        generateNotesBtn.innerHTML = `<svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Generating Progress...`;
+
+        try {
+            const response = await fetch('/api/shortnotes', {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: extractedNoteText, prompt: customPrompt || "Generate well-structured short notes." })
+            });
+
+            const data = await response.json();
+            if (data.result) {
+                generatedNotesOutput.value = data.result;
+                if (noteResultSection) noteResultSection.style.display = 'block';
+            }
+        } catch (error) {
+        } finally {
+            if (noteLoading) noteLoading.style.display = 'none';
+            generateNotesBtn.disabled = false;
+            generateNotesBtn.innerHTML = `${svgs.doc} Generate Short Notes`;
+        }
+    });
+}
+
+if (downloadNotesDocxBtn) {
+    downloadNotesDocxBtn.addEventListener('click', () => {
+        const text = generatedNotesOutput.value;
+        if (!text) return;
+        let formattedHtml = text.split('\n').map(line => {
+            let trimmed = line.trim();
+            if (trimmed.startsWith('# ')) return `<h1>${trimmed.substring(2)}</h1>`;
+            else if (trimmed.startsWith('## ')) return `<h2>${trimmed.substring(3)}</h2>`;
+            else if (trimmed.startsWith('### ')) return `<h3>${trimmed.substring(4)}</h3>`;
+            else if (trimmed.startsWith('• ') || trimmed.startsWith('- ')) return `<li>${trimmed.substring(2)}</li>`;
+            else if (trimmed === '') return `<br>`;
+            else return `<p>${trimmed}</p>`;
+        }).join('');
+
+        let wordContent = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><style>body{font-family:'Times New Roman',serif;}h1,h2,h3{color:#0f172a;}</style></head><body>${formattedHtml}</body></html>`;
+        const blob = new Blob(['\ufeff' + wordContent], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'Short_Notes.doc'; a.click(); URL.revokeObjectURL(url);
+    });
+}
+
+if (downloadNotesPdfBtn) {
+    downloadNotesPdfBtn.addEventListener('click', () => {
+        const text = generatedNotesOutput.value;
+        if (!text) return;
+        let printWindow = window.open('', '_blank');
+        printWindow.document.write(`<html><head><style>body{font-family:sans-serif;}</style></head><body><pre>${text}</pre><script>window.onload=()=>window.print();</script></body></html>`);
+        printWindow.document.close();
+    });
+}
+
+const generateIeeeBtn = document.getElementById('generate-ieee-btn');
+if (generateIeeeBtn) {
+    generateIeeeBtn.addEventListener('click', () => {
+        const title = document.getElementById('ieee-title').value;
+        if (!title) { alert("Please enter the details first."); return; }
+        // The rest of this is handled by your ieee.js module logic
     });
 }
