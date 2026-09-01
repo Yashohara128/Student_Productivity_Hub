@@ -99,7 +99,7 @@ body {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(15, 23, 42, 0.85); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px); padding: 1rem;
 }
-.modal-box { max-width: 480px; width: 100%; text-align: center; padding: 2rem 1.5rem; }
+.modal-box { max-width: 480px; width: 100%; text-align: center; padding: 2rem 1.5rem; position: relative; max-height: 90vh; overflow-y: auto;}
 
 .footer-profile img {
     width: 80px !important; height: 80px !important; border-radius: 50%; object-fit: cover;
@@ -123,6 +123,7 @@ body {
 }
 .btn-gotit { padding: 0.5rem 1.5rem; cursor: pointer; border-radius: 0.5rem; font-weight: 500; width: 100%; }
 
+/* Fixed Login Wrapper to support locked body */
 #login-section { text-align: center; margin: 10vh auto; padding: 2.5rem 1.5rem; max-width: 450px; }
 .login-card h1 {
     font-size: 1.8rem; font-weight: 600; background: linear-gradient(to right, var(--heading-gradient-1), var(--heading-gradient-2));
@@ -190,13 +191,14 @@ th { color: var(--text-muted); font-weight: 500; text-transform: uppercase; font
 .btn-erase-sem { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.6rem 1rem; border-radius: 0.5rem; cursor: pointer; width: 100%; font-weight: 500; font-size: 0.85rem; }
 .btn-reset-all { background: #ef4444; color: white; border: none; padding: 0.6rem 1rem; border-radius: 0.5rem; cursor: pointer; font-weight: 500; width: 100%; font-size: 0.85rem; }
 
+
 /* =========================================
    🟢 PERFECT LAYOUT LOCK & TOP FLOATING BUTTON
    ========================================= */
 
 #ai-toggle-btn {
     position: fixed !important;
-    top: 15px !important;    /* 🟢 MOVED TO TOP LEFT */
+    top: 15px !important;    
     left: 20px !important;
     z-index: 999999 !important;
     background: linear-gradient(135deg, #38bdf8, #2563eb);
@@ -260,52 +262,28 @@ body.light-mode .ai-agent-sidebar {
     background: rgba(255, 255, 255, 0.85) !important;
 }
 
-/* Desktop Collapsed */
 @media (min-width: 769px) {
     .ai-agent-sidebar.collapsed {
         width: 0 !important; min-width: 0 !important; border-right: none !important; opacity: 0; padding: 0 !important; margin: 0 !important; pointer-events: none;
     }
 }
 
-/* Mobile Layout Fixes */
 @media (max-width: 768px) {
-    .main-content {
-        padding: 65px 15px 90px !important; /* Clears top and bottom perfectly */
-    }
+    .main-content { padding: 65px 15px 90px !important; }
 
     .ai-agent-sidebar {
         position: fixed !important;
-        top: 0 !important;
-        left: -100% !important; 
-        width: 85% !important;
-        max-width: 320px !important;
-        height: 100dvh !important;
-        z-index: 99999 !important;
-        background: rgba(15, 23, 42, 0.9) !important; 
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        box-shadow: 5px 0 25px rgba(0,0,0,0.8) !important;
-        opacity: 1 !important; 
-        border-right: 1px solid rgba(255,255,255,0.1) !important;
+        top: 0 !important; left: -100% !important; 
+        width: 85% !important; max-width: 320px !important; height: 100dvh !important; z-index: 99999 !important;
+        background: rgba(15, 23, 42, 0.9) !important; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        box-shadow: 5px 0 25px rgba(0,0,0,0.8) !important; opacity: 1 !important; border-right: 1px solid rgba(255,255,255,0.1) !important;
     }
 
-    body.light-mode .ai-agent-sidebar {
-        background: rgba(248, 250, 252, 0.95) !important;
-    }
+    body.light-mode .ai-agent-sidebar { background: rgba(248, 250, 252, 0.95) !important; }
     
-    .ai-agent-sidebar.mobile-open {
-        left: 0 !important; 
-    }
-
-    #chat-input-text, #ai-chat-input {
-        padding: 12px 14px !important;
-        font-size: 0.95rem !important;
-        min-width: 80px !important;
-    }
-    
-    #chat-messages-container > div {
-        max-width: 90% !important; 
-    }
+    .ai-agent-sidebar.mobile-open { left: 0 !important; }
+    #chat-input-text, #ai-chat-input { padding: 12px 14px !important; font-size: 0.95rem !important; min-width: 80px !important; }
+    #chat-messages-container > div { max-width: 90% !important; }
 }
 
 @media(min-width: 768px) {
@@ -321,3 +299,66 @@ body.light-mode .ai-agent-sidebar {
     .btn-remove, .btn-edit { padding: 0.3rem 0.6rem; font-size: 0.9rem; }
     .feature-cards-grid { grid-template-columns: repeat(4, 1fr); } 
 }
+
+/* =========================================
+   🟢 NEW: Attachment Menu Popup Styles
+   ========================================= */
+.attachment-menu {
+    position: absolute;
+    bottom: 60px;
+    left: 10px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 8px;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    z-index: 1000;
+    min-width: 150px;
+    backdrop-filter: blur(15px);
+}
+.attachment-menu.show {
+    display: flex;
+    animation: slideUpFade 0.2s ease-out forwards;
+}
+
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.attach-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background 0.2s;
+    text-align: left;
+    width: 100%;
+}
+
+.attach-option:hover {
+    background: rgba(56, 189, 248, 0.15);
+}
+
+.attach-option svg {
+    width: 20px;
+    height: 20px;
+    stroke: #38bdf8;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.attach-option.mic svg { stroke: #ef4444; }
+.attach-option.doc svg { stroke: #a855f7; }
