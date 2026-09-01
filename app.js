@@ -412,10 +412,6 @@ if (chatSendBtn) {
                 return;
             }
         }
- 
-     const cleanedText = filterSensitiveData(text);
-
-        
 
         const cleanedText = filterSensitiveData(text);
         chatInputText.value = '';
