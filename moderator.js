@@ -1,19 +1,59 @@
-// moderator.js
-const forbiddenKeywords = ["sex", "nude", "porn", "xxx", "abuse", "sexy", "maru kada","maru kanda","xxxx"]; 
+// moderator.js - Standalone Auto-Moderation System
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+const auth = getAuth();
+const db = getFirestore();
+
+// Prohibited words (Sexual content & Hate speech list)
+const forbiddenKeywords = ["sex", "nude", "porn", "xxx", "abuse", "sexy", "xxxxxx","hutta","huk","palyan","plyn","pko","hutti","hutta"]; 
 let lastMessageTime = 0;
 let spamWarningCount = 0;
 
-export async function checkAndBanViolator(text, currentUser, db, updateDoc, doc) {
-    if (!text) return false;
+// 1. Intercept Virtual Room Entry (Check if Banned)
+document.addEventListener('click', async (e) => {
+    const virtualCard = e.target.closest('#card-virtual-room');
+    if (!virtualCard) return;
 
-    // 1. Anti-Spam Check (2 seconds delay)
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+        const userSnap = await getDoc(doc(db, "users", user.uid));
+        if (userSnap.exists() && userSnap.data().isBanned) {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+            alert("⛔ Access Denied: You have been banned from the Virtual Room for violating guidelines.");
+        }
+    } catch (err) {
+        console.error("Ban check error:", err);
+    }
+}, true); // Capturing phase runs before app.js
+
+// 2. Intercept Message Sending (Anti-Spam, Content Filter & Auto-Ban)
+document.addEventListener('click', async (e) => {
+    const sendBtn = e.target.closest('#chat-send-btn');
+    if (!sendBtn) return;
+
+    const chatInput = document.getElementById('chat-input-text');
+    if (!chatInput) return;
+
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    const user = auth.currentUser;
+    if (!user) return;
+
+    // Anti-Spam Check (2 seconds gap)
     const now = Date.now();
     if (now - lastMessageTime < 2000) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
         alert("⚠️ Please wait a moment before sending another message. (Anti-Spam)");
-        return false;
+        return;
     }
 
-    // 2. Sexual / Hate Content Filter
+    // Sexual Content & Hate Speech Filter
     const lowerText = text.toLowerCase();
     let isViolating = false;
     let matchedWord = "";
@@ -27,25 +67,27 @@ export async function checkAndBanViolator(text, currentUser, db, updateDoc, doc)
     }
 
     if (isViolating) {
-        spamWarningCount++;
-        alert(`🚨 WARNING: Inappropriate or prohibited content detected (${matchedWord}). Repeated violations will result in an auto-ban!`);
+        e.stopImmediatePropagation();
+        e.preventDefault();
         
-        // 3. Auto-Ban Trigger (3 warnings)
+        spamWarningCount++;
+        alert(`🚨 WARNING: Inappropriate content detected (${matchedWord}). Repeated violations will result in an auto-ban!`);
+
+        // Auto-Ban after 3 violations
         if (spamWarningCount >= 3) {
             try {
-                await updateDoc(doc(db, "users", currentUser.uid), { 
+                await updateDoc(doc(db, "users", user.uid), {
                     isBanned: true,
                     banReason: "Violation of Chat Guidelines (Sexual/Hate Content or Spam)"
                 });
                 alert("⛔ You have been automatically banned from the Virtual Room due to repeated violations.");
-                location.reload(); 
+                location.reload();
             } catch (err) {
                 console.error("Auto-ban error:", err);
             }
         }
-        return false; 
+        return;
     }
 
     lastMessageTime = Date.now();
-    return true; 
-}
+}, true); // Capturing phase runs before app.js
