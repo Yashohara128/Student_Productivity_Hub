@@ -1469,8 +1469,16 @@ const performLogout = () => {
     signOut(auth).then(() => { 
         allSubjects = []; 
         currentStudentFaculty = null;
+        
+        // 🟢 Fix: Logout unama login section eka pennanna one
+        if (loginSection) loginSection.style.display = "block";
+        if (appSection) appSection.style.display = "none";
+        if (reviewModal) reviewModal.style.display = 'none';
+
         showView('hub'); 
         updateUI(); 
+    }).catch((error) => {
+        alert("Logout Failed: " + error.message);
     }); 
 };
 
