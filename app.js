@@ -396,13 +396,13 @@ if (cancelActionBtn) {
     });
 }
 
-// 4. Send & Edit Message Logic (With 3-Strike Warning & WhatsApp-like Media Caption Support)
+// 4. Send & Edit Message Logic (With WhatsApp Media Support & Fix for Stuck Button)
 if (chatSendBtn) {
     chatSendBtn.addEventListener('click', async () => {
         if (!chatInputText || !currentStudentFaculty) return;
         const text = chatInputText.value.trim();
 
-        // 🟢 WhatsApp-like Pending Media & Caption Logic (Handled First)
+        // 🟢 WhatsApp-like Pending Media & Caption Logic
         if (pendingMediaFile) {
             const captionText = text;
             const fileToSend = pendingMediaFile;
@@ -771,39 +771,64 @@ function uploadMediaToFirebase(fileOrBlob, fileName, type) {
     uploadMediaWithCaptionToFirebase(fileOrBlob, fileName, type, "");
 }
 
+// 🟢 Helper Function to Upload Media with Caption & Error Recovery Support
 async function uploadMediaWithCaptionToFirebase(fileOrBlob, fileName, type, caption) {
+    if (!currentUser || !currentStudentFaculty) {
+        alert("Please login and join a virtual room first!");
+        if (chatSendBtn) {
+            chatSendBtn.innerHTML = svgs.send;
+            chatSendBtn.disabled = false;
+        }
+        return;
+    }
+
     const storageRef = ref(storage, `virtual_room_media/${Date.now()}_${fileName}`);
     const uploadTask = uploadBytesResumable(storageRef, fileOrBlob);
 
-    const originalBtnHTML = chatSendBtn.innerHTML;
-    chatSendBtn.innerHTML = "⏳";
-    chatSendBtn.disabled = true;
+    if (chatSendBtn) {
+        chatSendBtn.innerHTML = "⏳";
+        chatSendBtn.disabled = true;
+    }
 
     uploadTask.on('state_changed', 
         (snapshot) => {}, 
         (error) => {
+            console.error("Storage Upload Error:", error);
             alert("Upload failed: " + error.message);
-            chatSendBtn.innerHTML = originalBtnHTML;
-            chatSendBtn.disabled = false;
+            if (chatSendBtn) {
+                chatSendBtn.innerHTML = svgs.send;
+                chatSendBtn.disabled = false;
+            }
         }, 
         async () => {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            let displayTxt = caption ? caption : (type === 'audio' ? `${svgs.mic} Voice Message` : (type === 'image' ? `${svgs.photo} Photo` : `${svgs.doc} Document`));
-            
-            await addDoc(collection(db, "virtual_rooms"), {
-                faculty: currentStudentFaculty,
-                senderName: getStudentFirstName(),
-                senderId: currentUser.uid,
-                text: displayTxt,
-                type: type,
-                fileName: fileName,
-                fileUrl: downloadURL,
-                timestamp: new Date().toISOString()
-            });
-
-            chatSendBtn.innerHTML = originalBtnHTML;
-            chatSendBtn.disabled = false;
-            chatInputText.placeholder = "Type a message...";
+            try {
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                let displayTxt = caption ? caption : (type === 'audio' ? `${svgs.mic} Voice Message` : (type === 'image' ? `${svgs.photo} Photo` : `${svgs.doc} Document`));
+                
+                await addDoc(collection(db, "virtual_rooms"), {
+                    faculty: currentStudentFaculty,
+                    senderName: getStudentFirstName(),
+                    senderId: currentUser.uid,
+                    text: displayTxt,
+                    type: type,
+                    fileName: fileName,
+                    fileUrl: downloadURL,
+                    timestamp: new Date().toISOString()
+                });
+            } catch (e) {
+                console.error("Firestore Save Error:", e);
+                alert("Failed to save message: " + e.message);
+            } finally {
+                if (chatSendBtn) {
+                    chatSendBtn.innerHTML = svgs.send;
+                    chatSendBtn.disabled = false;
+                }
+                if (chatInputText) {
+                    chatInputText.placeholder = "Type a message...";
+                }
+                if (chatImageInput) chatImageInput.value = '';
+                if (chatDocInput) chatDocInput.value = '';
+            }
         }
     );
 }
