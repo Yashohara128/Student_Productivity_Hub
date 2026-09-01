@@ -67,13 +67,6 @@ const cardPlagiarism = document.getElementById('card-plagiarism');
 const cardIeee = document.getElementById('card-ieee');
 const cardVirtualRoom = document.getElementById('card-virtual-room');
 
-// Back Buttons
-const backToHubGpa = document.getElementById('back-to-hub-gpa');
-const backToHubShortNotes = document.getElementById('back-to-hub-shortnotes');
-const backToHubPlagiarism = document.getElementById('back-to-hub-plagiarism');
-const backToHubIeee = document.getElementById('back-to-hub-ieee');
-const backToHubRoom = document.getElementById('back-to-hub-room');
-
 let allSubjects = []; 
 let currentUser = null; 
 let editingSubjectId = null; 
@@ -153,16 +146,15 @@ function showView(viewName) {
         if (viewVirtualRoom) viewVirtualRoom.style.display = 'flex'; 
     }
     
-    // Smooth scroll only if it's not the virtual room
     if (viewName !== 'virtualroom') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
-if (document.getElementById('card-gpa')) document.getElementById('card-gpa').addEventListener('click', () => showView('gpa'));
-if (document.getElementById('card-shortnotes')) document.getElementById('card-shortnotes').addEventListener('click', () => showView('shortnotes'));
-if (document.getElementById('card-plagiarism')) document.getElementById('card-plagiarism').addEventListener('click', () => showView('plagiarism'));
-if (document.getElementById('card-ieee')) document.getElementById('card-ieee').addEventListener('click', () => showView('ieee'));
+if (cardGpa) cardGpa.addEventListener('click', () => showView('gpa'));
+if (cardShortNotes) cardShortNotes.addEventListener('click', () => showView('shortnotes'));
+if (cardPlagiarism) cardPlagiarism.addEventListener('click', () => showView('plagiarism'));
+if (cardIeee) cardIeee.addEventListener('click', () => showView('ieee'));
 
 document.querySelectorAll('.btn-back').forEach(btn => {
     btn.addEventListener('click', () => showView('hub'));
@@ -221,7 +213,7 @@ let replyingToMessageData = null;
 let selectedMessagesToDelete = new Set();
 let pressTimer;
 
-// 1. Open Room Logic
+// 1. Open Room Logic (Banned Check)
 if (cardVirtualRoom) {
     cardVirtualRoom.addEventListener('click', async () => {
         if (!currentUser) { 
@@ -255,6 +247,7 @@ if (cardVirtualRoom) {
         }
     });
 }
+
 // Dismiss Guidelines Modal
 if (acceptGuidelinesBtn) {
     acceptGuidelinesBtn.addEventListener('click', () => {
@@ -321,7 +314,6 @@ if (verifyIdBtn) {
             studentIdModal.style.display = 'none';
             currentStudentFaculty = assignedFaculty;
 
-            // Show Guidelines Pop-up
             if(roomGuidelinesModal) {
                 roomGuidelinesModal.style.display = 'flex';
             }
@@ -360,7 +352,7 @@ if (leaveRoomBtn) {
     });
 }
 
-// 🧹 Clear Chat Logic (With Instant Auto-Refresh UI)
+// 🧹 Clear Chat Logic
 if (clearMyChatBtn) {
     clearMyChatBtn.addEventListener('click', async () => {
         if (!currentUser) return;
@@ -373,7 +365,7 @@ if (clearMyChatBtn) {
                 
                 alert("🧹 Chat cleared successfully!");
                 if (currentStudentFaculty) {
-                    openChatRoom(currentStudentFaculty); // Instant auto-refresh view
+                    openChatRoom(currentStudentFaculty);
                 }
             } catch (e) {
                 alert("Failed to clear chat: " + e.message);
@@ -400,14 +392,13 @@ if (cancelActionBtn) {
     });
 }
 
-// 4. Send & Edit Message Logic
+// 4. Send & Edit Message Logic (With 3-Strike Warning & Auto-Ban System)
 if (chatSendBtn) {
     chatSendBtn.addEventListener('click', async () => {
         if (!chatInputText) return;
         const text = chatInputText.value.trim();
         if (!text || !currentStudentFaculty) return;
 
-        // 🟢 3-Times Warning & Auto-Moderation System
         const forbiddenKeywords = ["sex", "nude", "porn", "xxx", "abuse", "sexy", "xxxxxx","hutta","huk","palyan","plyn","pko","hutti"];
         const lowerText = text.toLowerCase();
         let isViolating = false;
@@ -422,18 +413,16 @@ if (chatSendBtn) {
         }
 
         if (isViolating) {
-            chatInputText.value = ""; // Message එක Auto-delete වෙනවා
+            chatInputText.value = ""; 
 
             try {
                 const userRef = doc(db, "users", currentUser.uid);
                 const userSnap = await getDoc(userRef);
                 let userData = userSnap.exists() ? userSnap.data() : {};
                 
-                // Warnings ගණන 1කින් වැඩි කරනවා
                 let currentWarnings = (userData.roomWarnings || 0) + 1;
 
                 if (currentWarnings >= 3) {
-                    // 3 වන වතාව නම් Virtual Room එකෙන් සදහටම Banned කරනවා (අනෙකුත් features වැඩ කරයි)
                     await updateDoc(userRef, {
                         roomWarnings: currentWarnings,
                         virtualRoomBanned: true,
@@ -442,7 +431,6 @@ if (chatSendBtn) {
                     alert(`⛔ PERMANENTLY BANNED: You have used prohibited words 3 times ("${matchedWord}"). You are now permanently banned from the Virtual Room.`);
                     location.reload(); 
                 } else {
-                    // 1 හෝ 2 වතාව නම් Warning එකක් පෙන්වයි
                     await updateDoc(userRef, {
                         roomWarnings: currentWarnings
                     });
@@ -451,7 +439,7 @@ if (chatSendBtn) {
             } catch (err) {
                 console.error("Warning update error:", err);
             }
-            return; // මැසේජ් එක යැවීම නවත්වයි
+            return; 
         }
 
         const cleanedText = filterSensitiveData(text);
@@ -491,15 +479,6 @@ if (chatSendBtn) {
     });
 }
 
-// 🟢 Do not auto-send on enter, allowing Next Line natively
-if (chatInputText) {
-    chatInputText.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            // Allows normal browser native newline functionality for <textarea>
-        }
-    });
-}
-
 // Global functions for inline Edit / Reply
 window.setEditMessage = function(msgId, currentText) {
     editingMessageId = msgId;
@@ -531,9 +510,19 @@ window.setReplyMessage = function(senderName, currentText) {
     chatInputText.focus();
 };
 
-// 🟢 Multi Delete Long Press Logic
+window.deleteVirtualMessage = async function(msgId) {
+    if (confirm("Are you sure you want to delete this message?")) {
+        try {
+            await deleteDoc(doc(db, "virtual_rooms", msgId));
+        } catch (e) {
+            console.error("Error deleting message:", e);
+            alert("Failed to delete message.");
+        }
+    }
+};
+
 window.startLongPress = function(msgId, isMe) {
-    if (!isMe) return; // Only allow long press on own messages
+    if (!isMe) return; 
     pressTimer = window.setTimeout(() => {
         if (!selectedMessagesToDelete.has(msgId)) {
             selectedMessagesToDelete.add(msgId);
@@ -597,7 +586,7 @@ if (confirmMultiDeleteBtn) {
     });
 }
 
-// 🟢 Toggle Attachment Menu
+// Toggle Attachment Menu
 if (mainAttachBtn && attachmentMenu) {
     mainAttachBtn.addEventListener('click', (e) => {
         if (isRecording && mediaRecorder) {
@@ -609,7 +598,6 @@ if (mainAttachBtn && attachmentMenu) {
         attachmentMenu.classList.toggle('show');
     });
 
-    // Close menu when clicking outside
     document.addEventListener('click', (e) => {
         if (!mainAttachBtn.contains(e.target) && !attachmentMenu.contains(e.target)) {
             attachmentMenu.classList.remove('show');
@@ -617,7 +605,7 @@ if (mainAttachBtn && attachmentMenu) {
     });
 }
 
-// 🟢 5. MEDIA UPLOAD LOGIC (Auto-Image Compression & Document Handling)
+// Media Upload Logic
 if(menuImageBtn && chatImageInput) {
     menuImageBtn.addEventListener('click', () => {
         chatImageInput.click();
@@ -674,7 +662,6 @@ if(menuDocBtn && chatDocInput) {
     });
 }
 
-// 🟢 6. VOICE MESSAGE LOGIC WITH PREVIEW & CANCEL OPTION
 let mediaRecorder;
 let audioChunks = [];
 let isRecording = false;
@@ -714,7 +701,6 @@ if(menuMicBtn) {
                     recordedAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                     audioChunks = [];
 
-                    // Show Preview Bar, hide normal input controls
                     if (previewAudioElement && voicePreviewBar && normalInputControls) {
                         previewAudioElement.src = URL.createObjectURL(recordedAudioBlob);
                         voicePreviewBar.style.display = 'flex';
@@ -728,7 +714,6 @@ if(menuMicBtn) {
     });
 }
 
-// Cancel Voice Note
 if (cancelVoiceBtn) {
     cancelVoiceBtn.addEventListener('click', () => {
         recordedAudioBlob = null;
@@ -738,7 +723,6 @@ if (cancelVoiceBtn) {
     });
 }
 
-// Send Voice Note after preview
 if (sendVoiceBtn) {
     sendVoiceBtn.addEventListener('click', () => {
         if (!recordedAudioBlob) return;
@@ -754,7 +738,6 @@ if (sendVoiceBtn) {
     });
 }
 
-// 🟢 Helper Function to Upload Media to Firebase Storage
 function uploadMediaToFirebase(fileOrBlob, fileName, type) {
     const storageRef = ref(storage, `virtual_room_media/${Date.now()}_${fileName}`);
     const uploadTask = uploadBytesResumable(storageRef, fileOrBlob);
@@ -791,7 +774,7 @@ function uploadMediaToFirebase(fileOrBlob, fileName, type) {
     );
 }
 
-// 5. Load Real-time Messages (Premium View)
+// 5. Load Real-time Messages (With Delete Trash Icon)
 function openChatRoom(facultyName) {
     showView('virtualroom');
     if(activeFacultyLabel) {
@@ -817,7 +800,7 @@ function openChatRoom(facultyName) {
         personalCutoffDate.setDate(personalCutoffDate.getDate() - studentPersonalDays);
 
         const absoluteMaxDate = new Date();
-        absoluteMaxDate.setDate(absoluteMaxDate.getDate() - 30); // Global 30-Day Limit
+        absoluteMaxDate.setDate(absoluteMaxDate.getDate() - 30); 
 
         snapshot.forEach(docSnap => {
             let msgData = docSnap.data();
@@ -833,7 +816,6 @@ function openChatRoom(facultyName) {
 
         msgs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-        // 🟢 Guidelines Inline Banner inside Chat with NEW RULES
         const bannerHtml = `
             <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 12px 14px; border-radius: 12px; font-size: 0.82rem; color: var(--text-color); line-height: 1.5; margin-bottom: 15px;">
                 <div style="font-weight: bold; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-size: 0.9rem;">
@@ -852,14 +834,6 @@ function openChatRoom(facultyName) {
 
         msgs.forEach(msg => {
             const isMe = msg.senderId === currentUser.uid;
-            let actionsHtml = `
-        <div class="msg-actions">
-            <button class="reply-btn" onclick="setReplyMessage('${msg.senderName}', '${encodeURIComponent(msg.type === 'text' ? msg.text : 'Media')}')" title="Reply">${svgs.reply}</button>
-            ${isMe && msg.type === 'text' ? `<button class="edit-btn" onclick="setEditMessage('${msg.msgId}', '${encodeURIComponent(msg.text)}')" title="Edit">${svgs.edit}</button>` : ''}
-            ${isMe ? `<button class="delete-btn" onclick="deleteVirtualMessage('${msg.msgId}')" title="Delete" style="background:none; border:none; cursor:pointer; padding:2px;">${svgs.trash}</button>` : ''}
-        </div>
-    `;
-});
 
             let contentHtml = "";
             if (msg.type === 'image') {
@@ -872,7 +846,6 @@ function openChatRoom(facultyName) {
                 contentHtml = `${msg.text.replace(/\n/g, '<br>')}`; 
             }
 
-            // Reply Block UI
             let replyBlockHtml = '';
             if (msg.replyTo) {
                 replyBlockHtml = `
@@ -883,22 +856,20 @@ function openChatRoom(facultyName) {
                 `;
             }
 
-            // Actions UI (Premium outside bubble, Always Visible)
             let actionsHtml = `
                 <div class="msg-actions">
                     <button class="reply-btn" onclick="setReplyMessage('${msg.senderName}', '${encodeURIComponent(msg.type === 'text' ? msg.text : 'Media')}')" title="Reply">${svgs.reply}</button>
                     ${isMe && msg.type === 'text' ? `<button class="edit-btn" onclick="setEditMessage('${msg.msgId}', '${encodeURIComponent(msg.text)}')" title="Edit">${svgs.edit}</button>` : ''}
+                    ${isMe ? `<button class="delete-btn" onclick="deleteVirtualMessage('${msg.msgId}')" title="Delete" style="background:none; border:none; cursor:pointer; padding:2px;">${svgs.trash}</button>` : ''}
                 </div>
             `;
 
-            // Checkbox UI for multi-delete (only for user's own messages)
             let checkboxHtml = '';
             if (isMe) {
                 const isChecked = selectedMessagesToDelete.has(msg.msgId) ? 'checked' : '';
                 checkboxHtml = `<input type="checkbox" class="chat-checkbox" onchange="toggleMessageSelection('${msg.msgId}', this)" ${isChecked}>`;
             }
 
-            // Msg Row HTML with Touch Events for Long Press Selection
             html += `
                 <div class="msg-row ${isMe ? 'me' : 'other'} ${selectedMessagesToDelete.size > 0 && isMe ? 'multi-select-mode' : ''}"
                      onmousedown="startLongPress('${msg.msgId}', ${isMe})" 
@@ -925,17 +896,14 @@ function openChatRoom(facultyName) {
         chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
     });
 }
-// ==========================================
 
-
-// --- 🟢 AI Agent Open / Close Toggle Logic ---
+// --- AI Agent Open / Close Toggle Logic ---
 const aiToggleBtn = document.getElementById('ai-toggle-btn');
 const aiAgentSidebar = document.getElementById('ai-agent-sidebar');
 
 if (aiToggleBtn && aiAgentSidebar) {
     aiToggleBtn.addEventListener('click', () => {
         if (window.innerWidth <= 768) {
-            // Mobile toggle
             aiAgentSidebar.classList.toggle('mobile-open');
             if (aiAgentSidebar.classList.contains('mobile-open')) {
                 aiToggleBtn.innerHTML = `
@@ -944,7 +912,6 @@ if (aiToggleBtn && aiAgentSidebar) {
                 aiToggleBtn.innerHTML = `${svgs.bot} Open AI Chat`;
             }
         } else {
-            // Desktop toggle
             aiAgentSidebar.classList.toggle('collapsed');
             if (aiAgentSidebar.classList.contains('collapsed')) {
                 aiToggleBtn.innerHTML = `${svgs.bot} Open AI Chat`;
@@ -1301,7 +1268,6 @@ if (generateNotesBtn) {
     });
 }
 
-// --- DOWNLOAD SHORT NOTES AS WORD DOCUMENT (.doc) ---
 if (downloadNotesDocxBtn) {
     downloadNotesDocxBtn.addEventListener('click', () => {
         const text = generatedNotesOutput.value;
@@ -1537,7 +1503,6 @@ const performLogout = () => {
         allSubjects = []; 
         currentStudentFaculty = null;
         
-        // 🟢 Fix: Logout unama login section eka pennanna one
         if (loginSection) loginSection.style.display = "block";
         if (appSection) appSection.style.display = "none";
         if (reviewModal) reviewModal.style.display = 'none';
