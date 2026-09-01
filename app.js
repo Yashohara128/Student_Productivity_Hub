@@ -224,29 +224,31 @@ let pressTimer;
 // 1. Open Room Logic
 if (cardVirtualRoom) {
     cardVirtualRoom.addEventListener('click', async () => {
-        if (!currentUser) { 
-            alert("Please login first!"); 
-            return; 
-        }
+        if (!currentUser) { alert("Please login first!"); return; }
 
-        const userDocRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userDocRef);
+        try {
+            const userDocRef = doc(db, "users", currentUser.uid);
+            const userSnap = await getDoc(userDocRef);
 
-        if (userSnap.exists() && userSnap.data().virtualRoomBanned) {
-            alert("⛔ Access Denied: You have been permanently banned from the Virtual Room due to repeated guideline violations.");
-            return; 
-        }
-
-        if (userSnap.exists() && userSnap.data().faculty && userSnap.data().studentId) {
-            currentStudentFaculty = userSnap.data().faculty;
-            if (roomGuidelinesModal) {
-                roomGuidelinesModal.style.display = 'flex';
+            if (userSnap.exists() && userSnap.data().virtualRoomBanned) {
+                alert("⛔ Access Denied: You have been permanently banned from the Virtual Room due to repeated guideline violations.");
+                return; 
             }
-            openChatRoom(currentStudentFaculty);
-        } else {
-            if (studentIdModal) {
-                studentIdModal.style.display = 'flex'; 
+
+            if (userSnap.exists() && userSnap.data().faculty && userSnap.data().studentId) {
+                currentStudentFaculty = userSnap.data().faculty;
+                if (roomGuidelinesModal) {
+                    roomGuidelinesModal.style.display = 'flex';
+                }
+                openChatRoom(currentStudentFaculty);
+            } else {
+                if (studentIdModal) {
+                    studentIdModal.style.display = 'flex'; 
+                }
             }
+        } catch (err) {
+            console.error("Error opening virtual room:", err);
+            alert("Error opening virtual room: " + err.message);
         }
     });
 }
