@@ -42,7 +42,8 @@ const svgs = {
     reply: `<svg class="icon-sm" style="stroke:currentColor; width:14px; height:14px;" viewBox="0 0 24 24"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>`,
     send: `<svg class="icon-sm" viewBox="0 0 24 24" id="send-btn-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`,
     star: `<svg class="icon-sm" style="stroke:#fbbf24; fill:#fbbf24;" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-    info: `<svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12.01" y2="16"/><line x1="12" y1="8" x2="12" y2="12"/></svg>`
+    info: `<svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12.01" y2="16"/><line x1="12" y1="8" x2="12" y2="12"/></svg>`,
+    bell: `<svg class="icon-sm" viewBox="0 0 24 24" style="width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2;"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.33 21a1.94 1.94 0 0 0 3.34 0"/></svg>`
 };
 
 const loginSection = document.getElementById('login-section');
@@ -97,6 +98,30 @@ if (loginBtn) {
             .catch((error) => { 
                 alert("❌ Login Failed: " + error.message); 
             });
+    });
+}
+
+// 🔔 ENABLE NOTIFICATIONS BUTTON LISTENER
+const enableNotifBtn = document.getElementById('enable-notif-btn');
+if (enableNotifBtn) {
+    enableNotifBtn.addEventListener('click', async () => {
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                console.log('Notification permission granted.');
+                const token = await getToken(messaging, { 
+                    vapidKey: 'BKjH0xSRq6_ijTlOSIlJackudap3756h-46-jFxIPTG037l07OPaLQjujYdk6nMAht_29QKqjE3OFfTRWDx_RY4' 
+                });
+                console.log('FCM Token:', token);
+                alert("🎉 Notifications Enabled Successfully!");
+                enableNotifBtn.style.display = 'none';
+            } else {
+                alert("❌ Notification permission denied.");
+            }
+        } catch (error) {
+            console.error('Error getting token:', error);
+            alert("Error enabling notifications: " + error.message);
+        }
     });
 }
 
@@ -1581,7 +1606,7 @@ if (themeSelector) {
     applyTheme(themeSelector.value);
 }
 
-// --- Firebase Auth State & Loading Subjects (WITH PUSH NOTIFICATIONS ADDED) ---
+// --- Firebase Auth State & Loading Subjects ---
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -1589,23 +1614,6 @@ onAuthStateChanged(auth, async (user) => {
         updateDynamicGreeting(studentName);
         
         initIEEEModule();
-
-        // 🔔 REQUEST NOTIFICATION PERMISSION & GET FCM TOKEN (VANILLA JS)
-        try {
-            const permission = await Notification.requestPermission();
-            if (permission === 'granted') {
-                console.log('Notification permission granted.');
-                const token = await getToken(messaging, { 
-                    vapidKey: 'BKjH0xSRq6_ijTlOSIlJackudap3756h-46-jFxIPTG037l07OPaLQjujYdk6nMAht_29QKqjE3OFfTRWDx_RY4' 
-                });
-                console.log('FCM Token:', token);
-                // TODO: Save this token in Firestore under users collection if required
-            } else {
-                console.log('Notification permission denied.');
-            }
-        } catch (error) {
-            console.error('Error getting FCM token:', error);
-        }
 
         // 🔔 HANDLE FOREGROUND MESSAGES
         if (messaging) {
