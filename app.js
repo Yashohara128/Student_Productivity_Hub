@@ -842,151 +842,162 @@ async function openChatRoom(facultyName) {
         activeFacultyLabel.innerHTML = `<span class="flex-align">🎓 ${facultyName}</span>`;
     }
     
-    let studentClearedTimeMs = 0;
-    const userDocSnap = await getDoc(doc(db, "users", currentUser.uid));
-    if (userDocSnap.exists() && userDocSnap.data().chatClearedAt) {
-        studentClearedTimeMs = new Date(userDocSnap.data().chatClearedAt).getTime();
-    }
-
-    const q = query(collection(db, "virtual_rooms"), where("faculty", "==", facultyName));
-
-    onSnapshot(q, (snapshot) => {
-        let msgs = [];
-        
-        const timerSelect = document.getElementById('disappearing-timer-select');
-        let studentPersonalDays = 30;
-        if (timerSelect && timerSelect.value !== 'off') {
-            studentPersonalDays = parseInt(timerSelect.value);
+    try {
+        let studentClearedTimeMs = 0;
+        if (currentUser) {
+            const userDocSnap = await getDoc(doc(db, "users", currentUser.uid));
+            if (userDocSnap.exists() && userDocSnap.data().chatClearedAt) {
+                studentClearedTimeMs = new Date(userDocSnap.data().chatClearedAt).getTime();
+            }
         }
 
-        const personalCutoffDateMs = Date.now() - (studentPersonalDays * 24 * 60 * 60 * 1000);
-        const absoluteMaxDateMs = Date.now() - (30 * 24 * 60 * 60 * 1000); 
+        const q = query(collection(db, "virtual_rooms"), where("faculty", "==", facultyName));
 
-        snapshot.forEach(docSnap => {
-            let msgData = docSnap.data();
-            msgData.msgId = docSnap.id;
-            const msgTimeMs = new Date(msgData.timestamp).getTime();
-
-            if (msgTimeMs < absoluteMaxDateMs) return;
-            if (msgTimeMs < personalCutoffDateMs) return;
-            if (studentClearedTimeMs && msgTime <= studentClearedTimeMs) return;
-
-            msgs.push(msgData);
-        });
-
-        msgs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
-        const bannerHtml = `
-            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 12px 14px; border-radius: 12px; font-size: 0.82rem; color: var(--text-color); line-height: 1.5; margin-bottom: 15px;">
-                <div style="font-weight: bold; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-size: 0.9rem;">
-                    ${svgs.info} Virtual Room Guidelines
-                </div>
-                <div><b>English:</b><br>1. Be mindful of your language and respectful while chatting. <br>2. Avoid sharing sensitive content like numbers or emails.<br><b style="color:#ef4444;">3. Do not share nudity or explicit content. (Ban will be applied).</b><br><b style="color:#a855f7;">4. Please upload media with smaller file sizes.</b></div>
-            </div>
-        `;
-
-        if (msgs.length === 0) {
-            chatMessagesContainer.innerHTML = `${bannerHtml}<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: auto; margin-bottom: auto;">No messages yet. Say hi! ${svgs.user}</div>`;
-            return;
-        }
-
-        let html = bannerHtml;
-
-        msgs.forEach(msg => {
-            const isMe = msg.senderId === currentUser.uid;
+        onSnapshot(q, (snapshot) => {
+            let msgs = [];
             
-            let downloadBtnHtml = `<div onclick="forceDownloadMedia('${msg.fileUrl}', '${msg.fileName || 'file'}')" style="cursor:pointer; color:#10b981; font-size:0.75rem; margin-top:8px; display:inline-flex; align-items:center; gap:5px; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 6px; font-weight: 500;">⬇️ Download File</div>`;
+            const timerSelect = document.getElementById('disappearing-timer-select');
+            let studentPersonalDays = 30;
+            if (timerSelect && timerSelect.value !== 'off') {
+                studentPersonalDays = parseInt(timerSelect.value);
+            }
 
-            let contentHtml = "";
+            const personalCutoffDateMs = Date.now() - (studentPersonalDays * 24 * 60 * 60 * 1000);
+            const absoluteMaxDateMs = Date.now() - (30 * 24 * 60 * 60 * 1000); 
 
-            if (msg.isUploading) {
-                contentHtml = `
-                    <div style="display:flex; flex-direction:column; padding: 5px;">
-                        <div style="color:var(--text-muted); font-size:0.85rem; display:flex; align-items:center; gap:5px;">⏳ Uploading Media...</div>
-                        ${msg.text && !['Photo','Video','Document','Voice Message'].some(w => msg.text.includes(w)) ? `<p style="margin: 5px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
+            snapshot.forEach(docSnap => {
+                let msgData = docSnap.data();
+                msgData.msgId = docSnap.id;
+                
+                if (!msgData.timestamp) return;
+                const msgTimeMs = new Date(msgData.timestamp).getTime();
+                if (isNaN(msgTimeMs)) return;
+
+                if (msgTimeMs < absoluteMaxDateMs) return;
+                if (msgTimeMs < personalCutoffDateMs) return;
+                if (studentClearedTimeMs && msgTimeMs <= studentClearedTimeMs) return;
+
+                msgs.push(msgData);
+            });
+
+            msgs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+            const bannerHtml = `
+                <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 12px 14px; border-radius: 12px; font-size: 0.82rem; color: var(--text-color); line-height: 1.5; margin-bottom: 15px;">
+                    <div style="font-weight: bold; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-size: 0.9rem;">
+                        ${svgs.info} Virtual Room Guidelines
                     </div>
-                `;
-            } else if (msg.type === 'image') {
-                contentHtml = `
-                    <div>
-                        <img src="${msg.fileUrl}" style="max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer;" onclick="let w = window.open(); w.document.write('<img src=\\'${msg.fileUrl}\\' style=\\'width:100%\\'/>');" title="Click to View Image">
-                        ${msg.text && !msg.text.includes('Photo') ? `<p style="margin: 5px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
-                        ${downloadBtnHtml}
-                    </div>
-                `;
-            } else if (msg.type === 'video') {
-                contentHtml = `
-                    <div>
-                        <video controls style="max-width: 100%; border-radius: 8px; margin-top: 5px;"><source src="${msg.fileUrl}"></video>
-                        ${msg.text && !msg.text.includes('Video') ? `<p style="margin: 5px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
-                        ${downloadBtnHtml}
-                    </div>
-                `;
-            } else if (msg.type === 'document') {
-                contentHtml = `
-                    <div>
-                        <div style="display: flex; align-items: center; margin-top: 5px;">
-                            <a href="${msg.fileUrl}" target="_blank" style="color: #38bdf8; text-decoration: underline; font-weight: 500;" title="Click to View Document">📄 View ${msg.fileName || 'Document'}</a>
+                    <div><b>English:</b><br>1. Be mindful of your language and respectful while chatting. <br>2. Avoid sharing sensitive content like numbers or emails.<br><b style="color:#ef4444;">3. Do not share nudity or explicit content. (Ban will be applied).</b><br><b style="color:#a855f7;">4. Please upload media with smaller file sizes.</b></div>
+                </div>
+            `;
+
+            if (msgs.length === 0) {
+                chatMessagesContainer.innerHTML = `${bannerHtml}<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: auto; margin-bottom: auto;">No messages yet. Say hi! ${svgs.user}</div>`;
+                return;
+            }
+
+            let html = bannerHtml;
+
+            msgs.forEach(msg => {
+                const isMe = currentUser && msg.senderId === currentUser.uid;
+                
+                let downloadBtnHtml = `<div onclick="forceDownloadMedia('${msg.fileUrl}', '${msg.fileName || 'file'}')" style="cursor:pointer; color:#10b981; font-size:0.75rem; margin-top:8px; display:inline-flex; align-items:center; gap:5px; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 6px; font-weight: 500;">⬇️ Download File</div>`;
+
+                let contentHtml = "";
+
+                if (msg.isUploading) {
+                    contentHtml = `
+                        <div style="display:flex; flex-direction:column; padding: 5px;">
+                            <div style="color:var(--text-muted); font-size:0.85rem; display:flex; align-items:center; gap:5px;">⏳ Uploading Media...</div>
+                            ${msg.text && !['Photo','Video','Document','Voice Message'].some(w => msg.text.includes(w)) ? `<p style="margin: 5px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
                         </div>
-                        ${msg.text && !msg.text.includes('Document') ? `<p style="margin: 8px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
-                        ${downloadBtnHtml}
+                    `;
+                } else if (msg.type === 'image') {
+                    contentHtml = `
+                        <div>
+                            <img src="${msg.fileUrl}" style="max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer;" onclick="let w = window.open(); w.document.write('<img src=\\'${msg.fileUrl}\\' style=\\'width:100%\\'/>');" title="Click to View Image">
+                            ${msg.text && !msg.text.includes('Photo') ? `<p style="margin: 5px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
+                            ${downloadBtnHtml}
+                        </div>
+                    `;
+                } else if (msg.type === 'video') {
+                    contentHtml = `
+                        <div>
+                            <video controls style="max-width: 100%; border-radius: 8px; margin-top: 5px;"><source src="${msg.fileUrl}"></video>
+                            ${msg.text && !msg.text.includes('Video') ? `<p style="margin: 5px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
+                            ${downloadBtnHtml}
+                        </div>
+                    `;
+                } else if (msg.type === 'document') {
+                    contentHtml = `
+                        <div>
+                            <div style="display: flex; align-items: center; margin-top: 5px;">
+                                <a href="${msg.fileUrl}" target="_blank" style="color: #38bdf8; text-decoration: underline; font-weight: 500;" title="Click to View Document">📄 View ${msg.fileName || 'Document'}</a>
+                            </div>
+                            ${msg.text && !msg.text.includes('Document') ? `<p style="margin: 8px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
+                            ${downloadBtnHtml}
+                        </div>
+                    `;
+                } else if (msg.type === 'audio') {
+                    contentHtml = `<audio controls style="height: 35px; max-width: 200px; margin-top: 5px;"><source src="${msg.fileUrl}"></audio>`;
+                } else {
+                    contentHtml = `${msg.text ? msg.text.replace(/\n/g, '<br>') : ''}`; 
+                }
+
+                let replyBlockHtml = '';
+                if (msg.replyTo) {
+                    replyBlockHtml = `
+                        <div class="reply-block">
+                            <strong style="color: #a855f7;">${msg.replyTo.senderName}</strong><br>
+                            ${msg.replyTo.text}
+                        </div>
+                    `;
+                }
+
+                let actionsHtml = `
+                    <div class="msg-actions">
+                        <button class="reply-btn" onclick="setReplyMessage('${msg.senderName}', '${encodeURIComponent(msg.type === 'text' ? msg.text : 'Media')}')" title="Reply">${svgs.reply}</button>
+                        ${isMe && msg.type === 'text' && !msg.isUploading ? `<button class="edit-btn" onclick="setEditMessage('${msg.msgId}', '${encodeURIComponent(msg.text)}')" title="Edit">${svgs.edit}</button>` : ''}
+                        ${isMe ? `<button class="delete-btn" onclick="deleteVirtualMessage('${msg.msgId}')" title="Delete" style="background:none; border:none; cursor:pointer; padding:2px;">${svgs.trash}</button>` : ''}
                     </div>
                 `;
-            } else if (msg.type === 'audio') {
-                contentHtml = `<audio controls style="height: 35px; max-width: 200px; margin-top: 5px;"><source src="${msg.fileUrl}"></audio>`;
-            } else {
-                contentHtml = `${msg.text.replace(/\n/g, '<br>')}`; 
-            }
 
-            let replyBlockHtml = '';
-            if (msg.replyTo) {
-                replyBlockHtml = `
-                    <div class="reply-block">
-                        <strong style="color: #a855f7;">${msg.replyTo.senderName}</strong><br>
-                        ${msg.replyTo.text}
+                let checkboxHtml = '';
+                if (isMe) {
+                    const isChecked = selectedMessagesToDelete.has(msg.msgId) ? 'checked' : '';
+                    checkboxHtml = `<input type="checkbox" class="chat-checkbox" onchange="toggleMessageSelection('${msg.msgId}', this)" ${isChecked}>`;
+                }
+
+                html += `
+                    <div class="msg-row ${isMe ? 'me' : 'other'} ${selectedMessagesToDelete.size > 0 && isMe ? 'multi-select-mode' : ''}"
+                         onmousedown="startLongPress('${msg.msgId}', ${isMe})" 
+                         onmouseup="cancelLongPress()" 
+                         onmouseleave="cancelLongPress()" 
+                         ontouchstart="startLongPress('${msg.msgId}', ${isMe})" 
+                         ontouchend="cancelLongPress()">
+                        
+                        ${isMe ? checkboxHtml : ''}
+                        ${isMe ? actionsHtml : ''}
+                        
+                        <div class="msg-bubble ${isMe ? 'msg-me' : 'msg-other'}">
+                            ${!isMe ? `<span class="msg-sender">${msg.senderName}</span>` : ''}
+                            ${replyBlockHtml}
+                            <div>${contentHtml}</div>
+                        </div>
+
+                        ${!isMe ? actionsHtml : ''}
                     </div>
                 `;
-            }
-
-            let actionsHtml = `
-                <div class="msg-actions">
-                    <button class="reply-btn" onclick="setReplyMessage('${msg.senderName}', '${encodeURIComponent(msg.type === 'text' ? msg.text : 'Media')}')" title="Reply">${svgs.reply}</button>
-                    ${isMe && msg.type === 'text' && !msg.isUploading ? `<button class="edit-btn" onclick="setEditMessage('${msg.msgId}', '${encodeURIComponent(msg.text)}')" title="Edit">${svgs.edit}</button>` : ''}
-                    ${isMe ? `<button class="delete-btn" onclick="deleteVirtualMessage('${msg.msgId}')" title="Delete" style="background:none; border:none; cursor:pointer; padding:2px;">${svgs.trash}</button>` : ''}
-                </div>
-            `;
-
-            let checkboxHtml = '';
-            if (isMe) {
-                const isChecked = selectedMessagesToDelete.has(msg.msgId) ? 'checked' : '';
-                checkboxHtml = `<input type="checkbox" class="chat-checkbox" onchange="toggleMessageSelection('${msg.msgId}', this)" ${isChecked}>`;
-            }
-
-            html += `
-                <div class="msg-row ${isMe ? 'me' : 'other'} ${selectedMessagesToDelete.size > 0 && isMe ? 'multi-select-mode' : ''}"
-                     onmousedown="startLongPress('${msg.msgId}', ${isMe})" 
-                     onmouseup="cancelLongPress()" 
-                     onmouseleave="cancelLongPress()" 
-                     ontouchstart="startLongPress('${msg.msgId}', ${isMe})" 
-                     ontouchend="cancelLongPress()">
-                    
-                    ${isMe ? checkboxHtml : ''}
-                    ${isMe ? actionsHtml : ''}
-                    
-                    <div class="msg-bubble ${isMe ? 'msg-me' : 'msg-other'}">
-                        ${!isMe ? `<span class="msg-sender">${msg.senderName}</span>` : ''}
-                        ${replyBlockHtml}
-                        <div>${contentHtml}</div>
-                    </div>
-
-                    ${!isMe ? actionsHtml : ''}
-                </div>
-            `;
+            });
+            
+            chatMessagesContainer.innerHTML = html;
+            chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
         });
-        
-        chatMessagesContainer.innerHTML = html;
-        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-    });
+
+    } catch (error) {
+        console.error("OpenChatRoom Error:", error);
+        chatMessagesContainer.innerHTML = `<div style="text-align: center; color: #ef4444; padding: 2rem;">Error opening chat room. Please refresh.</div>`;
+    }
 }
 
 const aiToggleBtn = document.getElementById('ai-toggle-btn');
