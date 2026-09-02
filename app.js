@@ -55,7 +55,6 @@ const mainLogoutBtn = document.getElementById('main-logout-btn');
 const addBtn = document.getElementById('add-btn');
 const degreeInput = document.getElementById('degree-name');
 
-// Navigation Views
 const dashboardHub = document.getElementById('dashboard-hub');
 const viewGpa = document.getElementById('view-gpa');
 const viewShortNotes = document.getElementById('view-shortnotes');
@@ -63,7 +62,6 @@ const viewPlagiarism = document.getElementById('view-plagiarism');
 const viewIeee = document.getElementById('view-ieee');
 const viewVirtualRoom = document.getElementById('view-virtual-room');
 
-// Card Triggers
 const cardGpa = document.getElementById('card-gpa');
 const cardShortNotes = document.getElementById('card-shortnotes');
 const cardPlagiarism = document.getElementById('card-plagiarism');
@@ -101,7 +99,7 @@ if (loginBtn) {
     });
 }
 
-// 🔔 ENABLE NOTIFICATIONS BUTTON LISTENER (Fixed with Service Worker Ready state)
+// 🔔 ENABLE NOTIFICATIONS BUTTON LISTENER
 const enableNotifBtn = document.getElementById('enable-notif-btn');
 if (enableNotifBtn) {
     enableNotifBtn.addEventListener('click', async () => {
@@ -110,13 +108,9 @@ if (enableNotifBtn) {
             if (permission === 'granted') {
                 console.log('Notification permission granted.');
                 
-                // 1. Service worker එක register කරනවා
-                await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-                
-                // 2. ඒක සම්පූර්ණයෙන්ම Active වෙලා ready වෙනකන් wait කරනවා
+                await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
                 const registration = await navigator.serviceWorker.ready;
                 
-                // 3. ඊටපස්සේ active වුණු registration එක pass කරනවා
                 const token = await getToken(messaging, { 
                     vapidKey: 'BKjH0xSRq6_ijTlOSIlJackudap3756h-46-jFxIPTG037l07OPaLQjujYdk6nMAht_29QKqjE3OFfTRWDx_RY4',
                     serviceWorkerRegistration: registration 
@@ -133,6 +127,7 @@ if (enableNotifBtn) {
             alert("Error enabling notifications: " + error.message);
         }
     });
+}
 
 function updateDynamicGreeting(userName) {
     const greetingEl = document.getElementById('welcome-greeting');
@@ -213,18 +208,15 @@ const chatSendBtn = document.getElementById('chat-send-btn');
 const leaveRoomBtn = document.getElementById('leave-room-btn'); 
 const clearMyChatBtn = document.getElementById('clear-my-chat-btn');
 
-// Attachment Menu Elements
 const mainAttachBtn = document.getElementById('main-attach-btn');
 const attachmentMenu = document.getElementById('attachment-menu');
 const menuImageBtn = document.getElementById('menu-image-btn');
 const menuDocBtn = document.getElementById('menu-doc-btn');
 const menuMicBtn = document.getElementById('menu-mic-btn');
 
-// Hidden File Inputs
 const chatImageInput = document.getElementById('chat-image-input');
 const chatDocInput = document.getElementById('chat-doc-input');
 
-// Voice Preview Elements
 const voicePreviewBar = document.getElementById('voice-preview-bar');
 const previewAudioElement = document.getElementById('preview-audio-element');
 const cancelVoiceBtn = document.getElementById('cancel-voice-btn');
@@ -232,11 +224,9 @@ const sendVoiceBtn = document.getElementById('send-voice-btn');
 const normalInputControls = document.getElementById('normal-input-controls');
 const recordingIndicator = document.getElementById('recording-indicator');
 
-// Guidelines Modal Elements
 const roomGuidelinesModal = document.getElementById('room-guidelines-modal');
 const acceptGuidelinesBtn = document.getElementById('accept-guidelines-btn');
 
-// Edit/Reply & Multi-Delete Elements
 const actionBar = document.getElementById('chat-action-bar');
 const actionBarTitle = document.getElementById('action-bar-title');
 const actionBarText = document.getElementById('action-bar-text');
@@ -1624,7 +1614,6 @@ onAuthStateChanged(auth, async (user) => {
         
         initIEEEModule();
 
-        // 🔔 HANDLE FOREGROUND MESSAGES
         if (messaging) {
             onMessage(messaging, (payload) => {
                 console.log('Message received in foreground: ', payload);
