@@ -101,6 +101,7 @@ if (loginBtn) {
 function updateDynamicGreeting(userName) {
     const greetingEl = document.getElementById('welcome-greeting');
     if (!greetingEl) return;
+    
     const now = new Date();
     const hours = now.getHours();
     let timeGreeting = "";
@@ -135,7 +136,10 @@ function showView(viewName) {
     if (viewName === 'hub') {
         if (dashboardHub) dashboardHub.style.display = 'block';
     } else if (viewName === 'gpa') {
-        if (viewGpa) { viewGpa.style.display = 'block'; renderGPAChart(); }
+        if (viewGpa) { 
+            viewGpa.style.display = 'block'; 
+            renderGPAChart(); 
+        }
     } else if (viewName === 'shortnotes') {
         if (viewShortNotes) viewShortNotes.style.display = 'block';
     } else if (viewName === 'plagiarism') {
@@ -392,16 +396,11 @@ if (cancelActionBtn) {
         replyingToMessageData = null;
         actionBar.style.display = 'none';
         chatInputText.value = '';
-        chatSendBtn.innerHTML = svgs.send;
     });
 }
 
-// Helper to reset input state
+// Helper to reset input state instantly
 function resetChatInput() {
-    if (chatSendBtn) {
-        chatSendBtn.innerHTML = svgs.send;
-        chatSendBtn.disabled = false;
-    }
     if (chatInputText) {
         chatInputText.placeholder = "Type a message...";
         chatInputText.value = '';
@@ -412,19 +411,19 @@ function resetChatInput() {
     pendingMediaType = null;
 }
 
-// 4. Send & Edit Message Logic
+// 4. Send & Edit Message Logic (Optimistic UI Update - WhatsApp Speed)
 if (chatSendBtn) {
     chatSendBtn.addEventListener('click', async () => {
         if (!chatInputText || !currentStudentFaculty) return;
         const text = chatInputText.value.trim();
 
-        // 🟢 WhatsApp-like Pending Media & Caption Logic
+        // 🟢 If Media is Attached (Background upload & instant placeholder)
         if (pendingMediaFile) {
             const captionText = text;
             const fileToSend = pendingMediaFile;
             const fileType = pendingMediaType;
-
-            await uploadMediaWithCaptionToFirebase(fileToSend, fileToSend.name, fileType, captionText);
+            
+            uploadMediaWithCaptionToCloudinary(fileToSend, fileToSend.name, fileType, captionText);
             return;
         }
 
@@ -445,7 +444,6 @@ if (chatSendBtn) {
 
         if (isViolating) {
             chatInputText.value = ""; 
-
             try {
                 const userRef = doc(db, "users", currentUser.uid);
                 const userSnap = await getDoc(userRef);
@@ -465,7 +463,7 @@ if (chatSendBtn) {
                     await updateDoc(userRef, {
                         roomWarnings: currentWarnings
                     });
-                    alert(`⚠️ WARNING (${currentWarnings}/3): Prohibited word detected ("${matchedWord}"). Your message was deleted. Reaching 3 warnings will result in a permanent ban from the Virtual Room.`);
+                    alert(`⚠️ WARNING (${currentWarnings}/3): Prohibited word detected ("${matchedWord}"). Your message was deleted.`);
                 }
             } catch (err) {
                 console.error("Warning update error:", err);
@@ -478,13 +476,10 @@ if (chatSendBtn) {
 
         if (editingMessageId) {
             try {
-                await updateDoc(doc(db, "virtual_rooms", editingMessageId), { text: cleanedText });
-            } catch (e) {
-                console.error(e);
-            }
+                updateDoc(doc(db, "virtual_rooms", editingMessageId), { text: cleanedText }).catch(e => console.error(e));
+            } catch (e) {}
             editingMessageId = null;
             if (actionBar) actionBar.style.display = 'none';
-            chatSendBtn.innerHTML = svgs.send;
         } else {
             let messagePayload = {
                 faculty: currentStudentFaculty,
@@ -501,11 +496,8 @@ if (chatSendBtn) {
                 if (actionBar) actionBar.style.display = 'none';
             }
 
-            try {
-                await addDoc(collection(db, "virtual_rooms"), messagePayload);
-            } catch (e) {
-                console.error("Error sending message:", e);
-            }
+            // 🟢 Send to DB instantly (Non-blocking)
+            addDoc(collection(db, "virtual_rooms"), messagePayload).catch(e => console.error(e));
         }
     });
 }
@@ -522,7 +514,6 @@ window.setEditMessage = function(msgId, currentText) {
         actionBarTitle.style.color = "#38bdf8";
         actionBarText.innerText = chatInputText.value;
     }
-    chatSendBtn.innerHTML = svgs.checkAll;
     chatInputText.focus();
 };
 
@@ -537,7 +528,6 @@ window.setReplyMessage = function(senderName, currentText) {
         actionBarTitle.style.color = "#a855f7";
         actionBarText.innerText = decodedText;
     }
-    chatSendBtn.innerHTML = svgs.send; 
     chatInputText.focus();
 };
 
@@ -546,7 +536,6 @@ window.deleteVirtualMessage = async function(msgId) {
         try {
             await deleteDoc(doc(db, "virtual_rooms", msgId));
         } catch (e) {
-            console.error("Error deleting message:", e);
             alert("Failed to delete message.");
         }
     }
@@ -607,9 +596,7 @@ if (confirmMultiDeleteBtn) {
             for (let msgId of selectedMessagesToDelete) {
                 try { 
                     await deleteDoc(doc(db, "virtual_rooms", msgId)); 
-                } catch (e) {
-                    console.error(e);
-                }
+                } catch (e) {}
             }
             selectedMessagesToDelete.clear();
             updateMultiDeleteBar();
@@ -617,7 +604,6 @@ if (confirmMultiDeleteBtn) {
     });
 }
 
-// Toggle Attachment Menu
 if (mainAttachBtn && attachmentMenu) {
     mainAttachBtn.addEventListener('click', (e) => {
         if (isRecording && mediaRecorder) {
@@ -647,41 +633,10 @@ if(menuImageBtn && chatImageInput) {
         const file = e.target.files[0];
         if (!file || !currentStudentFaculty) return;
 
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-            const img = new Image();
-            img.src = event.target.result;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-                const MAX_WIDTH = 800;
-                
-                if (width > MAX_WIDTH) {
-                    height = Math.round((height * MAX_WIDTH) / width);
-                    width = MAX_WIDTH;
-                }
-                
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                canvas.toBlob((blob) => {
-                    const compressedFile = new File([blob], file.name, {
-                        type: 'image/jpeg',
-                        lastModified: Date.now()
-                    });
-                    
-                    pendingMediaFile = compressedFile;
-                    pendingMediaType = 'image';
-                    chatInputText.placeholder = `📎 Image attached (${file.name}). Type a caption and press send...`;
-                    chatInputText.focus();
-
-                }, 'image/jpeg', 0.7);
-            };
-        };
+        pendingMediaFile = file;
+        pendingMediaType = 'image';
+        chatInputText.placeholder = `📎 Image attached (${file.name}). Type a caption and press send...`;
+        chatInputText.focus();
     });
 }
 
@@ -778,97 +733,125 @@ if (sendVoiceBtn) {
         if (voicePreviewBar) voicePreviewBar.style.display = 'none';
         if (normalInputControls) normalInputControls.style.display = 'flex';
 
-        uploadMediaToFirebase(blobToSend, `audio_${Date.now()}.webm`, 'audio');
+        uploadMediaWithCaptionToCloudinary(blobToSend, `audio_${Date.now()}.webm`, 'audio', "");
     });
 }
 
-function uploadMediaToFirebase(fileOrBlob, fileName, type) {
-    uploadMediaWithCaptionToFirebase(fileOrBlob, fileName, type, "");
-}
-
-// 🟢 Bypass Firebase Storage & Save Directly to Firestore as Base64 (No Billing needed)
-async function uploadMediaWithCaptionToFirebase(fileOrBlob, fileName, type, caption) {
+// 🟢 Upload to Cloudinary without Blocking the UI (WhatsApp Style)
+async function uploadMediaWithCaptionToCloudinary(fileOrBlob, fileName, type, caption) {
     if (!currentUser || !currentStudentFaculty) {
         alert("Please login and join a virtual room first!");
         resetChatInput();
         return;
     }
 
-    // Firestore document limit is 1MB. Base64 strings add overhead.
-    const maxSize = 700 * 1024; // 700 KB Limit
-    if (fileOrBlob.size > maxSize) {
-        alert(`File is too large! Maximum allowed size for direct upload is 700KB. (Your file is ${(fileOrBlob.size / 1024).toFixed(1)}KB)`);
-        resetChatInput();
+    // 🔴 CHANGE THESE TO YOUR CLOUDINARY DETAILS 🔴
+    const cloudName = "rpatylt6";       // e.g., "dz8aowpxv"
+    const uploadPreset = "Student Productivity Hub"; // e.g., "student_hub"
+
+    let displayTxt = caption ? caption : (type === 'audio' ? `${svgs.mic} Voice Message` : (type === 'image' ? `${svgs.photo} Photo` : (type === 'video' ? `🎬 Video` : `${svgs.doc} Document`)));
+    
+    // 1. Instantly show placeholder message in UI
+    let tempDocRef;
+    try {
+        tempDocRef = await addDoc(collection(db, "virtual_rooms"), {
+            faculty: currentStudentFaculty,
+            senderName: getStudentFirstName(),
+            senderId: currentUser.uid,
+            text: displayTxt,
+            type: type,
+            fileName: fileName,
+            fileUrl: "uploading", // Placeholder
+            isUploading: true,    // Special flag
+            timestamp: new Date().toISOString()
+        });
+    } catch(e) {
+        alert("Failed to send message: " + e.message);
         return;
     }
 
-    if (chatSendBtn) {
-        chatSendBtn.innerHTML = "⏳";
-        chatSendBtn.disabled = true;
-    }
+    // 2. Free up UI immediately
+    resetChatInput();
 
-    const reader = new FileReader();
-    reader.readAsDataURL(fileOrBlob);
-    reader.onload = async function () {
-        try {
-            const base64DataUrl = reader.result;
-            let displayTxt = caption ? caption : (type === 'audio' ? `${svgs.mic} Voice Message` : (type === 'image' ? `${svgs.photo} Photo` : (type === 'video' ? `🎬 Video` : `${svgs.doc} Document`)));
-            
-            await addDoc(collection(db, "virtual_rooms"), {
-                faculty: currentStudentFaculty,
-                senderName: getStudentFirstName(),
-                senderId: currentUser.uid,
-                text: displayTxt,
-                type: type,
-                fileName: fileName,
-                fileUrl: base64DataUrl,
-                timestamp: new Date().toISOString()
+    // 3. Do heavy upload in background
+    const formData = new FormData();
+    formData.append("file", fileOrBlob);
+    formData.append("upload_preset", uploadPreset);
+
+    try {
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+            method: "POST",
+            body: formData
+        });
+        const data = await response.json();
+
+        if (data.secure_url) {
+            // Update Firestore doc with real URL
+            await updateDoc(tempDocRef, {
+                fileUrl: data.secure_url,
+                isUploading: false
             });
-        } catch (e) {
-            console.error("Firestore Save Error:", e);
-            alert("Failed to save message: " + e.message);
-        } finally {
-            resetChatInput();
+        } else {
+            throw new Error("Upload failed");
         }
-    };
-    reader.onerror = function (error) {
-        console.error("File Read Error: ", error);
-        alert("File conversion failed.");
-        resetChatInput();
-    };
+    } catch (e) {
+        console.error("Upload Error:", e);
+        await updateDoc(tempDocRef, { 
+            text: "❌ Upload Failed (Please try a smaller file)", 
+            isUploading: false, 
+            type: 'text' 
+        });
+    }
 }
 
 // 🟢 Force Download Helper Function
 window.forceDownloadMedia = async function(url, filename) {
     try {
+        const response = await fetch(url);
+        if(!response.ok) throw new Error("Network response failed");
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.style.display = 'none';
-        a.href = url;
+        a.href = blobUrl;
         a.download = filename || 'downloaded_file';
         document.body.appendChild(a);
         a.click();
+        window.URL.revokeObjectURL(blobUrl);
         document.body.removeChild(a);
     } catch (err) {
-        console.error("Download failed", err);
+        console.error("Download fetch failed, opening in new tab instead", err);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename || 'downloaded_file';
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 };
 
-// 5. Load Real-time Messages
+// 5. Load Real-time Messages (Ultra Fast - Removed blocking getDoc)
 function openChatRoom(facultyName) {
     showView('virtualroom');
     if(activeFacultyLabel) {
         activeFacultyLabel.innerHTML = `<span class="flex-align">🎓 ${facultyName}</span>`;
     }
     
+    // Fetch clearance time ONCE to avoid lag on every message
+    let studentClearedTime = null;
+    getDoc(doc(db, "users", currentUser.uid)).then(userDoc => {
+        if (userDoc.exists() && userDoc.data().chatClearedAt) {
+            studentClearedTime = new Date(userDoc.data().chatClearedAt);
+        }
+    });
+
     const q = query(collection(db, "virtual_rooms"), where("faculty", "==", facultyName));
 
-    onSnapshot(q, async (snapshot) => {
+    // NO async inside onSnapshot - Makes it 10x faster
+    onSnapshot(q, (snapshot) => {
         let msgs = [];
         
-        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-        const userData = userDoc.exists() ? userDoc.data() : {};
-        const studentClearedTime = userData.chatClearedAt ? new Date(userData.chatClearedAt) : null;
-
         const timerSelect = document.getElementById('disappearing-timer-select');
         let studentPersonalDays = 30;
         if (timerSelect && timerSelect.value !== 'off') {
@@ -913,16 +896,25 @@ function openChatRoom(facultyName) {
 
         msgs.forEach(msg => {
             const isMe = msg.senderId === currentUser.uid;
-
+            
             // 🟢 Specific Download Button
-            let downloadBtnHtml = `<button onclick="forceDownloadMedia('${msg.fileUrl}', '${msg.fileName || 'file'}')" style="cursor:pointer; color:#10b981; font-size:0.75rem; margin-top:8px; display:inline-flex; align-items:center; gap:5px; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 6px; font-weight: 500; border:none;">⬇️ Download</button>`;
+            let downloadBtnHtml = `<div onclick="forceDownloadMedia('${msg.fileUrl}', '${msg.fileName || 'file'}')" style="cursor:pointer; color:#10b981; font-size:0.75rem; margin-top:8px; display:inline-flex; align-items:center; gap:5px; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 6px; font-weight: 500;">⬇️ Download File</div>`;
 
             let contentHtml = "";
-            if (msg.type === 'image') {
+
+            // 🟢 Show Loading State for Media
+            if (msg.isUploading) {
+                contentHtml = `
+                    <div style="display:flex; flex-direction:column; padding: 5px;">
+                        <div style="color:var(--text-muted); font-size:0.85rem; display:flex; align-items:center; gap:5px;">⏳ Uploading Media...</div>
+                        ${msg.text && !['Photo','Video','Document','Voice Message'].some(w => msg.text.includes(w)) ? `<p style="margin: 5px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
+                    </div>
+                `;
+            } else if (msg.type === 'image') {
                 contentHtml = `
                     <div>
-                        <img src="${msg.fileUrl}" style="max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer;" onclick="let w = window.open(); w.document.write('<img src=\\'${msg.fileUrl}\\' style=\\'max-width:100%\\'/>');" title="Click to View Image">
-                        ${msg.text && msg.text !== `${svgs.photo} Photo` ? `<p style="margin: 5px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
+                        <img src="${msg.fileUrl}" style="max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer;" onclick="let w = window.open(); w.document.write('<img src=\\'${msg.fileUrl}\\' style=\\'width:100%\\'/>');" title="Click to View Image">
+                        ${msg.text && !msg.text.includes('Photo') ? `<p style="margin: 5px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
                         ${downloadBtnHtml}
                     </div>
                 `;
@@ -930,7 +922,7 @@ function openChatRoom(facultyName) {
                 contentHtml = `
                     <div>
                         <video controls style="max-width: 100%; border-radius: 8px; margin-top: 5px;"><source src="${msg.fileUrl}"></video>
-                        ${msg.text && msg.text !== `🎬 Video` ? `<p style="margin: 5px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
+                        ${msg.text && !msg.text.includes('Video') ? `<p style="margin: 5px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
                         ${downloadBtnHtml}
                     </div>
                 `;
@@ -940,7 +932,7 @@ function openChatRoom(facultyName) {
                         <div style="display: flex; align-items: center; margin-top: 5px;">
                             <a href="${msg.fileUrl}" target="_blank" style="color: #38bdf8; text-decoration: underline; font-weight: 500;" title="Click to View Document">📄 View ${msg.fileName || 'Document'}</a>
                         </div>
-                        ${msg.text && msg.text !== `${svgs.doc} Document` ? `<p style="margin: 8px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
+                        ${msg.text && !msg.text.includes('Document') ? `<p style="margin: 8px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
                         ${downloadBtnHtml}
                     </div>
                 `;
@@ -963,7 +955,7 @@ function openChatRoom(facultyName) {
             let actionsHtml = `
                 <div class="msg-actions">
                     <button class="reply-btn" onclick="setReplyMessage('${msg.senderName}', '${encodeURIComponent(msg.type === 'text' ? msg.text : 'Media')}')" title="Reply">${svgs.reply}</button>
-                    ${isMe && msg.type === 'text' ? `<button class="edit-btn" onclick="setEditMessage('${msg.msgId}', '${encodeURIComponent(msg.text)}')" title="Edit">${svgs.edit}</button>` : ''}
+                    ${isMe && msg.type === 'text' && !msg.isUploading ? `<button class="edit-btn" onclick="setEditMessage('${msg.msgId}', '${encodeURIComponent(msg.text)}')" title="Edit">${svgs.edit}</button>` : ''}
                     ${isMe ? `<button class="delete-btn" onclick="deleteVirtualMessage('${msg.msgId}')" title="Delete" style="background:none; border:none; cursor:pointer; padding:2px;">${svgs.trash}</button>` : ''}
                 </div>
             `;
@@ -1039,18 +1031,37 @@ const modalReviewComment = document.getElementById('modal-review-comment');
 reviewNowButtons.forEach(btn => {
     btn.addEventListener('click', (e) => {
         e.preventDefault();
-        if (reviewModal) { reviewModal.style.display = 'flex'; loadGlobalReviews(); }
+        if (reviewModal) {
+            reviewModal.style.display = 'flex';
+            loadGlobalReviews();
+        }
     });
 });
-if (closeReviewModalBtn) closeReviewModalBtn.addEventListener('click', () => { if (reviewModal) reviewModal.style.display = 'none'; });
-if (closeGotItBtn) closeGotItBtn.addEventListener('click', () => { if (reviewModal) reviewModal.style.display = 'none'; });
+
+if (closeReviewModalBtn) {
+    closeReviewModalBtn.addEventListener('click', () => {
+        if (reviewModal) reviewModal.style.display = 'none';
+    });
+}
+
+if (closeGotItBtn) {
+    closeGotItBtn.addEventListener('click', () => {
+        if (reviewModal) reviewModal.style.display = 'none';
+    });
+}
 
 if (modalSubmitReviewBtn) {
     modalSubmitReviewBtn.addEventListener('click', async () => {
-        if (!currentUser) { alert("Please login first!"); return; }
+        if (!currentUser) {
+            alert("Please login first!");
+            return;
+        }
         const comment = modalReviewComment.value.trim();
         const rating = parseInt(modalReviewRating.value);
-        if (!comment) { alert("Please write a comment!"); return; }
+        if (!comment) {
+            alert("Please write a comment!");
+            return;
+        }
 
         modalSubmitReviewBtn.innerText = "Submitting...";
         modalSubmitReviewBtn.disabled = true;
@@ -1058,7 +1069,9 @@ if (modalSubmitReviewBtn) {
             await addDoc(collection(db, "global_reviews"), {
                 userName: currentUser.displayName || getStudentFirstName(),
                 userEmail: currentUser.email,
-                rating, comment, createdAt: new Date().toISOString()
+                rating: rating,
+                comment: comment,
+                createdAt: new Date().toISOString()
             });
             alert("Thank you for your feedback!");
             modalReviewComment.value = '';
@@ -1078,7 +1091,9 @@ function loadGlobalReviews() {
     
     onSnapshot(collection(db, "global_reviews"), (querySnapshot) => {
         let reviewsList = [];
-        querySnapshot.forEach((doc) => { reviewsList.push(doc.data()); });
+        querySnapshot.forEach((doc) => {
+            reviewsList.push(doc.data());
+        });
         reviewsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         if (reviewsList.length === 0) {
@@ -1110,8 +1125,15 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- Pricing & PayHere Integration ---
-window.openPricingModal = function() { document.getElementById('pricing-modal').style.display = 'flex'; };
-window.closePricingModal = function() { document.getElementById('pricing-modal').style.display = 'none'; };
+window.openPricingModal = function() {
+    const modal = document.getElementById('pricing-modal');
+    if (modal) modal.style.display = 'flex';
+};
+
+window.closePricingModal = function() {
+    const modal = document.getElementById('pricing-modal');
+    if (modal) modal.style.display = 'none';
+};
 
 window.startPayHerePayment = function(planName, amount, wordLimit) {
     if (!currentUser) return;
@@ -1129,12 +1151,19 @@ window.startPayHerePayment = function(planName, amount, wordLimit) {
         "last_name": "Student",
         "email": currentUser.email,
         "phone": "0771234567",
-        "address": "Sri Lanka", "city": "Colombo", "country": "Sri Lanka"
+        "address": "Sri Lanka",
+        "city": "Colombo",
+        "country": "Sri Lanka"
     };
 
     payhere.onCompleted = async function orderId(orderId) {
         alert(`🎉 Payment Successful! Welcome to the ${planName.toUpperCase()} Plan.`);
-        await updateDoc(doc(db, "users", currentUser.uid), { plan: planName, wordLimit, isPaid: true, upgradeDate: new Date().toISOString() });
+        await updateDoc(doc(db, "users", currentUser.uid), {
+            plan: planName,
+            wordLimit: wordLimit,
+            isPaid: true,
+            upgradeDate: new Date().toISOString()
+        });
         closePricingModal();
         location.reload();
     };
@@ -1231,7 +1260,8 @@ async function sendQueryToAIAgent() {
         });
 
         const data = await response.json();
-        document.getElementById(loadingId).remove();
+        const loaderEl = document.getElementById(loadingId);
+        if (loaderEl) loaderEl.remove();
 
         if (data.error) {
             aiChatMessages.innerHTML += `
@@ -1248,7 +1278,8 @@ async function sendQueryToAIAgent() {
             </div>
         `;
     } catch (err) {
-        if (document.getElementById(loadingId)) document.getElementById(loadingId).remove();
+        const loaderEl = document.getElementById(loadingId);
+        if (loaderEl) loaderEl.remove();
         aiChatMessages.innerHTML += `
             <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: 8px; color: var(--text-color);">
                 <b>🤖 AI Buddy:</b><br>Oops! Podi connection issue ekak wage, ${activeStudentName}. Ayith try karමුද? 🚀✨
@@ -1267,7 +1298,7 @@ if (aiSendBtn) aiSendBtn.addEventListener('click', sendQueryToAIAgent);
 if (aiChatInput) {
     aiChatInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
-            // Allows naturally moving to the next line
+            // Natural line wrap
         }
     });
 }
@@ -1534,8 +1565,13 @@ const customGradePointInput = document.getElementById('custom-grade-point');
 
 function toggleUniversityMode(mode) {
     if (!gradeSelect || !otherUniBox) return;
-    if (mode === 'other') { gradeSelect.style.display = 'none'; otherUniBox.style.display = 'flex'; }
-    else { gradeSelect.style.display = 'block'; otherUniBox.style.display = 'none'; }
+    if (mode === 'other') {
+        gradeSelect.style.display = 'none';
+        otherUniBox.style.display = 'flex';
+    } else {
+        gradeSelect.style.display = 'block';
+        otherUniBox.style.display = 'none';
+    }
 }
 
 if (profileOkBtn) {
@@ -1543,7 +1579,11 @@ if (profileOkBtn) {
         if (!universitySelector || !degreeInput) return;
         const mode = universitySelector.value;
         const deg = degreeInput.value.trim();
-        if (!deg) { alert("Please enter your Degree Program name!"); degreeInput.focus(); return; }
+        if (!deg) {
+            alert("Please enter your Degree Program name!");
+            degreeInput.focus();
+            return;
+        }
         localStorage.setItem('active_uni_mode', mode);
         localStorage.setItem(mode + '_degree', deg);
         toggleUniversityMode(mode);
@@ -1553,8 +1593,13 @@ if (profileOkBtn) {
 }
 
 const savedActiveMode = localStorage.getItem('active_uni_mode') || 'horizon';
-if (universitySelector) { universitySelector.value = savedActiveMode; toggleUniversityMode(savedActiveMode); }
-if (degreeInput) { degreeInput.value = localStorage.getItem(savedActiveMode + '_degree') || ''; }
+if (universitySelector) {
+    universitySelector.value = savedActiveMode;
+    toggleUniversityMode(savedActiveMode);
+}
+if (degreeInput) {
+    degreeInput.value = localStorage.getItem(savedActiveMode + '_degree') || '';
+}
 
 function applyTheme(theme) {
     document.body.classList.remove('light-mode');
@@ -1566,7 +1611,10 @@ function applyTheme(theme) {
 
 const themeSelector = document.getElementById('theme-selector');
 if (themeSelector) {
-    themeSelector.addEventListener('change', (e) => { localStorage.setItem('theme', e.target.value); applyTheme(e.target.value); });
+    themeSelector.addEventListener('change', (e) => {
+        localStorage.setItem('theme', e.target.value);
+        applyTheme(e.target.value);
+    });
     themeSelector.value = localStorage.getItem('theme') || 'system';
     applyTheme(themeSelector.value);
 }
@@ -1618,8 +1666,8 @@ const performLogout = () => {
     }); 
 };
 
-if (logoutBtn) { logoutBtn.addEventListener('click', performLogout); }
-if (mainLogoutBtn) { mainLogoutBtn.addEventListener('click', performLogout); }
+if (logoutBtn) logoutBtn.addEventListener('click', performLogout);
+if (mainLogoutBtn) mainLogoutBtn.addEventListener('click', performLogout);
 
 async function loadSubjectsFromDB() {
     try {
@@ -1633,11 +1681,17 @@ async function loadSubjectsFromDB() {
             allSubjects.push(sub); 
         });
         updateUI();
-    } catch (e) { console.error("Error loading subjects:", e); }
+    } catch (e) {
+        console.error("Error loading subjects:", e);
+    }
 }
 
 window.editSubject = function(dbId) {
-    if (!degreeInput || degreeInput.value.trim() === "") { alert("Please enter Degree Program name first!"); degreeInput.focus(); return; }
+    if (!degreeInput || degreeInput.value.trim() === "") {
+        alert("Please enter Degree Program name first!");
+        degreeInput.focus();
+        return;
+    }
     const sub = allSubjects.find(s => s.dbId === dbId);
     if (!sub) return;
     document.getElementById('subject-name').value = sub.name;
@@ -1655,7 +1709,10 @@ window.editSubject = function(dbId) {
     } else {
         if (gradeSelect) {
             for (let i = 0; i < gradeSelect.options.length; i++) {
-                if (sub.gradeText && gradeSelect.options[i].text === sub.gradeText) { gradeSelect.selectedIndex = i; break; }
+                if (sub.gradeText && gradeSelect.options[i].text === sub.gradeText) {
+                    gradeSelect.selectedIndex = i;
+                    break;
+                }
             }
         }
     }
@@ -1668,7 +1725,11 @@ window.editSubject = function(dbId) {
 if (addBtn) {
     addBtn.addEventListener('click', async () => {
         if (!currentUser) return;
-        if (!degreeInput || degreeInput.value.trim() === "") { alert("Please enter Degree name first!"); degreeInput.focus(); return; }
+        if (!degreeInput || degreeInput.value.trim() === "") {
+            alert("Please enter Degree name first!");
+            degreeInput.focus();
+            return;
+        }
 
         const name = document.getElementById('subject-name').value.trim();
         const year = document.getElementById('subject-year').value;
@@ -1680,7 +1741,10 @@ if (addBtn) {
         if (activeMode === 'other') {
             gradeLetter = otherGradeLetter.value;
             const rawPoint = customGradePointInput.value.trim();
-            if (!name || !year || !semester || isNaN(credit) || !gradeLetter) { alert("Please fill all fields correctly!"); return; }
+            if (!name || !year || !semester || isNaN(credit) || !gradeLetter) {
+                alert("Please fill all fields correctly!");
+                return;
+            }
             if (gradeLetter === "Repeat" || gradeLetter === "Absent" || gradeLetter === "Medical") { 
                 gradePoint = -1; 
                 gradeText = gradeLetter === "Repeat" ? "Repeat (RA)" : gradeLetter; 
@@ -1692,7 +1756,10 @@ if (addBtn) {
         } else {
             gradePoint = parseFloat(gradeSelect.value);
             gradeText = gradeSelect.options[gradeSelect.selectedIndex].text;
-            if (!name || !year || !semester || isNaN(credit) || isNaN(gradePoint)) { alert("Please fill all fields!"); return; }
+            if (!name || !year || !semester || isNaN(credit) || isNaN(gradePoint)) {
+                alert("Please fill all fields!");
+                return;
+            }
         }
 
         const subjectData = { name, year, semester, credit, gradePoint, gradeText, gradeLetter, isCustom, mode: activeMode };
@@ -1717,7 +1784,9 @@ if (addBtn) {
             addBtn.innerText = "Add to List";
             document.getElementById('form-title').innerText = "Add New Subject";
             updateUI();
-        } catch (e) { alert("Error saving subject: " + e.message); }
+        } catch (e) {
+            alert("Error saving subject: " + e.message);
+        }
         addBtn.disabled = false;
     });
 }
@@ -1726,7 +1795,11 @@ window.removeSubject = async function(dbId) {
     if (!currentUser) return;
     allSubjects = allSubjects.filter(sub => sub.dbId !== dbId);
     updateUI();
-    try { await deleteDoc(doc(db, "users", currentUser.uid, "subjects", dbId)); } catch (e) { console.error(e); }
+    try {
+        await deleteDoc(doc(db, "users", currentUser.uid, "subjects", dbId));
+    } catch (e) {
+        console.error(e);
+    }
 };
 
 const eraseSemBtn = document.getElementById('erase-sem-btn');
@@ -1735,16 +1808,23 @@ if (eraseSemBtn) {
         if (!currentUser) return;
         const year = document.getElementById('erase-year').value;
         const semester = document.getElementById('erase-semester').value;
-        if (!year || !semester) { alert("Please select Year and Semester!"); return; }
+        if (!year || !semester) {
+            alert("Please select Year and Semester!");
+            return;
+        }
         if (!confirm(`Delete subjects for Year ${year}, Semester ${semester}?`)) return;
 
         const targets = getActiveSubjects().filter(s => s.year == year && s.semester == semester);
         try {
-            for (let sub of targets) await deleteDoc(doc(db, "users", currentUser.uid, "subjects", sub.dbId));
+            for (let sub of targets) {
+                await deleteDoc(doc(db, "users", currentUser.uid, "subjects", sub.dbId));
+            }
             allSubjects = allSubjects.filter(s => !targets.some(t => t.dbId === s.dbId));
             updateUI();
             alert("Erasure successful!");
-        } catch (e) { alert("Error: " + e.message); }
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
     });
 }
 
@@ -1753,23 +1833,37 @@ if (resetAllBtn) {
     resetAllBtn.addEventListener('click', async () => {
         if (!currentUser) return;
         const targets = getActiveSubjects();
-        if (targets.length === 0) { alert("No data to reset!"); return; }
+        if (targets.length === 0) {
+            alert("No data to reset!");
+            return;
+        }
         if (!confirm("WARNING: Permanently delete all subjects in this profile?")) return;
         try {
-            for (let sub of targets) await deleteDoc(doc(db, "users", currentUser.uid, "subjects", sub.dbId));
+            for (let sub of targets) {
+                await deleteDoc(doc(db, "users", currentUser.uid, "subjects", sub.dbId));
+            }
             allSubjects = allSubjects.filter(s => (s.mode || 'horizon') !== getActiveMode());
             updateUI();
             alert("Profile data reset successfully!");
-        } catch (e) { alert("Error: " + e.message); }
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
     });
 }
 
 const downloadPdfBtn = document.getElementById('download-pdf');
 if (downloadPdfBtn) {
     downloadPdfBtn.addEventListener('click', () => {
-        if (!degreeInput || degreeInput.value.trim() === "") { alert("Enter degree name first!"); degreeInput.focus(); return; }
+        if (!degreeInput || degreeInput.value.trim() === "") {
+            alert("Enter degree name first!");
+            degreeInput.focus();
+            return;
+        }
         const activeSubjects = getActiveSubjects();
-        if (activeSubjects.length === 0) { alert("Add at least one subject!"); return; }
+        if (activeSubjects.length === 0) {
+            alert("Add at least one subject!");
+            return;
+        }
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -1778,10 +1872,16 @@ if (downloadPdfBtn) {
         const cgpa = document.getElementById('cgpa-display').innerText;
         const prediction = document.getElementById('class-display').innerText;
 
-        doc.setDrawColor(30, 41, 59); doc.setLineWidth(1.5); doc.rect(10, 10, 190, 277);
-        doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.text("ACADEMIC PERFORMANCE REPORT", 105, 25, null, null, "center");
-        doc.setFontSize(10); doc.setFont("helvetica", "normal");
-        doc.text(`Student: ${studentName}`, 20, 36); doc.text(`Degree: ${degree}`, 20, 43);
+        doc.setDrawColor(30, 41, 59);
+        doc.setLineWidth(1.5);
+        doc.rect(10, 10, 190, 277);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(18);
+        doc.text("ACADEMIC PERFORMANCE REPORT", 105, 25, null, null, "center");
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Student: ${studentName}`, 20, 36);
+        doc.text(`Degree: ${degree}`, 20, 43);
         doc.line(20, 48, 190, 48);
 
         let yPos = 56;
@@ -1789,16 +1889,28 @@ if (downloadPdfBtn) {
             [1, 2].forEach(sem => {
                 const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
                 if (semSubs.length === 0) return;
-                if (yPos > 230) { doc.addPage(); yPos = 25; }
-                doc.setFont("helvetica", "bold"); doc.setFontSize(11);
-                doc.text(`Year ${year} - Semester ${sem}`, 20, yPos); yPos += 6;
-                doc.setFillColor(240, 240, 240); doc.rect(20, yPos, 170, 7, "F");
+                if (yPos > 230) {
+                    doc.addPage();
+                    yPos = 25;
+                }
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(11);
+                doc.text(`Year ${year} - Semester ${sem}`, 20, yPos);
+                yPos += 6;
+                doc.setFillColor(240, 240, 240);
+                doc.rect(20, yPos, 170, 7, "F");
                 doc.setFontSize(9);
-                doc.text("Subject Name", 25, yPos + 5); doc.text("Credits", 115, yPos + 5); doc.text("Grade", 140, yPos + 5); doc.text("Point", 165, yPos + 5);
+                doc.text("Subject Name", 25, yPos + 5);
+                doc.text("Credits", 115, yPos + 5);
+                doc.text("Grade", 140, yPos + 5);
+                doc.text("Point", 165, yPos + 5);
                 yPos += 9;
                 doc.setFont("helvetica", "normal");
                 semSubs.forEach(sub => {
-                    if (yPos > 265) { doc.addPage(); yPos = 25; }
+                    if (yPos > 265) {
+                        doc.addPage();
+                        yPos = 25;
+                    }
                     doc.text(sub.name, 25, yPos);
                     doc.text(String(sub.credit), 118, yPos);
                     doc.text(sub.gradeText, 140, yPos);
@@ -1809,15 +1921,24 @@ if (downloadPdfBtn) {
             });
         });
 
-        if (yPos > 210) { doc.addPage(); yPos = 25; }
-        doc.setFillColor(248, 250, 252); doc.roundedRect(20, yPos, 170, 22, 2, 2, "FD");
-        doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+        if (yPos > 210) {
+            doc.addPage();
+            yPos = 25;
+        }
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(20, yPos, 170, 22, 2, 2, "FD");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
         doc.text(`Overall Cumulative CGPA: ${cgpa}`, 25, yPos + 8);
         doc.text(`Predicted Class: ${prediction}`, 25, yPos + 16);
         yPos += 30;
 
-        if (yPos > 220) { doc.addPage(); yPos = 25; }
-        doc.setFont("helvetica", "bold"); doc.setFontSize(9.5);
+        if (yPos > 220) {
+            doc.addPage();
+            yPos = 25;
+        }
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9.5);
         doc.text("Grade Descriptions & Notes:", 20, yPos);
         yPos += 6;
 
@@ -1899,7 +2020,12 @@ function renderGPAChart() {
             if (semSubs.length > 0) {
                 labels.push(`Y${year} S${sem}`);
                 let creds = 0, pts = 0;
-                semSubs.forEach(sub => { if (sub.gradePoint !== -1) { creds += sub.credit; pts += (sub.credit * sub.gradePoint); } });
+                semSubs.forEach(sub => {
+                    if (sub.gradePoint !== -1) {
+                        creds += sub.credit;
+                        pts += (sub.credit * sub.gradePoint);
+                    }
+                });
                 semGPAs.push(creds > 0 ? (pts / creds).toFixed(2) : 0);
             }
         });
@@ -1910,7 +2036,12 @@ function renderGPAChart() {
         [1, 2].forEach(sem => {
             const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
             if (semSubs.length > 0) {
-                semSubs.forEach(sub => { if (sub.gradePoint !== -1) { totalC += sub.credit; totalP += (sub.credit * sub.gradePoint); } });
+                semSubs.forEach(sub => {
+                    if (sub.gradePoint !== -1) {
+                        totalC += sub.credit;
+                        totalP += (sub.credit * sub.gradePoint);
+                    }
+                });
                 cumulativeGPAs.push(totalC > 0 ? (totalP / totalC).toFixed(2) : 0);
             }
         });
@@ -1926,16 +2057,48 @@ function renderGPAChart() {
         data: {
             labels: labels,
             datasets: [
-                { label: 'Semester GPA', data: semGPAs, borderColor: '#a855f7', backgroundColor: 'rgba(168, 85, 247, 0.1)', borderWidth: 2, tension: 0.3, fill: true },
-                { label: 'Cumulative CGPA', data: cumulativeGPAs, borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', borderWidth: 3, tension: 0.3, fill: true }
+                {
+                    label: 'Semester GPA',
+                    data: semGPAs,
+                    borderColor: '#a855f7',
+                    backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                },
+                {
+                    label: 'Cumulative CGPA',
+                    data: cumulativeGPAs,
+                    borderColor: '#38bdf8',
+                    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    fill: true
+                }
             ]
         },
         options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { labels: { color: textColor, font: { family: 'Poppins' } } } },
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: textColor,
+                        font: { family: 'Poppins' }
+                    }
+                }
+            },
             scales: {
-                y: { min: 0, max: 4.3, grid: { color: gridColor }, ticks: { color: textColor } },
-                x: { grid: { color: gridColor }, ticks: { color: textColor } }
+                y: {
+                    min: 0,
+                    max: 4.3,
+                    grid: { color: gridColor },
+                    ticks: { color: textColor }
+                },
+                x: {
+                    grid: { color: gridColor },
+                    ticks: { color: textColor }
+                }
             }
         }
     });
@@ -1962,7 +2125,12 @@ function updateUI() {
         thresholds.forEach(t => {
             const isActive = currentGPA >= t.min;
             const diff = (t.min - currentGPA).toFixed(2);
-            html += `<div class="goal-item ${isActive ? 'goal-active' : ''}"><div>${isActive ? '✅' : '🎯'} <b>${t.name} (>= ${t.min.toFixed(2)})</b></div>${!isActive ? `<small style="color:#38bdf8; margin-top:2px;">Need <b>${diff}</b> more points</small>` : `<small style="color:#22c55e; margin-top:2px;">Target Achieved!</small>`}</div>`;
+            html += `
+                <div class="goal-item ${isActive ? 'goal-active' : ''}">
+                    <div>${isActive ? '✅' : '🎯'} <b>${t.name} (>= ${t.min.toFixed(2)})</b></div>
+                    ${!isActive ? `<small style="color:#38bdf8; margin-top:2px;">Need <b>${diff}</b> more points</small>` : `<small style="color:#22c55e; margin-top:2px;">Target Achieved!</small>`}
+                </div>
+            `;
         });
         goalContent.innerHTML = html;
     }
@@ -1983,21 +2151,59 @@ function updateUI() {
         if (yearSubs.length === 0) return;
         const yearGPA = calculateYearGPA(year);
 
-        let yearHTML = `<div class="glass-card year-card"><div class="year-header"><div class="year-title">Year ${year}</div><div style="font-size: 1rem; font-weight: 500;">Year GPA: <span style="color: #38bdf8; font-weight: 600;">${yearGPA}</span></div></div>`;
+        let yearHTML = `
+            <div class="glass-card year-card">
+                <div class="year-header">
+                    <div class="year-title">Year ${year}</div>
+                    <div style="font-size: 1rem; font-weight: 500;">Year GPA: <span style="color: #38bdf8; font-weight: 600;">${yearGPA}</span></div>
+                </div>
+        `;
 
         [1, 2].forEach(sem => {
             const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
             if (semSubs.length === 0) return;
             const semGPA = calculateSemesterGPA(year, sem);
 
-            yearHTML += `<div class="semester-box"><div class="semester-header"><div class="semester-title">Semester ${sem}</div><div style="font-size: 0.85rem; color: var(--text-muted);">Semester GPA: <span style="color: #a855f7; font-weight: 600;">${semGPA}</span></div></div><div class="table-responsive"><table><thead><tr><th>Subject Name</th><th>Credits</th><th>Grade / Status</th><th>Action</th></tr></thead><tbody>`;
+            yearHTML += `
+                <div class="semester-box">
+                    <div class="semester-header">
+                        <div class="semester-title">Semester ${sem}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Semester GPA: <span style="color: #a855f7; font-weight: 600;">${semGPA}</span></div>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Subject Name</th>
+                                    <th>Credits</th>
+                                    <th>Grade / Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
 
             semSubs.forEach(sub => {
                 let displayGrade = sub.gradePoint === -1 ? sub.gradeText + getStatusAdvice(sub.gradeText) : sub.gradePoint.toFixed(2);
-                yearHTML += `<tr><td>${sub.name}</td><td>${sub.credit}</td><td style="line-height: 1.3; padding: 8px 0;">${displayGrade}</td><td><button onclick="editSubject('${sub.dbId}')" class="btn-edit">Edit</button> <button onclick="removeSubject('${sub.dbId}')" class="btn-remove">Remove</button></td></tr>`;
+                yearHTML += `
+                    <tr>
+                        <td>${sub.name}</td>
+                        <td>${sub.credit}</td>
+                        <td style="line-height: 1.3; padding: 8px 0;">${displayGrade}</td>
+                        <td>
+                            <button onclick="editSubject('${sub.dbId}')" class="btn-edit">Edit</button>
+                            <button onclick="removeSubject('${sub.dbId}')" class="btn-remove">Remove</button>
+                        </td>
+                    </tr>
+                `;
             });
 
-            yearHTML += `</tbody></table></div></div>`;
+            yearHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
         });
         yearHTML += `</div>`;
         container.innerHTML += yearHTML;
