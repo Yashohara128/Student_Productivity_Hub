@@ -17,8 +17,8 @@
     <div class="bg-glow circle-1"></div>
     <div class="bg-glow circle-2"></div>
 
-    <button id="ai-toggle-btn">
-        <svg class="icon-md" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
+    <button id="ai-toggle-btn" style="position: fixed; bottom: 20px; left: 20px; z-index: 99; display: flex; align-items: center; gap: 6px; padding: 10px 14px; background: linear-gradient(135deg, #38bdf8, #2563eb); color: white; border: none; border-radius: 30px; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4); font-weight: 600; cursor: pointer; font-size: 0.85rem;">
+        <svg class="icon-md" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
         Open AI Chat
     </button>
 
@@ -140,11 +140,11 @@
                 <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 12px 0;">
 
                 <div style="margin-bottom: 12px;"><b>සිංහල:</b><br>
-                1. මෙම virtual room එක ඇතුලේ ඔයලගේ campus එකේ අයියලා අක්කලා ඉන්න නිසා chat කිරිමේදි වචන භාවිතය ගැන සැලකිලිමත් වන්න.<br>
-                2. chat clear option එක හරහා සහ chat timer option තුලින් අදාල කාල සිමාවේ දී ඔබගේ චැට් එක ඔබගේ උපකරණයෙන් පමණක් ඉවත් වන අතර message delete option එක මගින් message එක සම්පුර්ණණයෙන්ම ඉවත් වීම සිදු වේ.<br>
-                3. දුරකතන අංක, ඊමේල් ලිපින, spam messages වැනි සංවේදි පණිවිඩ යැවීම නිසා ඔබගේ ගිණුම අවහිර වී යා හැකිය<br>
+                1. මෙම virtual room එක තුල campus Facluty යේ සිටින සියලුම සිසුන් සිටින බැවින් වචන භාවිතය ගැන සැලකිලිමත් වන්න.<br>
+                2. chat clear option එක හරහා සහ chat timer option තුලින් අදාල කාල සිමාවේ දී ඔබගේ චැට් එක ඔබගේ device එක තුලින් පමණක් ඉවත් වන අතර message delete option එක මගින් message එක සම්පුර්ණණයෙන්ම ඉවත් වීම සිදු වේ.<br>
+                3. දුරකතන අංක, ඊමේල් ලිපින, spam messages වැනි පණිවිඩ යැවීම නිසා ඔබගේ ගිණුම අවහිර වී යා හැකිය<br>
                 4. මෙම virtual room පහසුකම මගින් ඔබගේ campus එක තුල සමස්ත faculty එක ඇතුලත සහයෝගිතාවයෙන් ආරක්ෂිත ලෙස අධ්‍යාපනික තොරතුරු බෙදා ගැනීමට පහසුකම සැලසෙනු ඇතැයි අප විශ්වාස කරමු. - <i>Web Admin Team</i><br>
-                <b style="color: #ef4444;">5. නිරුවත් හෝ අසභ්‍ය දර්ශන හුවමාරු කිරීමෙන් වළකින්න. එසේ කිරීමෙන් ඔබගේ ගිණුම අවහිර විය හැක.</b><br>
+                <b style="color: #ef4444;">5.අසභ්‍ය දර්ශන හුවමාරු කිරීමෙන් වළකින්න. එසේ කිරීමෙන් ඔබගේ ගිණුම අවහිර විය හැක.</b><br>
                 <b style="color: #a855f7;">6. කරුණාකර කුඩා file size සහිත media පමණක් upload කිරීමට කටයුතු කරන්න.</b></div>
                 <hr style="border: none; border-top: 1px solid rgba(56,189,248,0.2); margin: 12px 0;">
 
@@ -260,13 +260,13 @@
                         </div>
                         <div class="glass-card feature-card" id="card-shortnotes">
                             <div class="feature-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
-                            <h2>AI PDF Short Note Generator</h2>
+                            <h2>PDF Short Note Generator</h2>
                             <p>Upload your lecture or study PDF and instantly generate structured short notes.</p>
                             <button class="btn-launch">Open Generator ➔</button>
                         </div>
                         <div class="glass-card feature-card" id="card-plagiarism">
                             <div class="feature-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M9 11l2 2 4-4"/></svg></div>
-                            <h2>Plagiarism & AI Humanizer</h2>
+                            <h2>Plagiarism Checker & Humanizer</h2>
                             <p>Scan your essay drafts for originality and instantly humanize robotic or flagged text.</p>
                             <button class="btn-launch">Open Checker ➔</button>
                         </div>
