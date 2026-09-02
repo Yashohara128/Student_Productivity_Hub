@@ -101,7 +101,7 @@ if (loginBtn) {
     });
 }
 
-// 🔔 ENABLE NOTIFICATIONS BUTTON LISTENER
+// 🔔 ENABLE NOTIFICATIONS BUTTON LISTENER (Fixed with Service Worker Registration)
 const enableNotifBtn = document.getElementById('enable-notif-btn');
 if (enableNotifBtn) {
     enableNotifBtn.addEventListener('click', async () => {
@@ -109,14 +109,19 @@ if (enableNotifBtn) {
             const permission = await Notification.requestPermission();
             if (permission === 'granted') {
                 console.log('Notification permission granted.');
+                
+                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                
                 const token = await getToken(messaging, { 
-                    vapidKey: 'BKjH0xSRq6_ijTlOSIlJackudap3756h-46-jFxIPTG037l07OPaLQjujYdk6nMAht_29QKqjE3OFfTRWDx_RY4' 
+                    vapidKey: 'BKjH0xSRq6_ijTlOSIlJackudap3756h-46-jFxIPTG037l07OPaLQjujYdk6nMAht_29QKqjE3OFfTRWDx_RY4',
+                    serviceWorkerRegistration: registration 
                 });
+                
                 console.log('FCM Token:', token);
                 alert("🎉 Notifications Enabled Successfully!");
                 enableNotifBtn.style.display = 'none';
             } else {
-                alert("❌ Notification permission denied.");
+                console.log('Notification permission denied.');
             }
         } catch (error) {
             console.error('Error getting token:', error);
