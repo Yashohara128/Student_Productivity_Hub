@@ -3,6 +3,7 @@ import { initIEEEModule } from './ieee.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, doc, updateDoc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-messaging.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBjzE30NZXDZsT-DuC9cBrksOjg0UsQM34",
@@ -18,6 +19,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+const messaging = getMessaging(app);
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
 
@@ -217,11 +219,9 @@ let replyingToMessageData = null;
 let selectedMessagesToDelete = new Set();
 let pressTimer;
 
-// Pending Media Variables for WhatsApp-like caption support
 let pendingMediaFile = null;
 let pendingMediaType = null;
 
-// 1. Open Room Logic (Banned Check)
 if (cardVirtualRoom) {
     cardVirtualRoom.addEventListener('click', async () => {
         if (!currentUser) { 
@@ -256,7 +256,6 @@ if (cardVirtualRoom) {
     });
 }
 
-// Dismiss Guidelines Modal
 if (acceptGuidelinesBtn) {
     acceptGuidelinesBtn.addEventListener('click', () => {
         if(roomGuidelinesModal) {
@@ -271,7 +270,6 @@ if (closeIdModal) {
     });
 }
 
-// 2. ID Prefix Verification & 🛡️ SECURITY LOGIC
 if (verifyIdBtn) {
     verifyIdBtn.addEventListener('click', async () => {
         const studentId = document.getElementById('student-id-input').value.trim().toUpperCase();
@@ -336,7 +334,6 @@ if (verifyIdBtn) {
     });
 }
 
-// 🚪 Leave Room Logic
 if (leaveRoomBtn) {
     leaveRoomBtn.addEventListener('click', async () => {
         if (!currentUser) return;
@@ -360,7 +357,6 @@ if (leaveRoomBtn) {
     });
 }
 
-// 🧹 Clear Chat Logic
 if (clearMyChatBtn) {
     clearMyChatBtn.addEventListener('click', async () => {
         if (!currentUser) return;
@@ -382,14 +378,12 @@ if (clearMyChatBtn) {
     });
 }
 
-// 3. Sensitive Data Filter (Regex)
 function filterSensitiveData(text) {
     let safeText = text.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, ` ${svgs.trash} <i>[Emails hidden]</i> `);
     safeText = safeText.replace(/(?:\+94|0)[0-9]{9}/g, ` ${svgs.trash} <i>[Numbers hidden]</i> `);
     return safeText;
 }
 
-// Cancel Action Logic (Edit / Reply)
 if (cancelActionBtn) {
     cancelActionBtn.addEventListener('click', () => {
         editingMessageId = null;
@@ -399,7 +393,6 @@ if (cancelActionBtn) {
     });
 }
 
-// Helper to reset input state instantly
 function resetChatInput() {
     if (chatInputText) {
         chatInputText.placeholder = "Type a message...";
@@ -411,13 +404,11 @@ function resetChatInput() {
     pendingMediaType = null;
 }
 
-// 4. Send & Edit Message Logic (Optimistic UI Update - WhatsApp Speed)
 if (chatSendBtn) {
     chatSendBtn.addEventListener('click', async () => {
         if (!chatInputText || !currentStudentFaculty) return;
         const text = chatInputText.value.trim();
 
-        // 🟢 If Media is Attached (Background upload & instant placeholder)
         if (pendingMediaFile) {
             const captionText = text;
             const fileToSend = pendingMediaFile;
@@ -496,13 +487,11 @@ if (chatSendBtn) {
                 if (actionBar) actionBar.style.display = 'none';
             }
 
-            // 🟢 Send to DB instantly (Non-blocking)
             addDoc(collection(db, "virtual_rooms"), messagePayload).catch(e => console.error(e));
         }
     });
 }
 
-// Global functions for inline Edit / Reply
 window.setEditMessage = function(msgId, currentText) {
     editingMessageId = msgId;
     replyingToMessageData = null;
@@ -622,7 +611,6 @@ if (mainAttachBtn && attachmentMenu) {
     });
 }
 
-// Media Upload Logic
 if(menuImageBtn && chatImageInput) {
     menuImageBtn.addEventListener('click', () => {
         chatImageInput.click();
@@ -737,7 +725,6 @@ if (sendVoiceBtn) {
     });
 }
 
-// 🟢 Upload to Cloudinary without Blocking the UI (WhatsApp Style)
 async function uploadMediaWithCaptionToCloudinary(fileOrBlob, fileName, type, caption) {
     if (!currentUser || !currentStudentFaculty) {
         alert("Please login and join a virtual room first!");
@@ -745,13 +732,11 @@ async function uploadMediaWithCaptionToCloudinary(fileOrBlob, fileName, type, ca
         return;
     }
 
-    // 🔴 CHANGE THESE TO YOUR CLOUDINARY DETAILS 🔴
-    const cloudName = "rpatylt6";       // e.g., "dz8aowpxv"
-    const uploadPreset = "Student Productivity Hub"; // e.g., "student_hub"
+    const cloudName = "rpatylt6";       
+    const uploadPreset = "Student Productivity Hub"; 
 
     let displayTxt = caption ? caption : (type === 'audio' ? `${svgs.mic} Voice Message` : (type === 'image' ? `${svgs.photo} Photo` : (type === 'video' ? `🎬 Video` : `${svgs.doc} Document`)));
     
-    // 1. Instantly show placeholder message in UI
     let tempDocRef;
     try {
         tempDocRef = await addDoc(collection(db, "virtual_rooms"), {
@@ -761,8 +746,8 @@ async function uploadMediaWithCaptionToCloudinary(fileOrBlob, fileName, type, ca
             text: displayTxt,
             type: type,
             fileName: fileName,
-            fileUrl: "uploading", // Placeholder
-            isUploading: true,    // Special flag
+            fileUrl: "uploading", 
+            isUploading: true,    
             timestamp: new Date().toISOString()
         });
     } catch(e) {
@@ -770,10 +755,8 @@ async function uploadMediaWithCaptionToCloudinary(fileOrBlob, fileName, type, ca
         return;
     }
 
-    // 2. Free up UI immediately
     resetChatInput();
 
-    // 3. Do heavy upload in background
     const formData = new FormData();
     formData.append("file", fileOrBlob);
     formData.append("upload_preset", uploadPreset);
@@ -786,7 +769,6 @@ async function uploadMediaWithCaptionToCloudinary(fileOrBlob, fileName, type, ca
         const data = await response.json();
 
         if (data.secure_url) {
-            // Update Firestore doc with real URL
             await updateDoc(tempDocRef, {
                 fileUrl: data.secure_url,
                 isUploading: false
@@ -804,7 +786,6 @@ async function uploadMediaWithCaptionToCloudinary(fileOrBlob, fileName, type, ca
     }
 }
 
-// 🟢 Force Download Helper Function
 window.forceDownloadMedia = async function(url, filename) {
     try {
         const response = await fetch(url);
@@ -831,14 +812,12 @@ window.forceDownloadMedia = async function(url, filename) {
     }
 };
 
-// 5. Load Real-time Messages (Ultra Fast - Removed blocking getDoc)
 function openChatRoom(facultyName) {
     showView('virtualroom');
     if(activeFacultyLabel) {
         activeFacultyLabel.innerHTML = `<span class="flex-align">🎓 ${facultyName}</span>`;
     }
     
-    // Fetch clearance time ONCE to avoid lag on every message
     let studentClearedTime = null;
     getDoc(doc(db, "users", currentUser.uid)).then(userDoc => {
         if (userDoc.exists() && userDoc.data().chatClearedAt) {
@@ -848,7 +827,6 @@ function openChatRoom(facultyName) {
 
     const q = query(collection(db, "virtual_rooms"), where("faculty", "==", facultyName));
 
-    // NO async inside onSnapshot - Makes it 10x faster
     onSnapshot(q, (snapshot) => {
         let msgs = [];
         
@@ -897,12 +875,10 @@ function openChatRoom(facultyName) {
         msgs.forEach(msg => {
             const isMe = msg.senderId === currentUser.uid;
             
-            // 🟢 Specific Download Button
             let downloadBtnHtml = `<div onclick="forceDownloadMedia('${msg.fileUrl}', '${msg.fileName || 'file'}')" style="cursor:pointer; color:#10b981; font-size:0.75rem; margin-top:8px; display:inline-flex; align-items:center; gap:5px; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 6px; font-weight: 500;">⬇️ Download File</div>`;
 
             let contentHtml = "";
 
-            // 🟢 Show Loading State for Media
             if (msg.isUploading) {
                 contentHtml = `
                     <div style="display:flex; flex-direction:column; padding: 5px;">
@@ -993,7 +969,6 @@ function openChatRoom(facultyName) {
     });
 }
 
-// --- AI Agent Open / Close Toggle Logic ---
 const aiToggleBtn = document.getElementById('ai-toggle-btn');
 const aiAgentSidebar = document.getElementById('ai-agent-sidebar');
 
@@ -1019,7 +994,6 @@ if (aiToggleBtn && aiAgentSidebar) {
     });
 }
 
-// --- Review Modal Close & Submit Logic ---
 const reviewModal = document.getElementById('review-modal');
 const closeReviewModalBtn = document.getElementById('close-review-modal');
 const closeGotItBtn = document.getElementById('close-modal-btn');
@@ -1124,7 +1098,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadGlobalReviews();
 });
 
-// --- Pricing & PayHere Integration ---
 window.openPricingModal = function() {
     const modal = document.getElementById('pricing-modal');
     if (modal) modal.style.display = 'flex';
@@ -1172,7 +1145,6 @@ window.startPayHerePayment = function(planName, amount, wordLimit) {
     payhere.startPayment(payment);
 };
 
-// --- PERSISTENT AI STUDY AGENT ---
 const aiChatMessages = document.getElementById('ai-chat-messages');
 const aiChatInput = document.getElementById('ai-chat-input');
 const aiSendBtn = document.getElementById('ai-send-btn');
@@ -1295,14 +1267,6 @@ async function sendQueryToAIAgent() {
 
 if (aiSendBtn) aiSendBtn.addEventListener('click', sendQueryToAIAgent);
 
-if (aiChatInput) {
-    aiChatInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            // Natural line wrap
-        }
-    });
-}
-
 if (aiClearBtn) {
     aiClearBtn.addEventListener('click', () => {
         const activeStudentName = getStudentFirstName();
@@ -1316,7 +1280,6 @@ if (aiClearBtn) {
     });
 }
 
-// --- AI PDF SHORT NOTE GENERATOR LOGIC ---
 const notePdfUpload = document.getElementById('note-pdf-upload');
 const notePdfFileName = document.getElementById('note-pdf-file-name');
 const generateNotesBtn = document.getElementById('generate-notes-btn');
@@ -1555,7 +1518,6 @@ if (downloadNotesPdfBtn) {
     });
 }
 
-// --- GPA TRACKER & UNIVERSITY MODES ---
 const universitySelector = document.getElementById('university-selector');
 const profileOkBtn = document.getElementById('profile-ok-btn');
 const gradeSelect = document.getElementById('grade');
@@ -1619,7 +1581,7 @@ if (themeSelector) {
     applyTheme(themeSelector.value);
 }
 
-// --- Firebase Auth State & Loading Subjects ---
+// --- Firebase Auth State & Loading Subjects (WITH PUSH NOTIFICATIONS ADDED) ---
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -1627,6 +1589,31 @@ onAuthStateChanged(auth, async (user) => {
         updateDynamicGreeting(studentName);
         
         initIEEEModule();
+
+        // 🔔 REQUEST NOTIFICATION PERMISSION & GET FCM TOKEN (VANILLA JS)
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                console.log('Notification permission granted.');
+                const token = await getToken(messaging, { 
+                    vapidKey: 'BKjH0xSRq6_ijTlOSIlJackudap3756h-46-jFxIPTG037l07OPaLQjujYdk6nMAht_29QKqjE3OFfTRWDx_RY4' 
+                });
+                console.log('FCM Token:', token);
+                // TODO: Save this token in Firestore under users collection if required
+            } else {
+                console.log('Notification permission denied.');
+            }
+        } catch (error) {
+            console.error('Error getting FCM token:', error);
+        }
+
+        // 🔔 HANDLE FOREGROUND MESSAGES
+        if (messaging) {
+            onMessage(messaging, (payload) => {
+                console.log('Message received in foreground: ', payload);
+                alert(`අලුත් මැසේජ් එකක්: ${payload.notification.title} - ${payload.notification.body}`);
+            });
+        }
 
         if (aiChatMessages) {
             aiChatMessages.innerHTML = `
@@ -1649,7 +1636,6 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// 🟢 GLOBAL LOGOUT FUNCTION
 const performLogout = () => { 
     signOut(auth).then(() => { 
         allSubjects = []; 
@@ -2210,7 +2196,6 @@ function updateUI() {
     });
 }
 
-// --- PDF UPLOAD & TEXT EXTRACTION FOR PLAGIARISM ---
 const pdfUpload = document.getElementById('pdf-upload');
 const pdfFileName = document.getElementById('pdf-file-name');
 
@@ -2243,7 +2228,6 @@ if (pdfUpload) {
     });
 }
 
-// --- HUMANIZER & PLAGIARISM CHECKER ---
 const checkPlagiarismBtn = document.getElementById('check-plagiarism-btn');
 const plagiarismText = document.getElementById('plagiarism-text');
 const plagiarismResult = document.getElementById('plagiarism-result');
