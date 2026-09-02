@@ -396,7 +396,23 @@ if (cancelActionBtn) {
     });
 }
 
-// 4. Send & Edit Message Logic (With WhatsApp Media Support & Fix for Stuck Button)
+// Helper to reset input state
+function resetChatInput() {
+    if (chatSendBtn) {
+        chatSendBtn.innerHTML = svgs.send;
+        chatSendBtn.disabled = false;
+    }
+    if (chatInputText) {
+        chatInputText.placeholder = "Type a message...";
+        chatInputText.value = '';
+    }
+    if (chatImageInput) chatImageInput.value = '';
+    if (chatDocInput) chatDocInput.value = '';
+    pendingMediaFile = null;
+    pendingMediaType = null;
+}
+
+// 4. Send & Edit Message Logic
 if (chatSendBtn) {
     chatSendBtn.addEventListener('click', async () => {
         if (!chatInputText || !currentStudentFaculty) return;
@@ -407,11 +423,6 @@ if (chatSendBtn) {
             const captionText = text;
             const fileToSend = pendingMediaFile;
             const fileType = pendingMediaType;
-
-            pendingMediaFile = null;
-            pendingMediaType = null;
-            chatInputText.value = '';
-            chatInputText.placeholder = "Type a message...";
 
             await uploadMediaWithCaptionToFirebase(fileToSend, fileToSend.name, fileType, captionText);
             return;
@@ -684,9 +695,13 @@ if(menuDocBtn && chatDocInput) {
         const file = e.target.files[0];
         if (!file || !currentStudentFaculty) return;
 
+        let fType = 'document';
+        if (file.type.startsWith('video/')) fType = 'video';
+        else if (file.type.startsWith('image/')) fType = 'image';
+
         pendingMediaFile = file;
-        pendingMediaType = 'document';
-        chatInputText.placeholder = `📎 Document attached (${file.name}). Type a caption and press send...`;
+        pendingMediaType = fType;
+        chatInputText.placeholder = `📎 ${fType.charAt(0).toUpperCase() + fType.slice(1)} attached (${file.name}). Type a caption...`;
         chatInputText.focus();
     });
 }
@@ -771,14 +786,19 @@ function uploadMediaToFirebase(fileOrBlob, fileName, type) {
     uploadMediaWithCaptionToFirebase(fileOrBlob, fileName, type, "");
 }
 
-// 🟢 Bypass Firebase Storage & Save Directly to Firestore as Base64 (No Billing/CORS needed!)
+// 🟢 Bypass Firebase Storage & Save Directly to Firestore as Base64 (No Billing needed)
 async function uploadMediaWithCaptionToFirebase(fileOrBlob, fileName, type, caption) {
     if (!currentUser || !currentStudentFaculty) {
         alert("Please login and join a virtual room first!");
-        if (chatSendBtn) {
-            chatSendBtn.innerHTML = svgs.send;
-            chatSendBtn.disabled = false;
-        }
+        resetChatInput();
+        return;
+    }
+
+    // Firestore document limit is 1MB. Base64 strings add overhead.
+    const maxSize = 700 * 1024; // 700 KB Limit
+    if (fileOrBlob.size > maxSize) {
+        alert(`File is too large! Maximum allowed size for direct upload is 700KB. (Your file is ${(fileOrBlob.size / 1024).toFixed(1)}KB)`);
+        resetChatInput();
         return;
     }
 
@@ -792,7 +812,7 @@ async function uploadMediaWithCaptionToFirebase(fileOrBlob, fileName, type, capt
     reader.onload = async function () {
         try {
             const base64DataUrl = reader.result;
-            let displayTxt = caption ? caption : (type === 'audio' ? `${svgs.mic} Voice Message` : (type === 'image' ? `${svgs.photo} Photo` : `${svgs.doc} Document`));
+            let displayTxt = caption ? caption : (type === 'audio' ? `${svgs.mic} Voice Message` : (type === 'image' ? `${svgs.photo} Photo` : (type === 'video' ? `🎬 Video` : `${svgs.doc} Document`)));
             
             await addDoc(collection(db, "virtual_rooms"), {
                 faculty: currentStudentFaculty,
@@ -808,26 +828,30 @@ async function uploadMediaWithCaptionToFirebase(fileOrBlob, fileName, type, capt
             console.error("Firestore Save Error:", e);
             alert("Failed to save message: " + e.message);
         } finally {
-            if (chatSendBtn) {
-                chatSendBtn.innerHTML = svgs.send;
-                chatSendBtn.disabled = false;
-            }
-            if (chatInputText) {
-                chatInputText.placeholder = "Type a message...";
-            }
-            if (chatImageInput) chatImageInput.value = '';
-            if (chatDocInput) chatDocInput.value = '';
+            resetChatInput();
         }
     };
     reader.onerror = function (error) {
         console.error("File Read Error: ", error);
         alert("File conversion failed.");
-        if (chatSendBtn) {
-            chatSendBtn.innerHTML = svgs.send;
-            chatSendBtn.disabled = false;
-        }
+        resetChatInput();
     };
 }
+
+// 🟢 Force Download Helper Function
+window.forceDownloadMedia = async function(url, filename) {
+    try {
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = filename || 'downloaded_file';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    } catch (err) {
+        console.error("Download failed", err);
+    }
+};
 
 // 5. Load Real-time Messages
 function openChatRoom(facultyName) {
@@ -890,13 +914,38 @@ function openChatRoom(facultyName) {
         msgs.forEach(msg => {
             const isMe = msg.senderId === currentUser.uid;
 
+            // 🟢 Specific Download Button
+            let downloadBtnHtml = `<button onclick="forceDownloadMedia('${msg.fileUrl}', '${msg.fileName || 'file'}')" style="cursor:pointer; color:#10b981; font-size:0.75rem; margin-top:8px; display:inline-flex; align-items:center; gap:5px; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 6px; font-weight: 500; border:none;">⬇️ Download</button>`;
+
             let contentHtml = "";
             if (msg.type === 'image') {
-                contentHtml = `<img src="${msg.fileUrl}" style="max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer;" onclick="window.open('${msg.fileUrl}', '_blank')">`;
+                contentHtml = `
+                    <div>
+                        <img src="${msg.fileUrl}" style="max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer;" onclick="let w = window.open(); w.document.write('<img src=\\'${msg.fileUrl}\\' style=\\'max-width:100%\\'/>');" title="Click to View Image">
+                        ${msg.text && msg.text !== `${svgs.photo} Photo` ? `<p style="margin: 5px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
+                        ${downloadBtnHtml}
+                    </div>
+                `;
+            } else if (msg.type === 'video') {
+                contentHtml = `
+                    <div>
+                        <video controls style="max-width: 100%; border-radius: 8px; margin-top: 5px;"><source src="${msg.fileUrl}"></video>
+                        ${msg.text && msg.text !== `🎬 Video` ? `<p style="margin: 5px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
+                        ${downloadBtnHtml}
+                    </div>
+                `;
             } else if (msg.type === 'document') {
-                contentHtml = `<a href="${msg.fileUrl}" download="${msg.fileName || 'file'}" style="color: #38bdf8; text-decoration: underline;" class="flex-align">${svgs.doc} ${msg.fileName || 'Download'}</a>`;
+                contentHtml = `
+                    <div>
+                        <div style="display: flex; align-items: center; margin-top: 5px;">
+                            <a href="${msg.fileUrl}" target="_blank" style="color: #38bdf8; text-decoration: underline; font-weight: 500;" title="Click to View Document">📄 View ${msg.fileName || 'Document'}</a>
+                        </div>
+                        ${msg.text && msg.text !== `${svgs.doc} Document` ? `<p style="margin: 8px 0 0 0; font-size: 0.9rem;">${msg.text}</p>` : ''}
+                        ${downloadBtnHtml}
+                    </div>
+                `;
             } else if (msg.type === 'audio') {
-                contentHtml = `<audio controls style="height: 35px; max-width: 200px; margin-top: 5px;"><source src="${msg.fileUrl}" type="audio/webm"></audio>`;
+                contentHtml = `<audio controls style="height: 35px; max-width: 200px; margin-top: 5px;"><source src="${msg.fileUrl}"></audio>`;
             } else {
                 contentHtml = `${msg.text.replace(/\n/g, '<br>')}`; 
             }
