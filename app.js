@@ -101,7 +101,7 @@ if (loginBtn) {
     });
 }
 
-// 🔔 ENABLE NOTIFICATIONS BUTTON LISTENER (Fixed with Service Worker Registration)
+// 🔔 ENABLE NOTIFICATIONS BUTTON LISTENER (Fixed with Service Worker Ready state)
 const enableNotifBtn = document.getElementById('enable-notif-btn');
 if (enableNotifBtn) {
     enableNotifBtn.addEventListener('click', async () => {
@@ -110,8 +110,13 @@ if (enableNotifBtn) {
             if (permission === 'granted') {
                 console.log('Notification permission granted.');
                 
-                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                // 1. Service worker එක register කරනවා
+                await navigator.serviceWorker.register('/firebase-messaging-sw.js');
                 
+                // 2. ඒක සම්පූර්ණයෙන්ම Active වෙලා ready වෙනකන් wait කරනවා
+                const registration = await navigator.serviceWorker.ready;
+                
+                // 3. ඊටපස්සේ active වුණු registration එක pass කරනවා
                 const token = await getToken(messaging, { 
                     vapidKey: 'BKjH0xSRq6_ijTlOSIlJackudap3756h-46-jFxIPTG037l07OPaLQjujYdk6nMAht_29QKqjE3OFfTRWDx_RY4',
                     serviceWorkerRegistration: registration 
@@ -128,7 +133,6 @@ if (enableNotifBtn) {
             alert("Error enabling notifications: " + error.message);
         }
     });
-}
 
 function updateDynamicGreeting(userName) {
     const greetingEl = document.getElementById('welcome-greeting');
