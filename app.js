@@ -836,18 +836,17 @@ window.forceDownloadMedia = async function(url, filename) {
     }
 };
 
-function openChatRoom(facultyName) {
+async function openChatRoom(facultyName) {
     showView('virtualroom');
     if(activeFacultyLabel) {
         activeFacultyLabel.innerHTML = `<span class="flex-align">🎓 ${facultyName}</span>`;
     }
     
-    let studentClearedTime = null;
-    getDoc(doc(db, "users", currentUser.uid)).then(userDoc => {
-        if (userDoc.exists() && userDoc.data().chatClearedAt) {
-            studentClearedTime = new Date(userDoc.data().chatClearedAt);
-        }
-    });
+    let studentClearedTimeMs = 0;
+    const userDocSnap = await getDoc(doc(db, "users", currentUser.uid));
+    if (userDocSnap.exists() && userDocSnap.data().chatClearedAt) {
+        studentClearedTimeMs = new Date(userDocSnap.data().chatClearedAt).getTime();
+    }
 
     const q = query(collection(db, "virtual_rooms"), where("faculty", "==", facultyName));
 
@@ -860,20 +859,17 @@ function openChatRoom(facultyName) {
             studentPersonalDays = parseInt(timerSelect.value);
         }
 
-        const personalCutoffDate = new Date();
-        personalCutoffDate.setDate(personalCutoffDate.getDate() - studentPersonalDays);
-
-        const absoluteMaxDate = new Date();
-        absoluteMaxDate.setDate(absoluteMaxDate.getDate() - 30); 
+        const personalCutoffDateMs = Date.now() - (studentPersonalDays * 24 * 60 * 60 * 1000);
+        const absoluteMaxDateMs = Date.now() - (30 * 24 * 60 * 60 * 1000); 
 
         snapshot.forEach(docSnap => {
             let msgData = docSnap.data();
             msgData.msgId = docSnap.id;
-            const msgTime = new Date(msgData.timestamp);
+            const msgTimeMs = new Date(msgData.timestamp).getTime();
 
-            if (msgTime < absoluteMaxDate) return;
-            if (msgTime < personalCutoffDate) return;
-            if (studentClearedTime && msgTime <= studentClearedTime) return;
+            if (msgTimeMs < absoluteMaxDateMs) return;
+            if (msgTimeMs < personalCutoffDateMs) return;
+            if (studentClearedTimeMs && msgTime <= studentClearedTimeMs) return;
 
             msgs.push(msgData);
         });
