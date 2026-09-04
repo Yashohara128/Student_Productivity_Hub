@@ -1351,6 +1351,7 @@ if (notePdfUpload) {
     });
 }
 
+// 🟢 FIXED GENERATE NOTES BUTTON LISTENER (Timeout & Safe JSON Parse Fixed)
 if (generateNotesBtn) {
     generateNotesBtn.addEventListener('click', async () => {
         if (!extractedNoteText) {
@@ -1371,21 +1372,26 @@ if (generateNotesBtn) {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
-                    text: extractedNoteText,
+                    text: String(extractedNoteText).slice(0, 5000), // Timeout මඟහරවා ගැනීමට ප්‍රමාණය සීමා කර ඇත
                     prompt: customPrompt || "Generate well-structured, comprehensive academic short notes with key definitions, core concepts, bullet points, comparative tables, and Mermaid.js diagrams for a university student."
                 })
             });
 
-            const data = await response.json();
-            if (data.error) {
-                alert("Error: " + data.error);
-                return;
+            const rawText = await response.text();
+            let data;
+            try {
+                data = JSON.parse(rawText);
+            } catch (parseErr) {
+                throw new Error("Server Error (Timeout or crash): " + rawText.slice(0, 100));
+            }
+
+            if (!response.ok || data.error) {
+                throw new Error(data.error || "Unknown server error");
             }
 
             if (data.result) {
                 generatedNotesOutput.value = data.result;
 
-                // Render into preview div if available for Mermaid visualization
                 const previewDiv = document.getElementById('notes-preview-div');
                 if (previewDiv) {
                     let processedHtml = data.result
@@ -1396,7 +1402,6 @@ if (generateNotesBtn) {
 
                 if (noteResultSection) noteResultSection.style.display = 'block';
 
-                // Mermaid.js rendering integration
                 try {
                     if (window.mermaid) {
                         setTimeout(async () => {
@@ -1413,7 +1418,7 @@ if (generateNotesBtn) {
             }
         } catch (error) {
             console.error("Short Notes API Error:", error);
-            alert("Failed to connect to server for generating short notes.");
+            alert("Error: " + error.message);
         } finally {
             if (noteLoading) noteLoading.style.display = 'none';
             generateNotesBtn.disabled = false;
