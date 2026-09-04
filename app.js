@@ -1284,7 +1284,7 @@ async function sendQueryToAIAgent() {
         const loaderEl = document.getElementById(loadingId);
         if (loaderEl) loaderEl.remove();
         aiChatMessages.innerHTML += `
-            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: 8px; color: var(--text-color);">
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px; color: var(--text-color);">
                 <b>🤖 AI Buddy:</b><br>Oops! Podi connection issue ekak wage, ${activeStudentName}. Ayith try karමුද? 🚀✨
             </div>
         `;
@@ -1351,7 +1351,7 @@ if (notePdfUpload) {
     });
 }
 
-// 📦 Auto-Extract & Generate Notes Button Listener (Fully Fixed & Unified)
+// 📦 Robust Auto-Extract & Generate Notes Button Listener (Guaranteed PDF Reading)
 if (generateNotesBtn) {
     generateNotesBtn.addEventListener('click', async () => {
         const customPromptInput = document.getElementById('note-custom-prompt');
@@ -1363,19 +1363,23 @@ if (generateNotesBtn) {
         generateNotesBtn.innerText = "Processing PDF & Generating...";
 
         try {
-            if (!extractedNoteText && notePdfUpload && notePdfUpload.files && notePdfUpload.files[0]) {
-                const file = notePdfUpload.files[0];
-                const arrayBuffer = await file.arrayBuffer();
-                const typedarray = new Uint8Array(arrayBuffer);
-                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                let fullText = "";
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    fullText += textContent.items.map(item => item.str).join(' ') + "\n";
+            // 🟢 Reliable fallback: if extractedNoteText is empty, instantly read from file input (supports all possible input IDs)
+            if (!extractedNoteText) {
+                const fileInputTarget = document.getElementById('note-pdf-upload') || document.getElementById('pdf-upload') || document.querySelector('input[type="file"]');
+                if (fileInputTarget && fileInputTarget.files && fileInputTarget.files[0]) {
+                    const file = fileInputTarget.files[0];
+                    const arrayBuffer = await file.arrayBuffer();
+                    const typedarray = new Uint8Array(arrayBuffer);
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                    let fullText = "";
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        fullText += textContent.items.map(item => item.str).join(' ') + "\n";
+                    }
+                    extractedNoteText = fullText.trim();
                 }
-                extractedNoteText = fullText.trim();
             }
 
             if (!extractedNoteText) {
