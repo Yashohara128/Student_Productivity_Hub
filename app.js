@@ -1565,61 +1565,14 @@ if (downloadNotesDocxBtn) {
 
 if (downloadNotesPdfBtn) {
     downloadNotesPdfBtn.addEventListener('click', () => {
-        const text = (generatedNotesOutput && generatedNotesOutput.value) ? generatedNotesOutput.value : (document.getElementById('notes-preview-div') ? document.getElementById('notes-preview-div').innerText : "");
-        if (!text) {
+        const previewDiv = document.getElementById('notes-preview-div');
+        if (!previewDiv || !previewDiv.innerHTML.trim()) {
             alert("No short notes available to download!");
             return;
         }
 
-        let formatted = text
-            .replace(/^#\s+(.*)$/gm, '<h1>$1</h1>')
-            .replace(/^##\s+(.*)$/gm, '<h2>$1</h2>')
-            .replace(/^###\s+(.*)$/gm, '<h3>$1</h3>')
-            .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-            .replace(/\*(.*?)\*/g, '<i>$1</i>');
-
-        let lines = formatted.split('\n');
-        let htmlLines = [];
-        let inTable = false;
-        let isHeaderRow = true;
-
-        for (let line of lines) {
-            let trimmed = line.trim();
-            if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
-                if (!inTable) {
-                    inTable = true;
-                    isHeaderRow = true;
-                    htmlLines.push('<table style="width:100%; border-collapse: collapse; margin: 15px 0; font-size: 9.5pt;">');
-                }
-                if (trimmed.includes('---')) {
-                    isHeaderRow = false;
-                    continue;
-                }
-                let cells = trimmed.split('|').slice(1, -1).map(c => c.trim());
-                let cellTag = isHeaderRow 
-                    ? 'th style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px; text-align: left; color: #0f172a;"' 
-                    : 'td style="border: 1px solid #cbd5e1; padding: 7px; text-align: left; color: #334155;"';
-                
-                let rowHtml = '<tr>' + cells.map(cell => `<${cellTag}>${cell}</${cellTag}>`).join('') + '</tr>';
-                htmlLines.push(rowHtml);
-                isHeaderRow = false;
-            } else {
-                if (inTable) {
-                    inTable = false;
-                    htmlLines.push('</table>');
-                }
-                if (trimmed.startsWith('• ') || trimmed.startsWith('- ')) {
-                    htmlLines.push(`<li style="margin-bottom: 4px; color: #334155;">${trimmed.substring(2)}</li>`);
-                } else if (trimmed === '') {
-                    htmlLines.push('<br>');
-                } else {
-                    htmlLines.push(`<p style="margin-bottom: 8px; text-align: justify; color: #334155;">${trimmed}</p>`);
-                }
-            }
-        }
-        if (inTable) htmlLines.push('</table>');
-
-        let finalHtmlContent = htmlLines.join('\n');
+        // වෙබ් පේජ් එකේ රෙන්ඩර් වී ඇති Mermaid ප්‍රස්ථාර සහ HTML හැඩතල සමඟම ලබා ගැනීම
+        let finalHtmlContent = previewDiv.innerHTML;
 
         let printWindow = window.open('', '_blank');
         printWindow.document.write(`
@@ -1637,8 +1590,17 @@ if (downloadNotesPdfBtn) {
                     h2 { font-size: 12pt; color: #1e293b; margin-top: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; }
                     h3 { font-size: 10.5pt; color: #334155; margin-top: 12px; }
                     ul { padding-left: 20px; margin-bottom: 10px; }
+                    table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 9.5pt; }
+                    th { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px; text-align: left; color: #0f172a; }
+                    td { border: 1px solid #cbd5e1; padding: 7px; text-align: left; color: #334155; }
+                    .mermaid { text-align: center; margin: 20px 0; display: flex; justify-content: center; }
+                    .mermaid svg { max-width: 100% !important; height: auto !important; }
                     .footer-note { margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 10px; text-align: center; font-size: 7.5pt; color: #94a3b8; }
-                    @media print { body { padding: 10mm 15mm; } .header-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+                    @media print { 
+                        body { padding: 10mm 15mm; } 
+                        .header-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+                        .mermaid svg { max-width: 100% !important; page-break-inside: avoid; }
+                    }
                 </style>
             </head>
             <body>
@@ -1648,7 +1610,13 @@ if (downloadNotesPdfBtn) {
                 </div>
                 <div class="content-body">${finalHtmlContent}</div>
                 <div class="footer-note">Official Academic Study Material Report | Powered by Gemini AI & Student Productivity Hub</div>
-                <script>window.onload = function() { window.print(); }</script>
+                <script>
+                    window.onload = function() { 
+                        setTimeout(() => { 
+                            window.print(); 
+                        }, 400); 
+                    }
+                </script>
             </body>
             </html>
         `);
