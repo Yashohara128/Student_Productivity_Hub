@@ -1351,7 +1351,7 @@ if (notePdfUpload) {
     });
 }
 
-// 🟢 FIXED GENERATE NOTES BUTTON LISTENER (Timeout & Safe JSON Parse Fixed)
+// 🟢 FIXED GENERATE NOTES BUTTON LISTENER (Timeout & Safe Null Checks Fixed)
 if (generateNotesBtn) {
     generateNotesBtn.addEventListener('click', async () => {
         if (!extractedNoteText) {
@@ -1372,7 +1372,7 @@ if (generateNotesBtn) {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
-                    text: String(extractedNoteText).slice(0, 5000), // Timeout මඟහරවා ගැනීමට ප්‍රමාණය සීමා කර ඇත
+                    text: String(extractedNoteText).slice(0, 5000), 
                     prompt: customPrompt || "Generate well-structured, comprehensive academic short notes with key definitions, core concepts, bullet points, comparative tables, and Mermaid.js diagrams for a university student."
                 })
             });
@@ -1390,7 +1390,9 @@ if (generateNotesBtn) {
             }
 
             if (data.result) {
-                generatedNotesOutput.value = data.result;
+                if (generatedNotesOutput) {
+                    generatedNotesOutput.value = data.result;
+                }
 
                 const previewDiv = document.getElementById('notes-preview-div');
                 if (previewDiv) {
@@ -1429,7 +1431,7 @@ if (generateNotesBtn) {
 
 if (downloadNotesDocxBtn) {
     downloadNotesDocxBtn.addEventListener('click', () => {
-        const text = generatedNotesOutput.value;
+        const text = generatedNotesOutput ? generatedNotesOutput.value : "";
         if (!text) {
             alert("No short notes available to download!");
             return;
@@ -1488,7 +1490,7 @@ if (downloadNotesDocxBtn) {
 
 if (downloadNotesPdfBtn) {
     downloadNotesPdfBtn.addEventListener('click', () => {
-        const text = generatedNotesOutput.value;
+        const text = generatedNotesOutput ? generatedNotesOutput.value : "";
         if (!text) {
             alert("No short notes available to download!");
             return;
