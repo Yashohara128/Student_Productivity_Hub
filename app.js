@@ -1352,22 +1352,46 @@ if (notePdfUpload) {
 }
 
 // 🟢 FIXED GENERATE NOTES BUTTON LISTENER (Timeout & Safe Null Checks Fixed)
+// 📦 Foolproof Auto-Extract & Generate Notes Button Listener
 if (generateNotesBtn) {
     generateNotesBtn.addEventListener('click', async () => {
-        if (!extractedNoteText) {
-            alert("Please upload a lecture PDF first!");
-            return;
-        }
-
         const customPromptInput = document.getElementById('note-custom-prompt');
         const customPrompt = customPromptInput ? customPromptInput.value.trim() : "";
 
         if (noteLoading) noteLoading.style.display = 'block';
         if (noteResultSection) noteResultSection.style.display = 'none';
         generateNotesBtn.disabled = true;
-        generateNotesBtn.innerText = "Generating Progress...";
+        generateNotesBtn.innerText = "Processing PDF & Generating...";
 
         try {
+            // 🟢 FIXED: ෆයිල් එක දාලා තිබුණත් extractedNoteText එක හිස් නම්, ක්ලික් කළ සැනින් ආයෙත් ඔටෝ රීඩ් කරගැනීම
+            if (!extractedNoteText) {
+                const fileInput = document.getElementById('note-pdf-upload');
+                if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const arrayBuffer = await file.arrayBuffer();
+                    const typedarray = new Uint8Array(arrayBuffer);
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                    let fullText = "";
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        fullText += textContent.items.map(item => item.str).join(' ') + "\n";
+                    }
+                    extractedNoteText = fullText.trim();
+                }
+            }
+
+            // තාමත් හිස් නම් විතරක් Error එක පෙන්නනවා
+            if (!extractedNoteText) {
+                alert("Please upload a lecture PDF first!");
+                if (noteLoading) noteLoading.style.display = 'none';
+                generateNotesBtn.disabled = false;
+                generateNotesBtn.innerText = "✨ Generate Short Notes";
+                return;
+            }
+
             const response = await fetch('/api/shortnotes', {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -1396,9 +1420,21 @@ if (generateNotesBtn) {
 
                 const previewDiv = document.getElementById('notes-preview-div');
                 if (previewDiv) {
-                    let processedHtml = data.result
-                        .replace(/```mermaid([\s\S]*?)```/g, (match, p1) => `<div class="mermaid">${p1.trim()}</div>`)
-                        .replace(/\n/g, '<br>');
+                    let rawNotes = data.result;
+                    let mermaidBlocks = [];
+
+                    let processedHtml = rawNotes.replace(/```mermaid([\s\S]*?)```/g, (match, p1) => {
+                        const placeholder = `__MERMAID_BLOCK_${mermaidBlocks.length}__`;
+                        mermaidBlocks.push(`<div class="mermaid">${p1.trim()}</div>`);
+                        return placeholder;
+                    });
+
+                    processedHtml = processedHtml.replace(/\n/g, '<br>');
+
+                    mermaidBlocks.forEach((block, index) => {
+                        processedHtml = processedHtml.replace(`__MERMAID_BLOCK_${index}__`, block);
+                    });
+
                     previewDiv.innerHTML = processedHtml;
                 }
 
