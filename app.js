@@ -1397,7 +1397,7 @@ if (generateNotesBtn) {
                 const previewDiv = document.getElementById('notes-preview-div');
                 if (previewDiv) {
                     let processedHtml = data.result
-                        .replace(/```mermaid([\s\S]*?)```/g, '<div class="mermaid">$1</div>')
+                        .replace(/```mermaid([\s\S]*?)```/g, (match, p1) => `<div class="mermaid">${p1.trim()}</div>`)
                         .replace(/\n/g, '<br>');
                     previewDiv.innerHTML = processedHtml;
                 }
@@ -1408,9 +1408,11 @@ if (generateNotesBtn) {
                     if (window.mermaid) {
                         setTimeout(async () => {
                             if (previewDiv) {
-                                await mermaid.run({ nodes: previewDiv.querySelectorAll('.mermaid') });
-                            } else {
-                                await mermaid.run();
+                                try {
+                                    await mermaid.run({ nodes: previewDiv.querySelectorAll('.mermaid') });
+                                } catch (mErr) {
+                                    console.warn("Mermaid syntax warning skipped:", mErr);
+                                }
                             }
                         }, 150);
                     }
@@ -1431,7 +1433,7 @@ if (generateNotesBtn) {
 
 if (downloadNotesDocxBtn) {
     downloadNotesDocxBtn.addEventListener('click', () => {
-        const text = generatedNotesOutput ? generatedNotesOutput.value : "";
+        const text = (generatedNotesOutput && generatedNotesOutput.value) ? generatedNotesOutput.value : (document.getElementById('notes-preview-div') ? document.getElementById('notes-preview-div').innerText : "");
         if (!text) {
             alert("No short notes available to download!");
             return;
@@ -1490,7 +1492,7 @@ if (downloadNotesDocxBtn) {
 
 if (downloadNotesPdfBtn) {
     downloadNotesPdfBtn.addEventListener('click', () => {
-        const text = generatedNotesOutput ? generatedNotesOutput.value : "";
+        const text = (generatedNotesOutput && generatedNotesOutput.value) ? generatedNotesOutput.value : (document.getElementById('notes-preview-div') ? document.getElementById('notes-preview-div').innerText : "");
         if (!text) {
             alert("No short notes available to download!");
             return;
