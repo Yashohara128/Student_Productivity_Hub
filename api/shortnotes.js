@@ -23,12 +23,13 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Gemini API Keys are missing in Vercel Environment Variables' });
         }
 
-        const model = 'gemini-3.5-flash';
+        // 🟢 අලුත්ම ස්ටේබල් මෝඩල් එක
+        const model = 'gemini-3.6-flash';
         const systemInstruction = "You are an expert academic assistant. Generate well-structured, clear, and comprehensive short notes based on the provided text, including key definitions, core concepts, bullet points, comparative tables, and Mermaid.js diagrams inside ```mermaid ... ``` blocks where applicable. Output ONLY the final structured notes.";
         
-        const truncatedText = String(text).slice(0, 4000);
+        const truncatedText = String(text).slice(0, 5000);
 
-        // සියලුම කීස් එකවර සමාන්තරව (Parallel) යැවීම මඟින් Vercel Timeout (10s) සම්පූර්ණයෙන්ම මඟහරවා ගැනීම
+        // 🟢 සියලුම කීස් එකවර සමාන්තරව (Parallel) යැවීම මඟින් Vercel Timeout (10s) සම්පූර්ණයෙන්ම මඟහරවා ගැනීම
         const requests = geminiApiKeys.map(apiKey => 
             fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
                 method: "POST",
