@@ -1571,7 +1571,6 @@ if (downloadNotesPdfBtn) {
             return;
         }
 
-        // වෙබ් පේජ් එකේ රෙන්ඩර් වී ඇති Mermaid ප්‍රස්ථාර සහ HTML හැඩතල සමඟම ලබා ගැනීම
         let finalHtmlContent = previewDiv.innerHTML;
 
         let printWindow = window.open('', '_blank');
@@ -1580,33 +1579,79 @@ if (downloadNotesPdfBtn) {
             <html>
             <head>
                 <title>Lecture Short Notes - Student Productivity Hub</title>
-                <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
                 <style>
-                    body { font-family: 'Poppins', sans-serif; font-size: 10pt; line-height: 1.6; color: #1e293b; margin: 0; padding: 15mm 20mm; background: #ffffff; }
-                    .header-box { background: linear-gradient(135deg, #0f172a, #1e293b); color: white; padding: 18px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
-                    .header-box h1 { font-size: 15pt; margin: 0 0 4px 0; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; }
-                    .header-box p { font-size: 8.5pt; color: #94a3b8; margin: 0; }
-                    h1 { font-size: 14pt; color: #0f172a; margin-top: 20px; border-bottom: 2px solid #38bdf8; padding-bottom: 4px; }
-                    h2 { font-size: 12pt; color: #1e293b; margin-top: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; }
-                    h3 { font-size: 10.5pt; color: #334155; margin-top: 12px; }
-                    ul { padding-left: 20px; margin-bottom: 10px; }
-                    table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 9.5pt; }
-                    th { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px; text-align: left; color: #0f172a; }
-                    td { border: 1px solid #cbd5e1; padding: 7px; text-align: left; color: #334155; }
-                    .mermaid { text-align: center; margin: 20px 0; display: flex; justify-content: center; }
-                    .mermaid svg { max-width: 100% !important; height: auto !important; }
-                    .footer-note { margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 10px; text-align: center; font-size: 7.5pt; color: #94a3b8; }
-                    @media print { 
-                        body { padding: 10mm 15mm; } 
-                        .header-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
-                        .mermaid svg { max-width: 100% !important; page-break-inside: avoid; }
+                    * { box-sizing: border-box; }
+                    body { 
+                        font-family: 'Inter', sans-serif; 
+                        font-size: 11pt; 
+                        line-height: 1.6; 
+                        color: #1e293b; 
+                        margin: 0; 
+                        padding: 15mm 20mm; 
+                        background: #ffffff !important; 
+                    }
+                    .header-box { 
+                        background: #0f172a !important; 
+                        color: white !important; 
+                        padding: 20px; 
+                        border-radius: 8px; 
+                        margin-bottom: 25px; 
+                        text-align: center; 
+                        -webkit-print-color-adjust: exact; 
+                        print-color-adjust: exact; 
+                    }
+                    .header-box h1 { font-size: 16pt; margin: 0 0 6px 0; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; }
+                    .header-box p { font-size: 9pt; color: #94a3b8; margin: 0; }
+                    
+                    h1 { font-size: 15pt; color: #0f172a; margin-top: 25px; border-bottom: 2px solid #38bdf8; padding-bottom: 5px; }
+                    h2 { font-size: 13pt; color: #1e293b; margin-top: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+                    h3 { font-size: 11.5pt; color: #334155; margin-top: 15px; }
+                    
+                    p { margin-bottom: 10px; text-align: justify; }
+                    ul, ol { padding-left: 20px; margin-bottom: 15px; }
+                    li { margin-bottom: 5px; }
+                    
+                    table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 10pt; page-break-inside: avoid; }
+                    th { background: #f1f5f9 !important; border: 1px solid #cbd5e1; padding: 10px; text-align: left; color: #0f172a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    td { border: 1px solid #cbd5e1; padding: 9px; text-align: left; color: #334155; }
+                    
+                    /* Mermaid Professional Chart Styling */
+                    .mermaid { 
+                        text-align: center; 
+                        margin: 25px auto; 
+                        display: flex; 
+                        justify-content: center; 
+                        background: #ffffff !important; 
+                        page-break-inside: avoid; 
+                    }
+                    .mermaid svg { 
+                        max-width: 100% !important; 
+                        height: auto !important; 
+                        background: #ffffff !important; 
+                    }
+                    
+                    .footer-note { 
+                        margin-top: 40px; 
+                        border-top: 1px solid #e2e8f0; 
+                        padding-top: 12px; 
+                        text-align: center; 
+                        font-size: 8pt; 
+                        color: #94a3b8; 
+                    }
+                    
+                    @media print {
+                        body { padding: 10mm 15mm; background: #ffffff !important; }
+                        .header-box { background: #0f172a !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        th { background: #f1f5f9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        .mermaid { page-break-inside: avoid; }
                     }
                 </style>
             </head>
             <body>
                 <div class="header-box">
                     <h1>📚 Lecture Short Notes</h1>
-                    <p>Generated via Student Productivity Hub • AI Academic Assistant</p>
+                    <p>Generated via Student Productivity Hub • Professional Academic Edition</p>
                 </div>
                 <div class="content-body">${finalHtmlContent}</div>
                 <div class="footer-note">Official Academic Study Material Report | Powered by Gemini AI & Student Productivity Hub</div>
@@ -1614,7 +1659,7 @@ if (downloadNotesPdfBtn) {
                     window.onload = function() { 
                         setTimeout(() => { 
                             window.print(); 
-                        }, 400); 
+                        }, 500); 
                     }
                 </script>
             </body>
