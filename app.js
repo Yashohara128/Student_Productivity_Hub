@@ -756,7 +756,7 @@ async function uploadMediaWithCaptionToCloudinary(fileOrBlob, fileName, type, ca
         return;
     }
 
-    const cloudName = "rpatylt6";       
+    const cloudName = "rpatylt6";        
     const uploadPreset = "Student Productivity Hub"; 
 
     let displayTxt = caption ? caption : (type === 'audio' ? `${svgs.mic} Voice Message` : (type === 'image' ? `${svgs.photo} Photo` : (type === 'video' ? `🎬 Video` : `${svgs.doc} Document`)));
@@ -1372,7 +1372,7 @@ if (generateNotesBtn) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
                     text: extractedNoteText,
-                    prompt: customPrompt || "Generate well-structured, comprehensive academic short notes with key definitions, core concepts, bullet points, and comparative tables for a university student."
+                    prompt: customPrompt || "Generate well-structured, comprehensive academic short notes with key definitions, core concepts, bullet points, comparative tables, and Mermaid.js diagrams for a university student."
                 })
             });
 
@@ -1385,6 +1385,17 @@ if (generateNotesBtn) {
             if (data.result) {
                 generatedNotesOutput.value = data.result;
                 if (noteResultSection) noteResultSection.style.display = 'block';
+
+                // Mermaid.js rendering integration
+                try {
+                    if (window.mermaid) {
+                        setTimeout(async () => {
+                            await mermaid.run();
+                        }, 100);
+                    }
+                } catch (mermaidErr) {
+                    console.error("Mermaid rendering trigger error:", mermaidErr);
+                }
             }
         } catch (error) {
             console.error("Short Notes API Error:", error);
@@ -1431,7 +1442,7 @@ if (downloadNotesDocxBtn) {
                 <title>Lecture Short Notes - Student Productivity Hub</title>
                 <style>
                     body { font-family: 'Times New Roman', serif; margin: 25mm; }
-                    .header-box { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 25mm; }
+                    .header-box { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 15mm; margin-bottom: 25mm; }
                     .header-box h1 { color: #0f172a; font-size: 18pt; margin: 0; }
                     .header-box p { color: #64748b; font-size: 10pt; margin: 5px 0 0 0; }
                 </style>
