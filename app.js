@@ -1578,13 +1578,14 @@ if (downloadNotesPdfBtn) {
             <!DOCTYPE html>
             <html>
             <head>
+                <meta charset="UTF-8">
                 <title>Lecture Short Notes - Student Productivity Hub</title>
-                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+                <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
                 <style>
                     * { box-sizing: border-box; }
                     body { 
-                        font-family: 'Inter', sans-serif; 
-                        font-size: 11pt; 
+                        font-family: 'Poppins', sans-serif; 
+                        font-size: 10.5pt; 
                         line-height: 1.6; 
                         color: #1e293b; 
                         margin: 0; 
@@ -1592,7 +1593,7 @@ if (downloadNotesPdfBtn) {
                         background: #ffffff !important; 
                     }
                     .header-box { 
-                        background: #0f172a !important; 
+                        background: linear-gradient(135deg, #0f172a, #1e293b) !important; 
                         color: white !important; 
                         padding: 20px; 
                         border-radius: 8px; 
@@ -1604,22 +1605,23 @@ if (downloadNotesPdfBtn) {
                     .header-box h1 { font-size: 16pt; margin: 0 0 6px 0; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; }
                     .header-box p { font-size: 9pt; color: #94a3b8; margin: 0; }
                     
-                    h1 { font-size: 15pt; color: #0f172a; margin-top: 25px; border-bottom: 2px solid #38bdf8; padding-bottom: 5px; }
-                    h2 { font-size: 13pt; color: #1e293b; margin-top: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
-                    h3 { font-size: 11.5pt; color: #334155; margin-top: 15px; }
+                    h1 { font-size: 14pt; color: #0f172a; margin-top: 22px; border-bottom: 2px solid #38bdf8; padding-bottom: 4px; }
+                    h2 { font-size: 12pt; color: #1e293b; margin-top: 18px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; }
+                    h3 { font-size: 10.5pt; color: #334155; margin-top: 14px; }
                     
-                    p { margin-bottom: 10px; text-align: justify; }
-                    ul, ol { padding-left: 20px; margin-bottom: 15px; }
-                    li { margin-bottom: 5px; }
+                    p { margin-bottom: 8px; text-align: justify; }
+                    ul, ol { padding-left: 20px; margin-bottom: 12px; }
+                    li { margin-bottom: 4px; }
                     
-                    table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 10pt; page-break-inside: avoid; }
-                    th { background: #f1f5f9 !important; border: 1px solid #cbd5e1; padding: 10px; text-align: left; color: #0f172a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                    td { border: 1px solid #cbd5e1; padding: 9px; text-align: left; color: #334155; }
+                    /* Tables Styling (Professional Grid Look) */
+                    table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 9.5pt; page-break-inside: avoid; }
+                    th { background: #f1f5f9 !important; border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; color: #0f172a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    td { border: 1px solid #cbd5e1; padding: 7px 10px; text-align: left; color: #334155; }
                     
-                    /* Mermaid Professional Chart Styling */
+                    /* Mermaid / Charts Clean Fixing */
                     .mermaid { 
                         text-align: center; 
-                        margin: 25px auto; 
+                        margin: 20px auto; 
                         display: flex; 
                         justify-content: center; 
                         background: #ffffff !important; 
@@ -1632,11 +1634,11 @@ if (downloadNotesPdfBtn) {
                     }
                     
                     .footer-note { 
-                        margin-top: 40px; 
+                        margin-top: 35px; 
                         border-top: 1px solid #e2e8f0; 
-                        padding-top: 12px; 
+                        padding-top: 10px; 
                         text-align: center; 
-                        font-size: 8pt; 
+                        font-size: 7.5pt; 
                         color: #94a3b8; 
                     }
                     
@@ -1651,7 +1653,7 @@ if (downloadNotesPdfBtn) {
             <body>
                 <div class="header-box">
                     <h1>📚 Lecture Short Notes</h1>
-                    <p>Generated via Student Productivity Hub • Professional Academic Edition</p>
+                    <p>Generated via Student Productivity Hub • AI Academic Assistant</p>
                 </div>
                 <div class="content-body">${finalHtmlContent}</div>
                 <div class="footer-note">Official Academic Study Material Report | Powered by Gemini AI & Student Productivity Hub</div>
@@ -1668,7 +1670,6 @@ if (downloadNotesPdfBtn) {
         printWindow.document.close();
     });
 }
-
 const universitySelector = document.getElementById('university-selector');
 const profileOkBtn = document.getElementById('profile-ok-btn');
 const gradeSelect = document.getElementById('grade');
