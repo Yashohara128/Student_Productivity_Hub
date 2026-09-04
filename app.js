@@ -1284,7 +1284,7 @@ async function sendQueryToAIAgent() {
         const loaderEl = document.getElementById(loadingId);
         if (loaderEl) loaderEl.remove();
         aiChatMessages.innerHTML += `
-            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px; color: var(--text-color);">
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: 8px; color: var(--text-color);">
                 <b>🤖 AI Buddy:</b><br>Oops! Podi connection issue ekak wage, ${activeStudentName}. Ayith try karමුද? 🚀✨
             </div>
         `;
@@ -1326,7 +1326,7 @@ if (notePdfUpload) {
     notePdfUpload.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        notePdfFileName.innerText = "📁 " + file.name;
+        if (notePdfFileName) notePdfFileName.innerText = "📁 " + file.name;
 
         const reader = new FileReader();
         reader.readAsArrayBuffer(file);
@@ -1342,7 +1342,6 @@ if (notePdfUpload) {
                     fullText += textContent.items.map(item => item.str).join(' ') + "\n";
                 }
                 extractedNoteText = fullText.trim();
-                alert("Lecture PDF text extracted successfully! Ready to generate short notes.");
             } catch (err) {
                 console.error("PDF Read Error:", err);
                 alert("Failed to read PDF file.");
@@ -1351,7 +1350,7 @@ if (notePdfUpload) {
     });
 }
 
-// 📦 Robust Auto-Extract & Generate Notes Button Listener (Guaranteed PDF Reading)
+// 📦 Foolproof Auto-Extract & Generate Notes Button Listener
 if (generateNotesBtn) {
     generateNotesBtn.addEventListener('click', async () => {
         const customPromptInput = document.getElementById('note-custom-prompt');
@@ -1363,7 +1362,7 @@ if (generateNotesBtn) {
         generateNotesBtn.innerText = "Processing PDF & Generating...";
 
         try {
-            // 🟢 Reliable fallback: if extractedNoteText is empty, instantly read from file input (supports all possible input IDs)
+            // 🟢 ෆයිල් එක දාලා තිබුණත් extractedNoteText එක හිස් නම්, ක්ලික් කළ සැනින් ඔටෝ රීඩ් කරගැනීම (Fail-safe)
             if (!extractedNoteText) {
                 const fileInputTarget = document.getElementById('note-pdf-upload') || document.getElementById('pdf-upload') || document.querySelector('input[type="file"]');
                 if (fileInputTarget && fileInputTarget.files && fileInputTarget.files[0]) {
