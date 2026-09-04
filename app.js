@@ -1384,14 +1384,28 @@ if (generateNotesBtn) {
 
             if (data.result) {
                 generatedNotesOutput.value = data.result;
+
+                // Render into preview div if available for Mermaid visualization
+                const previewDiv = document.getElementById('notes-preview-div');
+                if (previewDiv) {
+                    let processedHtml = data.result
+                        .replace(/```mermaid([\s\S]*?)```/g, '<div class="mermaid">$1</div>')
+                        .replace(/\n/g, '<br>');
+                    previewDiv.innerHTML = processedHtml;
+                }
+
                 if (noteResultSection) noteResultSection.style.display = 'block';
 
                 // Mermaid.js rendering integration
                 try {
                     if (window.mermaid) {
                         setTimeout(async () => {
-                            await mermaid.run();
-                        }, 100);
+                            if (previewDiv) {
+                                await mermaid.run({ nodes: previewDiv.querySelectorAll('.mermaid') });
+                            } else {
+                                await mermaid.run();
+                            }
+                        }, 150);
                     }
                 } catch (mermaidErr) {
                     console.error("Mermaid rendering trigger error:", mermaidErr);
