@@ -24,8 +24,7 @@ export default async function handler(req, res) {
         }
 
         const modelsToTry = [
-            'gemini-3.6-flash',
-            'gemini-3.7-flash'
+            'gemini-3.8-flash'
         ];
 
         // කීස් සහ මොඩල්ස් සියල්ල එක්කෝට් කරමින් පූල් එකක් සකස් කිරීම
