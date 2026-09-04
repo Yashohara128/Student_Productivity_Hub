@@ -1351,7 +1351,7 @@ if (notePdfUpload) {
     });
 }
 
-// 🟢 FIXED GENERATE NOTES BUTTON LISTENER (Timeout & Safe Null Checks Fixed)
+// 🟢 FIXED GENERATE NOTES BUTTON LISTENER (Safe Mermaid Isolation & Null Checks)
 if (generateNotesBtn) {
     generateNotesBtn.addEventListener('click', async () => {
         if (!extractedNoteText) {
@@ -1396,9 +1396,24 @@ if (generateNotesBtn) {
 
                 const previewDiv = document.getElementById('notes-preview-div');
                 if (previewDiv) {
-                    let processedHtml = data.result
-                        .replace(/```mermaid([\s\S]*?)```/g, (match, p1) => `<div class="mermaid">${p1.trim()}</div>`)
-                        .replace(/\n/g, '<br>');
+                    let rawNotes = data.result;
+                    let mermaidBlocks = [];
+
+                    // 1. Isolate Mermaid blocks so their internal newlines are preserved
+                    let processedHtml = rawNotes.replace(/```mermaid([\s\S]*?)```/g, (match, p1) => {
+                        const placeholder = `__MERMAID_BLOCK_${mermaidBlocks.length}__`;
+                        mermaidBlocks.push(`<div class="mermaid">${p1.trim()}</div>`);
+                        return placeholder;
+                    });
+
+                    // 2. Convert standard newlines to breaks
+                    processedHtml = processedHtml.replace(/\n/g, '<br>');
+
+                    // 3. Restore Mermaid blocks safely
+                    mermaidBlocks.forEach((block, index) => {
+                        processedHtml = processedHtml.replace(`__MERMAID_BLOCK_${index}__`, block);
+                    });
+
                     previewDiv.innerHTML = processedHtml;
                 }
 
