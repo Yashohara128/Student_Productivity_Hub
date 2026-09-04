@@ -1321,38 +1321,75 @@ const downloadNotesDocxBtn = document.getElementById('download-notes-docx-btn');
 const downloadNotesPdfBtn = document.getElementById('download-notes-pdf-btn');
 
 let extractedNoteText = "";
+let notePdfReadPromise = null;
+
+// Read the selected lecture PDF and wait until extraction is fully finished.
+async function extractLecturePdfText(file) {
+    if (!file) {
+        throw new Error("Please select a lecture PDF first.");
+    }
+
+    if (file.type !== "application/pdf") {
+        throw new Error("Please select a valid PDF file.");
+    }
+
+    if (typeof pdfjsLib === "undefined") {
+        throw new Error("PDF reader is not loaded. Please refresh the page and try again.");
+    }
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const arrayBuffer = await file.arrayBuffer();
+    const typedarray = new Uint8Array(arrayBuffer);
+    const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
+
+    let fullText = "";
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+
+        fullText += textContent.items
+            .map(item => item.str || "")
+            .join(" ") + "\n";
+    }
+
+    const result = fullText.trim();
+
+    if (!result) {
+        throw new Error("No readable text was found in this PDF. If it is a scanned/image-only PDF, text extraction is not available.");
+    }
+
+    return result;
+}
 
 if (notePdfUpload) {
-    notePdfUpload.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
+    notePdfUpload.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
         if (!file) return;
-        notePdfFileName.innerText = "📁 " + file.name;
 
-        const reader = new FileReader();
-        reader.readAsArrayBuffer(file);
-        reader.onload = async function() {
-            const typedarray = new Uint8Array(this.result);
-            try {
-                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                let fullText = "";
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    fullText += textContent.items.map(item => item.str).join(' ') + "\n";
-                }
-                extractedNoteText = fullText.trim();
-                alert("Lecture PDF text extracted successfully! Ready to generate short notes.");
-            } catch (err) {
+        if (notePdfFileName) {
+            notePdfFileName.innerText = "📁 " + file.name;
+        }
+
+        extractedNoteText = "";
+
+        // Store the promise so Generate can WAIT for PDF extraction to finish.
+        notePdfReadPromise = extractLecturePdfText(file)
+            .then(text => {
+                extractedNoteText = text;
+                return text;
+            })
+            .catch(err => {
+                extractedNoteText = "";
                 console.error("PDF Read Error:", err);
-                alert("Failed to read PDF file.");
-            }
-        };
+                throw err;
+            });
     });
 }
 
-// 🟢 FIXED GENERATE NOTES BUTTON LISTENER (Timeout & Safe Null Checks Fixed)
-// 📦 Foolproof Auto-Extract & Generate Notes Button Listener
+// FIX: Generate waits for the PDF extraction promise before checking extractedNoteText.
 if (generateNotesBtn) {
     generateNotesBtn.addEventListener('click', async () => {
         const customPromptInput = document.getElementById('note-custom-prompt');
@@ -1364,45 +1401,42 @@ if (generateNotesBtn) {
         generateNotesBtn.innerText = "Processing PDF & Generating...";
 
         try {
-            // 🟢 FIXED: ෆයිල් එක දාලා තිබුණත් extractedNoteText එක හිස් නම්, ක්ලික් කළ සැනින් ආයෙත් ඔටෝ රීඩ් කරගැනීම
-            if (!extractedNoteText) {
-                const fileInput = document.getElementById('note-pdf-upload');
-                if (fileInput && fileInput.files && fileInput.files.length > 0) {
-                    const file = fileInput.files[0];
-                    const arrayBuffer = await file.arrayBuffer();
-                    const typedarray = new Uint8Array(arrayBuffer);
-                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                    let fullText = "";
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const page = await pdf.getPage(i);
-                        const textContent = await page.getTextContent();
-                        fullText += textContent.items.map(item => item.str).join(' ') + "\n";
-                    }
-                    extractedNoteText = fullText.trim();
+            const fileInput = document.getElementById('note-pdf-upload');
+            const selectedFile = fileInput && fileInput.files && fileInput.files.length > 0
+                ? fileInput.files[0]
+                : null;
+
+            // If extraction is already running, wait for it.
+            if (notePdfReadPromise) {
+                try {
+                    await notePdfReadPromise;
+                } catch (readError) {
+                    throw readError;
                 }
             }
 
-            // තාමත් හිස් නම් විතරක් Error එක පෙන්නනවා
+            // If the user selected a file but the previous promise is unavailable,
+            // extract it directly here.
+            if (!extractedNoteText && selectedFile) {
+                extractedNoteText = await extractLecturePdfText(selectedFile);
+            }
+
             if (!extractedNoteText) {
-                alert("Please upload a lecture PDF first!");
-                if (noteLoading) noteLoading.style.display = 'none';
-                generateNotesBtn.disabled = false;
-                generateNotesBtn.innerText = "✨ Generate Short Notes";
-                return;
+                throw new Error("Please upload a lecture PDF first!");
             }
 
             const response = await fetch('/api/shortnotes', {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ 
-                    text: String(extractedNoteText).slice(0, 5000), 
+                body: JSON.stringify({
+                    text: String(extractedNoteText).slice(0, 5000),
                     prompt: customPrompt || "Generate well-structured, comprehensive academic short notes with key definitions, core concepts, bullet points, comparative tables, and Mermaid.js diagrams for a university student."
                 })
             });
 
             const rawText = await response.text();
             let data;
+
             try {
                 data = JSON.parse(rawText);
             } catch (parseErr) {
@@ -1419,6 +1453,7 @@ if (generateNotesBtn) {
                 }
 
                 const previewDiv = document.getElementById('notes-preview-div');
+
                 if (previewDiv) {
                     let rawNotes = data.result;
                     let mermaidBlocks = [];
@@ -1445,7 +1480,9 @@ if (generateNotesBtn) {
                         setTimeout(async () => {
                             if (previewDiv) {
                                 try {
-                                    await mermaid.run({ nodes: previewDiv.querySelectorAll('.mermaid') });
+                                    await mermaid.run({
+                                        nodes: previewDiv.querySelectorAll('.mermaid')
+                                    });
                                 } catch (mErr) {
                                     console.warn("Mermaid syntax warning skipped:", mErr);
                                 }
@@ -1457,7 +1494,7 @@ if (generateNotesBtn) {
                 }
             }
         } catch (error) {
-            console.error("Short Notes API Error:", error);
+            console.error("Short Notes Error:", error);
             alert("Error: " + error.message);
         } finally {
             if (noteLoading) noteLoading.style.display = 'none';
