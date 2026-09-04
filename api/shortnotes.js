@@ -19,11 +19,16 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Gemini API Keys are missing in Vercel Environment Variables' });
         }
 
-        // 🟢 පාවිච්චි කරන්න පුළුවන් මොඩල් ලැයිස්තුව (පළමු එක ෆේල් වුණොත් ඊළඟ එකට මාරු වේ)
+        // 🟢 ඔයා ඉල්ලපු සියලුම මොඩල්ස් අනුපිළිවෙළට ෆෝල්බැක් ලූප් එකට ඇතුළත් කර ඇත
         const modelsToTry = [
-            'gemini-3.6-flash',
+            'gemini-3.8-flash',
             'gemini-3.7-flash',
-            'gemini-2.5-flash'
+            'gemini-3.6-flash',
+            'gemini-3.5-flash',
+            'gemini-3.5-flash-lite',
+            'gemini-3.1-flash-lite',
+            'gemini-3.1-pro-preview',
+            'gemini-3-flash-preview'
         ];
 
         const systemInstructionText = "You are an expert academic assistant. Generate well-structured, clear, and comprehensive short notes based on the provided text, including key definitions, core concepts, bullet points, and comparative tables where applicable. Output ONLY the final structured notes.";
@@ -34,7 +39,6 @@ export default async function handler(req, res) {
         let data = null;
         let lastError = null;
 
-        // මොඩල් සහ කීස් එකිනෙක පරීක්ෂා කරමින් වැඩේ සාර්ථක කරගැනීම
         for (const model of modelsToTry) {
             if (success) break;
             for (const apiKey of geminiApiKeys) {
@@ -53,9 +57,9 @@ export default async function handler(req, res) {
 
                     data = await response.json();
 
-                    if (response.status === 429 || response.status === 503 || data.error) {
-                        lastError = data?.error?.message || `Model ${model} limit reached.`;
-                        continue; // ඊළඟ කී එකට හෝ මොඩල් එකට යන්න
+                    if (response.status !== 200 || data.error) {
+                        lastError = data?.error?.message || `Model ${model} failed.`;
+                        continue; 
                     }
 
                     success = true;
@@ -67,7 +71,7 @@ export default async function handler(req, res) {
         }
 
         if (!success || (data && data.error)) {
-            return res.status(500).json({ error: lastError || 'All models and API keys are currently experiencing high demand or limits.' });
+            return res.status(500).json({ error: lastError || 'All models and API keys are currently unavailable.' });
         }
 
         const notesResult = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0].text
