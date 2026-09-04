@@ -24,20 +24,19 @@ export default async function handler(req, res) {
         }
 
         const modelsToTry = [
-            'gemini-3.8-flash',
-            'gemini-3.7-flash',
+            'gemini-2.5-flash',
             'gemini-3.6-flash',
-            'gemini-3.5-flash'
+            'gemini-3.5-flash',
+            'gemini-3.7-flash'
         ];
 
-        // 🟢 මොඩල් සහ කීස් එකතු කර සාදාගත් ප්‍රියෝරිටි ලිස්ට් එකෙන් උපරිම උත්සාහයන් 3ක් පමණක් තෝරා ගැනීම (Timeout මඟහරවා ගැනීමට)
+        // කීස් සහ මොඩල්ස් සියල්ල එක්කෝට් කරමින් පූල් එකක් සකස් කිරීම
         const requestPool = [];
         for (const model of modelsToTry) {
             for (const apiKey of geminiApiKeys) {
                 requestPool.push({ model, apiKey });
             }
         }
-        const topTries = requestPool.slice(0, 3);
 
         const systemInstructionText = `You are an expert academic assistant. Generate well-structured, clear, and comprehensive short notes based on the provided text, including key definitions, core concepts, bullet points, comparative tables, and Mermaid.js diagrams where applicable. Output ONLY the final structured notes.`;
         
@@ -47,7 +46,7 @@ export default async function handler(req, res) {
         let responseData = null;
         let lastError = null;
 
-        for (const { model, apiKey } of topTries) {
+        for (const { model, apiKey } of requestPool) {
             if (success) break;
 
             try {
@@ -69,8 +68,17 @@ export default async function handler(req, res) {
                     continue;
                 }
 
+                // High Demand (429) හෝ Resource Exhausted එරර් එකක් ආවොත් ස්වයංක්‍රීයව ඊළඟ කී එකට/මොඩල් එකට පැනීම
                 if (!response.ok || responseData.error) {
-                    lastError = responseData?.error?.message || `Model ${model} failed.`;
+                    const errMessage = responseData?.error?.message || '';
+                    const errStatus = response.status;
+                    
+                    if (errStatus === 429 || errMessage.includes('RESOURCE_EXHAUSTED') || errMessage.includes('high demand') || errMessage.includes('overloaded')) {
+                        lastError = `Model ${model} overloaded (High Demand). Switching fallback...`;
+                        continue; // ඊළඟ කී එකට හෝ මොඩල් එකට යයි
+                    }
+
+                    lastError = errMessage || `Model ${model} failed.`;
                     continue; 
                 }
 
@@ -82,7 +90,7 @@ export default async function handler(req, res) {
         }
 
         if (!success || !responseData || responseData.error) {
-            return res.status(500).json({ error: lastError || 'All fallback attempts have failed or exhausted rate limits.' });
+            return res.status(500).json({ error: lastError || 'All models and API keys are currently experiencing high demand. Please try again in a few seconds.' });
         }
 
         const notesResult = responseData.candidates?.[0]?.content?.parts?.[0]?.text
