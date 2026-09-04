@@ -1326,7 +1326,7 @@ if (notePdfUpload) {
     notePdfUpload.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        if (notePdfFileName) notePdfFileName.innerText = "📁 " + file.name;
+        notePdfFileName.innerText = "📁 " + file.name;
 
         const reader = new FileReader();
         reader.readAsArrayBuffer(file);
@@ -1342,6 +1342,7 @@ if (notePdfUpload) {
                     fullText += textContent.items.map(item => item.str).join(' ') + "\n";
                 }
                 extractedNoteText = fullText.trim();
+                alert("Lecture PDF text extracted successfully! Ready to generate short notes.");
             } catch (err) {
                 console.error("PDF Read Error:", err);
                 alert("Failed to read PDF file.");
@@ -1350,45 +1351,23 @@ if (notePdfUpload) {
     });
 }
 
-// 📦 Foolproof Auto-Extract & Generate Notes Button Listener
+// 🟢 FIXED GENERATE NOTES BUTTON LISTENER (Timeout & Safe Null Checks Fixed)
 if (generateNotesBtn) {
     generateNotesBtn.addEventListener('click', async () => {
+        if (!extractedNoteText) {
+            alert("Please upload a lecture PDF first!");
+            return;
+        }
+
         const customPromptInput = document.getElementById('note-custom-prompt');
         const customPrompt = customPromptInput ? customPromptInput.value.trim() : "";
 
         if (noteLoading) noteLoading.style.display = 'block';
         if (noteResultSection) noteResultSection.style.display = 'none';
         generateNotesBtn.disabled = true;
-        generateNotesBtn.innerText = "Processing PDF & Generating...";
+        generateNotesBtn.innerText = "Generating Progress...";
 
         try {
-            // 🟢 ෆයිල් එක දාලා තිබුණත් extractedNoteText එක හිස් නම්, ක්ලික් කළ සැනින් ඔටෝ රීඩ් කරගැනීම (Fail-safe)
-            if (!extractedNoteText) {
-                const fileInputTarget = document.getElementById('note-pdf-upload') || document.getElementById('pdf-upload') || document.querySelector('input[type="file"]');
-                if (fileInputTarget && fileInputTarget.files && fileInputTarget.files[0]) {
-                    const file = fileInputTarget.files[0];
-                    const arrayBuffer = await file.arrayBuffer();
-                    const typedarray = new Uint8Array(arrayBuffer);
-                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                    let fullText = "";
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const page = await pdf.getPage(i);
-                        const textContent = await page.getTextContent();
-                        fullText += textContent.items.map(item => item.str).join(' ') + "\n";
-                    }
-                    extractedNoteText = fullText.trim();
-                }
-            }
-
-            if (!extractedNoteText) {
-                alert("Please upload a lecture PDF first!");
-                if (noteLoading) noteLoading.style.display = 'none';
-                generateNotesBtn.disabled = false;
-                generateNotesBtn.innerText = "✨ Generate Short Notes";
-                return;
-            }
-
             const response = await fetch('/api/shortnotes', {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -1417,21 +1396,9 @@ if (generateNotesBtn) {
 
                 const previewDiv = document.getElementById('notes-preview-div');
                 if (previewDiv) {
-                    let rawNotes = data.result;
-                    let mermaidBlocks = [];
-
-                    let processedHtml = rawNotes.replace(/```mermaid([\s\S]*?)```/g, (match, p1) => {
-                        const placeholder = `__MERMAID_BLOCK_${mermaidBlocks.length}__`;
-                        mermaidBlocks.push(`<div class="mermaid">${p1.trim()}</div>`);
-                        return placeholder;
-                    });
-
-                    processedHtml = processedHtml.replace(/\n/g, '<br>');
-
-                    mermaidBlocks.forEach((block, index) => {
-                        processedHtml = processedHtml.replace(`__MERMAID_BLOCK_${index}__`, block);
-                    });
-
+                    let processedHtml = data.result
+                        .replace(/```mermaid([\s\S]*?)```/g, (match, p1) => `<div class="mermaid">${p1.trim()}</div>`)
+                        .replace(/\n/g, '<br>');
                     previewDiv.innerHTML = processedHtml;
                 }
 
@@ -2273,6 +2240,38 @@ function updateUI() {
         });
         yearHTML += `</div>`;
         container.innerHTML += yearHTML;
+    });
+}
+
+const pdfUpload = document.getElementById('pdf-upload');
+const pdfFileName = document.getElementById('pdf-file-name');
+
+if (pdfUpload) {
+    pdfUpload.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        pdfFileName.innerText = "📁 " + file.name;
+
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(file);
+        reader.onload = async function() {
+            const typedarray = new Uint8Array(this.result);
+            try {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                let fullText = "";
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    fullText += textContent.items.map(item => item.str).join(' ') + "\n";
+                }
+                document.getElementById('plagiarism-text').value = fullText.trim();
+                alert("PDF text extracted successfully!");
+            } catch (err) {
+                console.error("PDF Read Error:", err);
+                alert("Failed to read PDF file.");
+            }
+        };
     });
 }
 
