@@ -31,7 +31,8 @@ export default async function handler(req, res) {
             'gemini-3-flash-preview'
         ];
 
-        const systemInstructionText = "You are an expert academic assistant. Generate well-structured, clear, and comprehensive short notes based on the provided text, including key definitions, core concepts, bullet points, and comparative tables where applicable. Output ONLY the final structured notes.";
+        const systemInstructionText = `You are an expert academic assistant. Generate well-structured, clear, and comprehensive short notes based on the provided text, including key definitions, core concepts, bullet points, and comparative tables where applicable. 
+IMPORTANT: Wherever a visual workflow, network structure, data flow, or algorithm step is explained, include a Mermaid.js diagram inside standard markdown code blocks (e.g., \`\`\`mermaid ... \`\`\`). Output ONLY the final structured notes.`;
         
         const fullUserPrompt = `Source Text:\n${text.slice(0, 15000)}\n\nInstructions: ${prompt || "Generate short notes."}`;
 
