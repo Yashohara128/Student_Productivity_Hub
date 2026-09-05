@@ -1564,115 +1564,45 @@ if (downloadNotesDocxBtn) {
 }
 if (downloadNotesPdfBtn) {
     downloadNotesPdfBtn.addEventListener('click', () => {
-        const rawText = (generatedNotesOutput && generatedNotesOutput.value) ? generatedNotesOutput.value : (document.getElementById('notes-preview-div') ? document.getElementById('notes-preview-div').innerText : "");
-        
-        if (!rawText.trim()) {
+        const previewDiv = document.getElementById('notes-preview-div');
+        if (!previewDiv || !previewDiv.innerHTML.trim()) {
             alert("No short notes available to download!");
             return;
         }
 
-        // වෙබ් පේජ් එකේ රෙන්ඩර් වී ඇති Mermaid SVGs ලබා ගැනීම
-        const previewDiv = document.getElementById('notes-preview-div');
-        const renderedSvgs = previewDiv ? previewDiv.querySelectorAll('svg') : [];
-        let svgIndex = 0;
+        // වෙබ් පේජ් එකේ රෙන්ඩර් වී ඇති සම්පූර්ණ HTML එක (චාට්ස් සමඟම) ලබා ගැනීම
+        let htmlContent = previewDiv.innerHTML;
 
-        // Smart Markdown Parser (මාර්ක්ඩවුන් පිරිසිදු කරමින් චාට්ස් නිසි තැන්වලට ඇතුළත් කිරීම)
-        let lines = rawText.split('\n');
-        let htmlLines = [];
-        let inList = false;
-        let inTable = false;
-        let isHeaderRow = true;
-        let skipMermaidBlock = false;
-
-        for (let line of lines) {
+        // පේජ් එකේ ඇති Raw Markdown (##, ###, **) පිරිසිදු HTML බවට හැරවීම (චාට්ස් වලට හානියක් නොවන ලෙස)
+        let lines = htmlContent.split(/<br\s*[\/]?>/gi);
+        let processedLines = lines.map(line => {
             let trimmed = line.trim();
-
-            // Mermaid Block හමුවූ විට SVG එක ඉන්ජෙක්ට් කිරීම
-            if (trimmed.startsWith('```mermaid')) {
-                if (inList) { htmlLines.push('</ul>'); inList = false; }
-                if (inTable) { inTable = false; htmlLines.push('</table>'); }
-                
-                if (renderedSvgs[svgIndex]) {
-                    htmlLines.push(`<div class="mermaid">${renderedSvgs[svgIndex].outerHTML}</div>`);
-                    svgIndex++;
-                }
-                skipMermaidBlock = true;
-                continue;
-            }
-            if (skipMermaidBlock && trimmed.startsWith('```')) {
-                skipMermaidBlock = false;
-                continue;
-            }
-            if (skipMermaidBlock) {
-                continue;
+            
+            // Mermaid SVG බ්ලොක්ස් නම් එහෙම්මම තැබීම
+            if (trimmed.includes('class="mermaid"') || trimmed.includes('class=\'mermaid\'') || trimmed.includes('<svg')) {
+                return line;
             }
 
-            // Tables handling
-            if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
-                if (!inTable) {
-                    if (inList) { htmlLines.push('</ul>'); inList = false; }
-                    inTable = true;
-                    isHeaderRow = true;
-                    htmlLines.push('<table>');
-                }
-                if (trimmed.includes('---')) {
-                    isHeaderRow = false;
-                    continue;
-                }
-                let cells = trimmed.split('|').slice(1, -1).map(c => c.trim());
-                let cellTag = isHeaderRow ? 'th' : 'td';
-                let rowHtml = '<tr>' + cells.map(cell => `<${cellTag}>${cell.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</${cellTag}>`).join('') + '</tr>';
-                htmlLines.push(rowHtml);
-                isHeaderRow = false;
-                continue;
-            } else {
-                if (inTable) { inTable = false; htmlLines.push('</table>'); }
-            }
-
-            // Headings
+            // Headings පිරිසිදු කිරීම
             if (trimmed.startsWith('# ')) {
-                if (inList) { htmlLines.push('</ul>'); inList = false; }
-                htmlLines.push(`<h1>${trimmed.substring(2).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</h1>`);
+                return `<h1>${trimmed.substring(2).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</h1>`;
             } else if (trimmed.startsWith('## ')) {
-                if (inList) { htmlLines.push('</ul>'); inList = false; }
-                htmlLines.push(`<h2>${trimmed.substring(3).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</h2>`);
+                return `<h2>${trimmed.substring(3).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</h2>`;
             } else if (trimmed.startsWith('### ')) {
-                if (inList) { htmlLines.push('</ul>'); inList = false; }
-                htmlLines.push(`<h3>${trimmed.substring(4).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</h3>`);
-            } 
-            // Blockquotes
-            else if (trimmed.startsWith('> ')) {
-                if (inList) { htmlLines.push('</ul>'); inList = false; }
-                let content = trimmed.substring(2).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-                htmlLines.push(`<blockquote style="border-left: 4px solid #38bdf8; padding-left: 10px; margin: 10px 0; color: #334155; font-style: italic;">${content}</blockquote>`);
+                return `<h3>${trimmed.substring(4).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</h3>`;
             }
-            // Horizontal Rule
-            else if (trimmed === '---' || trimmed === '***') {
-                if (inList) { htmlLines.push('</ul>'); inList = false; }
-                htmlLines.push(`<hr style="border: 0; border-top: 1px solid #cbd5e1; margin: 15px 0;">`);
-            } 
-            // Bullet Points
-            else if (trimmed.startsWith('• ') || trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-                if (!inList) { inList = true; htmlLines.push('<ul>'); }
-                let content = trimmed.substring(2).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-                htmlLines.push(`<li>${content}</li>`);
-            } 
-            // Empty lines
-            else if (trimmed === '') {
-                if (inList) { htmlLines.push('</ul>'); inList = false; }
-                htmlLines.push('<br>');
-            } 
-            // Paragraphs
-            else {
-                if (inList) { htmlLines.push('</ul>'); inList = false; }
-                let content = trimmed.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-                htmlLines.push(`<p>${content}</p>`);
-            }
-        }
-        if (inList) htmlLines.push('</ul>');
-        if (inTable) htmlLines.push('</table>');
 
-        let finalHtmlContent = htmlLines.join('\n');
+            // Bullet points පිරිසිදු කිරීම
+            if (trimmed.startsWith('• ') || trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                let content = trimmed.substring(2).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                return `<li>${content}</li>`;
+            }
+
+            // සාමාන්‍ය පේළිවල Bold අකුරු නිවැරදි කිරීම
+            return `<p>${line.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</p>`;
+        });
+
+        let finalHtmlContent = processedLines.join('\n');
 
         let printWindow = window.open('', '_blank');
         printWindow.document.write(`
@@ -1681,7 +1611,7 @@ if (downloadNotesPdfBtn) {
             <head>
                 <meta charset="UTF-8">
                 <title>Lecture Short Notes - Student Productivity Hub</title>
-                <link href="[https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap](https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap)" rel="stylesheet">
+                <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
                 <style>
                     * { box-sizing: border-box; }
                     body { 
@@ -1711,13 +1641,13 @@ if (downloadNotesPdfBtn) {
                     h3 { font-size: 10.5pt; color: #334155; margin-top: 14px; page-break-after: avoid; }
                     
                     p { margin-bottom: 8px; text-align: justify; }
-                    ul { padding-left: 20px; margin-bottom: 12px; }
                     li { margin-bottom: 4px; }
                     
                     table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 9.5pt; page-break-inside: avoid; }
                     th { background: #f1f5f9 !important; border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; color: #0f172a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                     td { border: 1px solid #cbd5e1; padding: 7px 10px; text-align: left; color: #334155; }
                     
+                    /* Mermaid Charts Professional Styling */
                     .mermaid { 
                         text-align: center; 
                         margin: 25px auto; 
@@ -1769,8 +1699,6 @@ if (downloadNotesPdfBtn) {
         printWindow.document.close();
     });
 }
-
-
 const universitySelector = document.getElementById('university-selector');
 const profileOkBtn = document.getElementById('profile-ok-btn');
 const gradeSelect = document.getElementById('grade');
