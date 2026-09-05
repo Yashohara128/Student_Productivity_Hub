@@ -1572,7 +1572,12 @@ if (downloadNotesPdfBtn) {
             return;
         }
 
-        // Markdown ටැග්ස් පිරිසිදු HTML බවට හැරවීම (Professional Formatting Parser)
+        // වෙබ් පේජ් එකේ රෙන්ඩර් වී ඇති Mermaid SVGs ලබා ගැනීම
+        const previewDiv = document.getElementById('notes-preview-div');
+        const renderedSvgs = previewDiv ? previewDiv.querySelectorAll('svg') : [];
+        let svgIndex = 0;
+
+        // Smart Markdown Parser (චාට්ස් සහ මාර්ක්ඩවුන් එකවර පිරිසිදු කිරීම)
         let lines = rawText.split('\n');
         let htmlLines = [];
         let inList = false;
@@ -1581,6 +1586,21 @@ if (downloadNotesPdfBtn) {
 
         for (let line of lines) {
             let trimmed = line.trim();
+
+            // Mermaid Block හමුවූ විට ඩොම් එකේ ඇති rendered SVG එක ඇතුළත් කිරීම
+            if (trimmed.startsWith('```mermaid')) {
+                if (inList) { htmlLines.push('</ul>'); inList = false; }
+                if (inTable) { inTable = false; htmlLines.push('</table>'); }
+                
+                if (renderedSvgs[svgIndex]) {
+                    htmlLines.push(`<div class="mermaid">${renderedSvgs[svgIndex].outerHTML}</div>`);
+                    svgIndex++;
+                }
+                continue;
+            }
+            if (trimmed.startsWith('```')) {
+                continue;
+            }
 
             // Tables handling
             if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
@@ -1604,7 +1624,7 @@ if (downloadNotesPdfBtn) {
                 if (inTable) { inTable = false; htmlLines.push('</table>'); }
             }
 
-            // Headings
+            // Headings (මාර්ක්ඩවුන් සංකේත ඉවත් කර Professional Headings සෑදීම)
             if (trimmed.startsWith('# ')) {
                 if (inList) { htmlLines.push('</ul>'); inList = false; }
                 htmlLines.push(`<h1>${trimmed.substring(2).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</h1>`);
@@ -1675,9 +1695,9 @@ if (downloadNotesPdfBtn) {
                     .header-box h1 { font-size: 16pt; margin: 0 0 6px 0; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; }
                     .header-box p { font-size: 9pt; color: #94a3b8; margin: 0; }
                     
-                    h1 { font-size: 14pt; color: #0f172a; margin-top: 22px; border-bottom: 2px solid #38bdf8; padding-bottom: 4px; }
-                    h2 { font-size: 12pt; color: #1e293b; margin-top: 18px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; }
-                    h3 { font-size: 10.5pt; color: #334155; margin-top: 14px; }
+                    h1 { font-size: 14pt; color: #0f172a; margin-top: 22px; border-bottom: 2px solid #38bdf8; padding-bottom: 4px; page-break-after: avoid; }
+                    h2 { font-size: 12pt; color: #1e293b; margin-top: 18px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; page-break-after: avoid; }
+                    h3 { font-size: 10.5pt; color: #334155; margin-top: 14px; page-break-after: avoid; }
                     
                     p { margin-bottom: 8px; text-align: justify; }
                     ul { padding-left: 20px; margin-bottom: 12px; }
@@ -1689,7 +1709,7 @@ if (downloadNotesPdfBtn) {
                     
                     .mermaid { 
                         text-align: center; 
-                        margin: 20px auto; 
+                        margin: 25px auto; 
                         display: flex; 
                         justify-content: center; 
                         background: #ffffff !important; 
@@ -1714,6 +1734,7 @@ if (downloadNotesPdfBtn) {
                         body { padding: 10mm 15mm; background: #ffffff !important; }
                         .header-box { background: #0f172a !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                         th { background: #f1f5f9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        .mermaid, table { page-break-inside: avoid; }
                     }
                 </style>
             </head>
@@ -1728,7 +1749,7 @@ if (downloadNotesPdfBtn) {
                     window.onload = function() { 
                         setTimeout(() => { 
                             window.print(); 
-                        }, 500); 
+                        }, 600); 
                     }
                 </script>
             </body>
@@ -1737,6 +1758,7 @@ if (downloadNotesPdfBtn) {
         printWindow.document.close();
     });
 }
+
 const universitySelector = document.getElementById('university-selector');
 const profileOkBtn = document.getElementById('profile-ok-btn');
 const gradeSelect = document.getElementById('grade');
