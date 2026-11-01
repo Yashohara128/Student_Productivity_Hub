@@ -2109,24 +2109,66 @@ if (downloadPdfBtn) {
     });
 }
 
+// 🟢 නිවැරදි කරන ලද GPA ගණනය කිරීමේ ක්‍රමවේදය (F, NC-E, NC-C වැනි අසමත් විෂයයන් වල ක්‍රෙඩිට්ස් මුළු ක්‍රෙඩිට් ගණනට එකතු වේ)
 function calculateSemesterGPA(year, semester) {
-    const subs = getActiveSubjects().filter(s => s.year == year && s.semester == semester && s.gradePoint !== -1);
-    let creds = subs.reduce((acc, s) => acc + s.credit, 0);
-    let pts = subs.reduce((acc, s) => acc + (s.credit * s.gradePoint), 0);
+    const subs = getActiveSubjects().filter(s => s.year == year && s.semester == semester);
+    let creds = 0;
+    let pts = 0;
+    
+    subs.forEach(s => {
+        let cp = s.gradePoint;
+        // F, E, NC-E, NC-C වැනි ෆේල්/අසම්පූර්ණ ග්‍රේඩ්ස් වලට Grade Point 0 ලෙස සලකා credits ටොටල් එකට එකතු කරයි
+        if (cp === -1) {
+            // Medical වැනි විශේෂ අවස්ථා ඉවත් කිරීමට
+            if (s.gradeText && (s.gradeText.toLowerCase().includes('medical') || s.gradeText.toLowerCase().includes('mc'))) {
+                return;
+            }
+            cp = 0.00;
+        }
+        creds += s.credit;
+        pts += (s.credit * cp);
+    });
+    
     return creds === 0 ? "0.00" : (pts / creds).toFixed(2);
 }
 
 function calculateYearGPA(year) {
-    const subs = getActiveSubjects().filter(s => s.year == year && s.gradePoint !== -1);
-    let creds = subs.reduce((acc, s) => acc + s.credit, 0);
-    let pts = subs.reduce((acc, s) => acc + (s.credit * s.gradePoint), 0);
+    const subs = getActiveSubjects().filter(s => s.year == year);
+    let creds = 0;
+    let pts = 0;
+    
+    subs.forEach(s => {
+        let cp = s.gradePoint;
+        if (cp === -1) {
+            if (s.gradeText && (s.gradeText.toLowerCase().includes('medical') || s.gradeText.toLowerCase().includes('mc'))) {
+                return;
+            }
+            cp = 0.00;
+        }
+        creds += s.credit;
+        pts += (s.credit * cp);
+    });
+    
     return creds === 0 ? "0.00" : (pts / creds).toFixed(2);
 }
 
 function calculateOverallCGPA() {
-    const subs = getActiveSubjects().filter(s => s.gradePoint !== -1);
-    let creds = subs.reduce((acc, s) => acc + s.credit, 0);
-    let pts = subs.reduce((acc, s) => acc + (s.credit * s.gradePoint), 0);
+    const subs = getActiveSubjects();
+    let creds = 0;
+    let pts = 0;
+    
+    subs.forEach(s => {
+        let cp = s.gradePoint;
+        if (cp === -1) {
+            if (s.gradeText && (s.gradeText.toLowerCase().includes('medical') || s.gradeText.toLowerCase().includes('mc'))) {
+                return;
+            }
+            cp = 0.00;
+        }
+        creds += s.credit;
+        pts += (s.credit * cp);
+    });
+    
     return creds === 0 ? "0.00" : (pts / creds).toFixed(2);
 }
 
@@ -2170,10 +2212,15 @@ function renderGPAChart() {
                 labels.push(`Y${year} S${sem}`);
                 let creds = 0, pts = 0;
                 semSubs.forEach(sub => {
-                    if (sub.gradePoint !== -1) {
-                        creds += sub.credit;
-                        pts += (sub.credit * sub.gradePoint);
+                    let cp = sub.gradePoint;
+                    if (cp === -1) {
+                        if (sub.gradeText && (sub.gradeText.toLowerCase().includes('medical') || sub.gradeText.toLowerCase().includes('mc'))) {
+                            return;
+                        }
+                        cp = 0.00;
                     }
+                    creds += sub.credit;
+                    pts += (sub.credit * cp);
                 });
                 semGPAs.push(creds > 0 ? (pts / creds).toFixed(2) : 0);
             }
@@ -2186,10 +2233,15 @@ function renderGPAChart() {
             const semSubs = activeSubjects.filter(s => s.year == year && s.semester == sem);
             if (semSubs.length > 0) {
                 semSubs.forEach(sub => {
-                    if (sub.gradePoint !== -1) {
-                        totalC += sub.credit;
-                        totalP += (sub.credit * sub.gradePoint);
+                    let cp = sub.gradePoint;
+                    if (cp === -1) {
+                        if (sub.gradeText && (sub.gradeText.toLowerCase().includes('medical') || sub.gradeText.toLowerCase().includes('mc'))) {
+                            return;
+                        }
+                        cp = 0.00;
                     }
+                    totalC += sub.credit;
+                    totalP += (sub.credit * cp);
                 });
                 cumulativeGPAs.push(totalC > 0 ? (totalP / totalC).toFixed(2) : 0);
             }
