@@ -2384,9 +2384,12 @@ function updateUI() {
                             <tbody>
             `;
 
-            semSubs.forEach(sub => {
-                let cleanGradeText = sub.gradeText ? sub.gradeText.split('(')[0].trim() : (sub.gradeLetter || "-");
-                let displayGrade = sub.gradePoint === -1 ? sub.gradeText + getStatusAdvice(sub.gradeText) : sub.gradePoint.toFixed(2);
+    let gradeLetterOnly = sub.gradeText ? sub.gradeText.split('(')[0].trim() : sub.gradePoint.toFixed(2);
+
+     let displayGrade = sub.gradePoint === -1 
+    ? sub.gradeText + getStatusAdvice(sub.gradeText) 
+    : gradeLetterOnly;
+            
                 yearHTML += `
                     <tr>
                         <td>${sub.name}</td>
