@@ -2384,7 +2384,7 @@ function updateUI() {
                             <tbody>
             `;
 
-   semSubs.forEach(sub => {
+            semSubs.forEach(sub => {
                 let gradeLetterOnly = sub.gradeText ? sub.gradeText.split('(')[0].trim() : sub.gradePoint.toFixed(2);
 
                 let displayGrade = sub.gradePoint === -1 
@@ -2403,6 +2403,19 @@ function updateUI() {
                     </tr>
                 `;
             });
+
+            yearHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        });
+        yearHTML += `</div>`;
+        container.innerHTML += yearHTML;
+    });
+}
+
 if (pdfUpload) {
     pdfUpload.addEventListener('change', async (e) => {
         const file = e.target.files[0];
