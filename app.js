@@ -2384,12 +2384,13 @@ function updateUI() {
                             <tbody>
             `;
 
-    let gradeLetterOnly = sub.gradeText ? sub.gradeText.split('(')[0].trim() : sub.gradePoint.toFixed(2);
+   semSubs.forEach(sub => {
+                let gradeLetterOnly = sub.gradeText ? sub.gradeText.split('(')[0].trim() : sub.gradePoint.toFixed(2);
 
-     let displayGrade = sub.gradePoint === -1 
-    ? sub.gradeText + getStatusAdvice(sub.gradeText) 
-    : gradeLetterOnly;
-            
+                let displayGrade = sub.gradePoint === -1 
+                    ? sub.gradeText + getStatusAdvice(sub.gradeText) 
+                    : gradeLetterOnly;
+
                 yearHTML += `
                     <tr>
                         <td>${sub.name}</td>
@@ -2402,22 +2403,6 @@ function updateUI() {
                     </tr>
                 `;
             });
-
-            yearHTML += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-        });
-        yearHTML += `</div>`;
-        container.innerHTML += yearHTML;
-    });
-}
-
-const pdfUpload = document.getElementById('pdf-upload');
-const pdfFileName = document.getElementById('pdf-file-name');
-
 if (pdfUpload) {
     pdfUpload.addEventListener('change', async (e) => {
         const file = e.target.files[0];
